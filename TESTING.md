@@ -69,7 +69,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 |---|---|---|
 | 31 | `/sr purge <name>` and confirm | Chat says "Deleted <name>". They are gone from `/sr`. |
 | 32 | `/sr purge all` and confirm | Chat says all data deleted. The list is empty. Settings are unchanged. |
-| 33 | `/sr rate Somebody|cffff0000Red|r`, give a score, note `|TInterface\Icons\x:16|t hi |Hitem:1|h[x]|h`, **Save**, open history | The note shows as plain text `hi [x]`. No icon, no color, no link. |
+| 33 | `/sr rate Testdummy`, click a score, paste this as the note: `|TInterface\Icons\x:16|t hi |Hitem:1|h[x]|h` then **Save**. `/sr`, click Testdummy | The note shows as plain text `hi [x]`. No icon, no color, no link. |
 
 ## What I most need back
 
