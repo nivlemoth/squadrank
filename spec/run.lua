@@ -1,6 +1,9 @@
 -- Minimal test runner for machines without busted (busted needs a C compiler to install).
 -- Implements the small subset of the busted API the specs use, so the same spec files
 -- also run under real busted. Usage, from the addon folder: luajit spec/run.lua
+-- Kept local because the smoke test replaces the global print with a recorder.
+local print = print
+
 local SPECS = {
 	"spec/util_spec.lua",
 	"spec/db_spec.lua",
@@ -9,6 +12,7 @@ local SPECS = {
 	"spec/runs_spec.lua",
 	"spec/debug_spec.lua",
 	"spec/locale_spec.lua",
+	"spec/smoke_spec.lua",
 }
 
 local passed, failed = 0, 0

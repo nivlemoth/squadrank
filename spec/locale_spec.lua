@@ -22,7 +22,7 @@ describe("locale table", function()
 	it("defines every L.KEY used in the source files", function()
 		local missing = {}
 		local files = tocFiles()
-		assert.is_true(#files > 5)
+		assert.is_true(#files >= 26)
 		for _, path in ipairs(files) do
 			local handle = assert(io.open(path, "r"), "TOC lists a missing file: " .. path)
 			local source = handle:read("*a")
