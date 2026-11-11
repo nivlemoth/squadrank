@@ -1,0 +1,9 @@
+## Interface: 110105
+## Title: SquadRank
+## Notes: Player rating and tracking system
+## Author: Nivlemoth (Nathrezim / Quel'Thalas)
+## Version: 1.5.2
+## LoadSavedVariablesFirst: 1
+## SavedVariables: SquadRankDB
+
+SquadRank.lua
