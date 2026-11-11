@@ -64,3 +64,28 @@ before use. **in-game ✔** = John has confirmed it in game (no entries yet).
 ## C_RecentAllies (candidate dependency)
 All functions listed in widget-api-and-blizzard-ui.md are verified-src F+L. **Runtime enablement on Forever is unknown:**
 `/run print(C_RecentAllies.IsSystemSupported(), C_RecentAllies.IsSystemEnabled())`
+
+## Added during the v0.1 build (2026-11-10)
+
+All of these were checked in the Forever source (`forever` @ 4cd0ab7) but **none has run in the client yet**.
+Each is called through a guard (pcall or a nil check), and `/sr selftest` reports on it.
+
+| API | Source file in Forever | Status | Guard / fallback |
+|---|---|---|---|
+| `GROUP_JOINED(category, partyGUID)`, `GROUP_LEFT` | PartyInfoDocumentation.lua | verified-src, **unverified in game** | party GUID is only a session key; nil is fine |
+| `SAVED_VARIABLES_TOO_LARGE(addOnName)` | AddOnsDocumentation.lua | verified-src | warning only |
+| `C_GameRules.IsHardcoreActive()` | GameRulesDocumentation.lua | verified-src, **unverified in game** | pcall; ruleset tag falls back to the realm name |
+| Second return of `UnitName` on Forever (realm or surname) | UnitPopupShared.lua:34-50 | **unverified** | stored as returned; self-test reports type and length only |
+| `Menu.ModifyMenu(tag, fn)` with tags `MENU_UNIT_PARTY`, `_RAID_PLAYER`, `_PLAYER`, `_TARGET`, `_FOCUS` | Blizzard_Menu/Menu.lua:2767, UnitPopupShared.lua:110 | verified-src, **unverified in game** | pcall per tag; `/sr rate <name>` always works |
+| `MenuUtil.CreateContextMenu`, `root:CreateButton/CreateRadio/CreateTitle/CreateDivider` | Blizzard_Menu/MenuUtil.lua, 11_0_0_MenuImplementationGuide.lua | verified-src | nil check + pcall |
+| `Settings.RegisterVerticalLayoutCategory`, `RegisterAddOnSetting(category, variable, key, tbl, type, name, default)`, `CreateCheckbox`, `CreateSlider`, `CreateSliderOptions`, `RegisterAddOnCategory` | Blizzard_Settings_Shared/Blizzard_Settings.lua | verified-src | each control in its own pcall |
+| `CreateSettingsButtonInitializer(name, buttonText, onClick, tooltip, addSearchTags)` | Blizzard_SettingControls.lua:1040 | verified-src | pcall |
+| `ButtonFrameTemplate` + `ButtonFrameTemplate_HidePortrait/_HideButtonBar`, `frame:SetTitle` | SharedUIPanelTemplates.xml/.lua, PortraitFrame.lua | verified-src | pcall; plain backdrop window otherwise |
+| `WowScrollBoxList`, `MinimalScrollBar`, `CreateScrollBoxListLinearView`, `view:SetElementExtent`, `view:SetElementInitializer("Button", fn)`, `ScrollUtil.InitScrollBoxListWithScrollBar`, `CreateDataProvider`, `ScrollBoxConstants.RetainScrollPosition` | Shared/Scroll/*, FrameFactory.lua:12-26 (frame types allowed) | verified-src | pcall; recycled-row list otherwise; `/sr debug lists` forces the fallback |
+| `TooltipBackdropTemplate` (toast) | SharedTooltipTemplates.xml | verified-src | pcall; `BackdropTemplate` otherwise |
+| `SearchBoxTemplate`, `InputBoxTemplate`, `UIPanelButtonTemplate`, `UIPanelCloseButton`, `UIPanelScrollFrameTemplate` | InputBoxTemplates.xml, SharedUIPanelTemplates.xml, SecureScrollTemplates.xml | verified-src | search box falls back to InputBoxTemplate |
+| `StaticPopupDialogs` / `StaticPopup_Show(which, text, nil, data)`, `OnAccept(dialog, data)` | Blizzard_StaticPopup/StaticPopup.lua | verified-src | no edit box is used |
+| `C_AddOns.GetAddOnMetadata(..., "AddonCompartmentFunc")` calling `_G[name](addonName, buttonName)` | Blizzard_Minimap/Mainline/AddonCompartment.lua:106-125 | verified-src | `/sr` always works |
+| `C_RecentAllies.GetRecentAllyByFullName`, `IsSystemEnabled` | RecentAlliesDocumentation.lua | verified-src; **enabled state unknown** | off by default; nil check + pcall |
+| `LOCALIZED_CLASS_NAMES_MALE` | not checked | **unverified** | read through `_G`; falls back to the class token |
+| TOC `IconTexture: Interface\Icons\INV_Misc_GroupLooking` | not checked | **unverified** | cosmetic only |

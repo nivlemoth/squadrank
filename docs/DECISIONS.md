@@ -23,3 +23,26 @@ Logged while building without stopping to ask. Newest at the bottom.
    4 hours is never resumed. Runs with no other member are discarded.
 10. **Run prompt states.** `pending` until every member is rated (`done`) or the user clicks "Stop asking"
     (`skipped`). "Later" leaves it pending; `/sr rate` reopens the newest pending run.
+11. **Extra file.** `Data/Session.lua` holds the "toast once per group" logic so it can be unit-tested; the
+    plan had it inside `Track/Roster.lua`.
+12. **Commits.** The pure data modules (database, players, ratings, runs, session) were written together and
+    committed as "Steps 0-2"; step 4 therefore has no commit of its own. The TOC in the step 3 to 6 commits
+    listed only the first 17 files (an edit silently did not apply); it was fixed in the step 8 commit.
+    Only the head of `v0.1` is a loadable build.
+13. **Reading in combat.** "All DB reads and writes out of combat" is applied to the UI too: windows do not
+    open or refresh in combat, and slash commands that read data print a short message instead.
+14. **Smoke test.** Because the game client cannot be run from here, `spec/smoke_spec.lua` loads every TOC
+    file against a fake client (`spec/wowmock.lua`) and plays a session. The fake accepts any frame method,
+    so it proves load order and our logic, not that Blizzard's templates look or behave as expected.
+15. **ScrollBox safety valve.** Lists use ScrollBox when it can be created, otherwise a recycled-row list.
+    `/sr debug lists` followed by `/reload` forces the simple list, in case ScrollBox creates but misbehaves.
+16. **Toast for several players.** When more than one rated player is new at once (you join a formed group),
+    one combined toast lists up to five of them with label and top tag.
+17. **Typed names.** `/sr rate <name>` for a player never seen creates a name-keyed record at once. If it is
+    never rated it is removed by pruning after 180 days. When that player is later seen in a group, the
+    record is re-keyed to their GUID.
+18. **Recent Allies scope.** The only use is a GUID lookup for a typed name. Nothing is imported from the list.
+19. **Icon.** The four legacy PNG files were removed from the addon (kept in git history). The TOC points at a
+    built-in icon whose name has not been checked in the Forever client.
+20. **SAVED_VARIABLES_TOO_LARGE.** Handled with a log line and a chat warning only. Pruning (300 runs,
+    50 ratings per player, unrated players after 180 days) is the real protection.
