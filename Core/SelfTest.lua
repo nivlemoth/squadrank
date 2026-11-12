@@ -238,6 +238,34 @@ check("animation groups (motion only)", function()
 	return (ok and detail == "alpha+scale ok") and PASS or FAIL, ok and detail or tostring(detail)
 end)
 
+check("minimap button (Minimap, GetCursorPosition)", function()
+	local map = _G.Minimap
+	local ok = type(map) == "table" and type(map.GetCenter) == "function" and type(GetCursorPosition) == "function"
+	return ok and PASS or FAIL, "button: " .. tostring(Debug.notes.minimap or "not built")
+end)
+
+check("flat look (SetRotation, SetGradient, mouse wheel)", function()
+	local ok, detail = pcall(function()
+		local texture = UIParent:CreateTexture()
+		local scroll = CreateFrame("ScrollFrame", nil, UIParent)
+		scroll:Hide()
+		local has = {}
+		for _, name in ipairs({ "SetRotation", "SetGradient", "SetDesaturated" }) do
+			if type(texture[name]) ~= "function" then
+				has[#has + 1] = name
+			end
+		end
+		for _, name in ipairs({ "EnableMouseWheel", "GetVerticalScrollRange" }) do
+			if type(scroll[name]) ~= "function" then
+				has[#has + 1] = name
+			end
+		end
+		texture:Hide()
+		return #has == 0 and "all present" or ("missing: " .. table.concat(has, ", "))
+	end)
+	return (ok and detail == "all present") and PASS or FAIL, ok and detail or tostring(detail)
+end)
+
 check("role and checkmark atlases (art only)", function()
 	if not (C_Texture and C_Texture.GetAtlasInfo) then
 		return INFO, "C_Texture.GetAtlasInfo absent"

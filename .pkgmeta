@@ -3,7 +3,7 @@
 # TODO before the first CurseForge upload:
 #   1. Create the project on CurseForge and note its numeric project ID.
 #   2. Pass it to the packager with -p <ID> (or add "## X-Curse-Project-ID: <ID>" to SquadRank.toc).
-#   3. Change "## Version: 0.2.0" in SquadRank.toc to "## Version: @project-version@" so the git tag
+#   3. Change "## Version: 0.3.0" in SquadRank.toc to "## Version: @project-version@" so the git tag
 #      becomes the version. Keep ns.VERSION in Core/Init.lua in step, or read it from the TOC.
 #   4. The packager README does not list Forever as a game type. Check how to tag the upload for
 #      Forever (the -g option) before the first release.

@@ -10,8 +10,8 @@ local Slash = {}
 ns.Slash = Slash
 
 local function toggleMain()
-	if ns.MainWindow then
-		ns.MainWindow.Toggle()
+	if ns.Hub then
+		ns.Hub.Toggle()
 	end
 end
 
@@ -132,13 +132,29 @@ function commands.debug(arg)
 	ns.DebugPanel.Show()
 end
 
+function commands.settings()
+	ns.Hub.Show("settings")
+end
+commands.config = commands.settings
+commands.options = commands.settings
+
+function commands.about()
+	ns.Hub.Show("about")
+end
+
+function commands.minimap()
+	local settings = ns.db.settings
+	settings.minimapButton = not settings.minimapButton
+	ns.MinimapButton.Update()
+end
+
 function commands.selftest()
 	ns.SelfTest.Run()
 end
 
 function commands.help()
 	ns.Print(L.ADDON .. " " .. ns.VERSION)
-	for _, line in ipairs({ L.MSG_HELP_1, L.MSG_HELP_2, L.MSG_HELP_3, L.MSG_HELP_4, L.MSG_HELP_5 }) do
+	for _, line in ipairs({ L.MSG_HELP_1, L.MSG_HELP_2, L.MSG_HELP_3, L.MSG_HELP_4, L.MSG_HELP_5, L.MSG_HELP_6 }) do
 		print("  " .. line)
 	end
 end
@@ -180,6 +196,9 @@ function Slash.RefreshWindows()
 	end
 	if ns.PlayerDetail then
 		ns.PlayerDetail.Refresh()
+	end
+	if ns.Hub then
+		ns.Hub.UpdateBadges()
 	end
 end
 

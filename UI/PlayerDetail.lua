@@ -1,117 +1,247 @@
--- History window for one player: reputation summary and every rating, newest first.
+-- A player's history as a drawer that slides in over the right side of the Players page:
+-- reputation at a glance (average score, role bars, top tags), then every rating, newest first.
 local _, ns = ...
 
 local L = ns.L
 local UI = ns.UI
+local Anim = ns.Anim
 local Util = ns.Util
 local Compat = ns.Compat
 
 local PlayerDetail = {}
 ns.PlayerDetail = PlayerDetail
 
-local frame, body, child
+local C = UI.C
+local WIDTH = 340
+local BAR_W = 150
+
+local drawer, scroll, child, body
+local w = {}
 local currentPid
 
-local function buildText(rec)
+local function place(offset)
+	drawer:ClearAllPoints()
+	drawer:SetPoint("TOPRIGHT", offset, 0)
+	drawer:SetPoint("BOTTOMRIGHT", offset, 0)
+end
+
+local function slide(open)
+	local from = drawer.offset or WIDTH
+	local to = open and 0 or WIDTH + 8
+	if open then
+		drawer:Show()
+	end
+	Anim.Tween("detail drawer", open and 0.24 or 0.18, function(p)
+		drawer.offset = Anim.Lerp(from, to, p)
+		place(drawer.offset)
+	end, function()
+		if not open then
+			drawer:Hide()
+		end
+	end)
+end
+
+local function historyText(rec)
 	local db = ns.db
-	local summary = ns.Ratings.Summary(rec, Compat.Now(), db.settings.minRatings)
-	local lines = { UI.ColoredName(rec) .. "   " .. UI.LabelText(summary.label) }
-
-	if rec.classFile then
-		lines[#lines + 1] =
-			L.DETAIL_CLASS_LEVEL:format(tostring(rec.level or "?"), Util.Escape(UI.ClassName(rec.classFile)))
-	end
-	lines[#lines + 1] = L.DETAIL_SEEN:format(UI.Date(rec.firstSeen), UI.Date(rec.lastSeen))
-	local rulesets = {}
-	for tag in pairs(rec.rulesets or {}) do
-		rulesets[#rulesets + 1] = Util.Escape(tostring(tag))
-	end
-	if #rulesets > 0 then
-		table.sort(rulesets)
-		lines[#lines + 1] = L.DETAIL_RULESETS:format(table.concat(rulesets, ", "))
-	end
-	for _, line in ipairs(UI.SummaryLines(summary)) do
-		lines[#lines + 1] = line
-	end
-	lines[#lines + 1] = " "
-
+	local lines = {}
 	if #rec.ratings == 0 then
-		lines[#lines + 1] = L.DETAIL_NO_RATINGS
+		lines[#lines + 1] = "|cff808080" .. L.DETAIL_NO_RATINGS .. "|r"
 	end
 	for i = #rec.ratings, 1, -1 do
 		local rating = rec.ratings[i]
+		local score = tonumber(rating.score) or 0
 		local role = ns.Ratings.ROLE_SET[rating.role] and L["ROLE_" .. rating.role] or "-"
-		local head = L.DETAIL_RATING_FMT:format(UI.Date(rating.createdAt), tonumber(rating.score) or 0, role)
-		lines[#lines + 1] = "|cffffd100" .. head .. "|r"
+		local scoreText = UI.Colorize(L.DETAIL_SCORE_FMT:format(score), UI.ScoreColor(score))
+		lines[#lines + 1] = ("%s   %s   |cff9aa0aa%s|r"):format(scoreText, role, UI.Date(rating.createdAt))
 		local run = rating.runId and db.runs[rating.runId]
 		if run and run.instanceName then
-			lines[#lines + 1] = "   " .. Util.Escape(run.instanceName)
+			lines[#lines + 1] = "|cff9aa0aa" .. UI.RunName(run) .. "|r"
 		end
 		local tags = {}
 		for _, id in ipairs(rating.tags or {}) do
-			if ns.Ratings.TAG_INFO[id] then
-				tags[#tags + 1] = id
+			local info = ns.Ratings.TAG_INFO[id]
+			if info then
+				tags[#tags + 1] = UI.Colorize(L["TAG_" .. id], info.positive and C.good or C.bad)
 			end
 		end
 		if #tags > 0 then
-			lines[#lines + 1] = "   " .. UI.TagNames(tags)
+			lines[#lines + 1] = table.concat(tags, "  ")
 		end
 		local note = Util.Sanitize(rating.note)
 		if note ~= "" then
-			lines[#lines + 1] = "   " .. L.FMT_NOTE:format(note)
+			lines[#lines + 1] = '|cffd8d8d8"' .. note .. '"|r'
 		end
 		if rating.imported then
-			lines[#lines + 1] = "   " .. L.DETAIL_IMPORTED
+			lines[#lines + 1] = "|cff808080" .. L.DETAIL_IMPORTED .. "|r"
 		end
+		lines[#lines + 1] = " "
 	end
 	return table.concat(lines, "\n")
 end
 
-local function build()
-	frame = UI.CreateWindow(460, 440, L.DETAIL_TITLE)
-	local content = frame.content
+local function paint(rec)
+	local db = ns.db
+	local summary = ns.Ratings.Summary(rec, Compat.Now(), db.settings.minRatings)
+	w.name:SetText(UI.ColoredName(rec))
+	local sub = {}
+	if rec.classFile then
+		sub[#sub + 1] =
+			L.DETAIL_CLASS_LEVEL:format(tostring(rec.level or "?"), Util.Escape(UI.ClassName(rec.classFile)))
+	end
+	sub[#sub + 1] = L.DETAIL_SEEN_SHORT:format(UI.Date(rec.lastSeen))
+	w.sub:SetText(table.concat(sub, "   "))
 
-	local rate = UI.Button(content, L.BTN_RATE, 90, 22, function()
+	local labelColor = ({ trusted = C.good, mixed = C.gold, caution = C.bad })[summary.label] or C.muted
+	w.label:Set(L["LABEL_" .. summary.label], labelColor, 0.22)
+
+	if summary.count > 0 and summary.weighted then
+		w.score:SetText(UI.Colorize(("%.1f"):format(summary.weighted), UI.ScoreColor(summary.weighted)))
+		w.scoreSub:SetText(summary.count == 1 and L.DETAIL_AVG_ONE or L.DETAIL_AVG_MANY:format(summary.count))
+	else
+		w.score:SetText("|cff808080-|r")
+		w.scoreSub:SetText(L.DETAIL_NO_RATINGS)
+	end
+
+	for i, role in ipairs(ns.Ratings.ROLES) do
+		local bar = w.roles[i]
+		local stat = summary.roles[role]
+		if stat then
+			bar.value:SetText(("%.1f"):format(stat.avg))
+			UI.SetColor(bar.fill, UI.ScoreColor(stat.avg))
+			bar.target = (BAR_W - 20) * stat.avg / 5
+		else
+			bar.value:SetText("|cff606060-|r")
+			bar.target = 1
+		end
+	end
+	Anim.Tween("detail bars", 0.4, function(p)
+		for _, bar in ipairs(w.roles) do
+			bar.fill:SetWidth(math.max(1, bar.target * p))
+		end
+	end)
+
+	local tags = {}
+	for i = 1, math.min(4, #summary.topTags) do
+		local id = summary.topTags[i].id
+		local info = ns.Ratings.TAG_INFO[id]
+		tags[#tags + 1] = UI.Colorize(L["TAG_" .. id], info and info.positive and C.good or C.bad)
+	end
+	w.tags:SetText(#tags > 0 and table.concat(tags, "   ") or "")
+
+	body:SetText(historyText(rec))
+	child:SetHeight(math.max(10, (tonumber((body:GetStringHeight())) or 10) + 8))
+end
+
+local function build(page)
+	drawer = CreateFrame("Frame", nil, page)
+	drawer:SetWidth(WIDTH)
+	drawer:SetFrameLevel((page:GetFrameLevel() or 1) + 20)
+	drawer:EnableMouse(true)
+	UI.Fill(drawer, C.side, 0.99)
+	local edge = drawer:CreateTexture(nil, "BORDER")
+	edge:SetPoint("TOPLEFT")
+	edge:SetPoint("BOTTOMLEFT")
+	edge:SetWidth(1)
+	UI.SetColor(edge, C.accent, 0.35)
+	drawer.offset = WIDTH + 8
+	place(drawer.offset)
+	drawer:Hide()
+
+	local close = UI.CloseButton(drawer, PlayerDetail.Close, 24)
+	close:SetPoint("TOPRIGHT", -6, -6)
+
+	w.name = UI.Text(drawer, "GameFontHighlightLarge")
+	w.name:SetPoint("TOPLEFT", 18, -16)
+	w.name:SetWidth(WIDTH - 60)
+	w.name:SetWordWrap(false)
+	w.sub = UI.Text(drawer, "GameFontDisableSmall")
+	w.sub:SetPoint("TOPLEFT", 18, -38)
+	w.label = UI.Pill(drawer)
+	w.label:SetPoint("TOPLEFT", 18, -56)
+
+	w.score = UI.Text(drawer, "GameFontHighlightHuge2")
+	w.score:SetPoint("TOPLEFT", 18, -84)
+	w.scoreSub = UI.Text(drawer, "GameFontDisableSmall")
+	w.scoreSub:SetPoint("TOPLEFT", 18, -120)
+
+	w.roles = {}
+	for i, role in ipairs(ns.Ratings.ROLES) do
+		local y = -84 - (i - 1) * 18
+		local bar = {}
+		bar.name = UI.Text(drawer, "GameFontHighlightSmall")
+		bar.name:SetPoint("TOPLEFT", 110, y)
+		bar.name:SetText(L["ROLE_" .. role])
+		local track = drawer:CreateTexture(nil, "ARTWORK")
+		track:SetPoint("TOPLEFT", 160, y - 5)
+		track:SetSize(BAR_W - 20, 5)
+		track:SetColorTexture(1, 1, 1, 0.08)
+		bar.fill = drawer:CreateTexture(nil, "ARTWORK", nil, 1)
+		bar.fill:SetPoint("TOPLEFT", track, "TOPLEFT")
+		bar.fill:SetHeight(5)
+		bar.fill:SetWidth(1)
+		bar.value = UI.Text(drawer, "GameFontHighlightSmall", "RIGHT")
+		bar.value:SetPoint("TOPRIGHT", -16, y)
+		bar.target = 1
+		w.roles[i] = bar
+	end
+	w.tags = UI.Text(drawer, "GameFontHighlightSmall")
+	w.tags:SetPoint("TOPLEFT", 18, -144)
+	w.tags:SetWidth(WIDTH - 36)
+
+	local rate = UI.FlatButton(drawer, L.BTN_RATE, 140, 28, function()
 		if currentPid and not Compat.InCombat() then
 			ns.RateFrame.OpenPlayers({ currentPid })
 		end
-	end)
-	rate:SetPoint("TOPLEFT", 0, 0)
-	local purge = UI.Button(content, L.BTN_PURGE, 90, 22, function()
+	end, "primary")
+	rate:SetPoint("TOPLEFT", 18, -168)
+	local purge = UI.FlatButton(drawer, L.BTN_PURGE, 100, 28, function()
 		if currentPid then
 			ns.Slash.ConfirmPurgePlayer(currentPid)
 		end
-	end)
-	purge:SetPoint("LEFT", rate, "RIGHT", 6, 0)
+	end, "danger")
+	purge:SetPoint("LEFT", rate, "RIGHT", 8, 0)
 
-	local scroll = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
-	scroll:SetPoint("TOPLEFT", 0, -30)
-	scroll:SetPoint("BOTTOMRIGHT", -26, 0)
-	child = CreateFrame("Frame", nil, scroll)
-	child:SetSize(400, 10)
-	scroll:SetScrollChild(child)
+	local history = UI.Text(drawer, "GameFontDisableSmall")
+	history:SetPoint("TOPLEFT", 18, -212)
+	history:SetText(L.DETAIL_HISTORY:upper())
+	local line = drawer:CreateTexture(nil, "BORDER")
+	line:SetPoint("TOPLEFT", 18, -226)
+	line:SetPoint("TOPRIGHT", -18, -226)
+	line:SetHeight(1)
+	UI.SetColor(line, C.line)
 
+	local holder = CreateFrame("Frame", nil, drawer)
+	holder:SetPoint("TOPLEFT", 18, -234)
+	holder:SetPoint("BOTTOMRIGHT", -8, 12)
+	scroll, child = UI.SmoothScroll(holder)
+	child:SetWidth(WIDTH - 46)
 	body = UI.Text(child, "GameFontHighlightSmall")
-	body:SetPoint("TOPLEFT", 4, -2)
-	body:SetWidth(392)
+	body:SetPoint("TOPLEFT", 0, -2)
+	body:SetWidth(WIDTH - 50)
 	body:SetWordWrap(true)
 	body:SetSpacing(3)
 end
 
+function PlayerDetail.Close()
+	if drawer and drawer:IsShown() then
+		currentPid = nil
+		slide(false)
+	end
+end
+
 function PlayerDetail.Refresh()
-	if not frame or not frame:IsShown() then
+	if not drawer or not drawer:IsShown() or not currentPid then
 		return
 	end
-	local rec = currentPid and ns.db.players[currentPid]
+	local rec = ns.db.players[currentPid]
 	if not rec then
-		frame:Hide()
+		PlayerDetail.Close()
 		return
 	end
 	if Compat.InCombat() then
 		return
 	end
-	body:SetText(buildText(rec))
-	child:SetHeight(math.max(10, body:GetStringHeight() + 8))
+	paint(rec)
 end
 
 function PlayerDetail.Open(pid)
@@ -122,10 +252,26 @@ function PlayerDetail.Open(pid)
 		ns.Print(L.MSG_COMBAT)
 		return
 	end
-	if not frame then
-		build()
+	ns.Hub.Show("players")
+	if not drawer then
+		local page = ns.Hub.Page("players")
+		if not page then
+			return
+		end
+		build(page)
 	end
+	local switching = currentPid ~= nil and currentPid ~= pid and drawer:IsShown()
 	currentPid = pid
-	frame:Show()
-	PlayerDetail.Refresh()
+	paint(ns.db.players[pid])
+	scroll.Reset()
+	if switching then
+		child:SetAlpha(0.2)
+		Anim.FadeIn(child, 0.2, "detail body")
+	else
+		slide(true)
+	end
+end
+
+function PlayerDetail.Current()
+	return currentPid
 end

@@ -13,6 +13,8 @@ DB.DEFAULT_SETTINGS = {
 	promptAfterRun = true,
 	recentAllies = false,
 	simpleLists = false,
+	minimapButton = true,
+	minimapAngle = 200,
 }
 
 DB.LIMITS = {
@@ -42,6 +44,7 @@ local function repair(db)
 	Util.MergeDefaults(db.settings, DB.DEFAULT_SETTINGS)
 	db.settings.toastDuration = Util.Clamp(db.settings.toastDuration, 3, 30)
 	db.settings.minRatings = Util.Clamp(math.floor(db.settings.minRatings), 1, 10)
+	db.settings.minimapAngle = db.settings.minimapAngle % 360
 end
 
 -- Turns whatever was loaded from SavedVariables into a usable database.

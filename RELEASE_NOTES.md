@@ -1,3 +1,28 @@
+# SquadRank 0.3.0
+
+## New in 0.3.0: one window, new look
+
+- **Everything in one window.** A sidebar switches between Rate, Players, Runs, Settings and About, with a
+  short slide between pages. No more stacks of separate windows.
+- **Player history slides in.** Click a player and their history slides in from the right: average score,
+  a bar per role, their top tags, Rate and Purge buttons, then every rating you gave them. The list stays
+  in view, so you can click the next player straight away.
+- **Rate page.** Opening it shows every group still waiting for a rating, or "All caught up". The sidebar
+  shows how many players are waiting.
+- **Minimap button.** Left-click opens SquadRank, right-click opens Settings, drag to move it. A gold dot
+  pulses when players are waiting to be rated. Hide it in Settings or with `/sr minimap`.
+- **Settings inside the window,** with switches and +/- steppers. Blizzard's options panel still works and
+  shows the same values.
+- **About page,** by Nivlemoth.
+- **A flat, modern look** everywhere, including the toast and the "Rate your squad" alert, with gliding
+  mouse-wheel scrolling.
+- **New commands:** `/sr settings`, `/sr about`, `/sr minimap`.
+
+The 0.3.0 window has **not** been run in the game client yet; it is covered by 105 automated tests and every
+new Blizzard call was checked against the Forever UI source.
+
+---
+
 # SquadRank 0.2.0
 
 ## New in 0.2.0: faster rating

@@ -36,6 +36,8 @@ read_globals = {
 	"Settings",
 	"CreateSettingsButtonInitializer",
 	"MinimalSliderWithSteppersMixin",
+	"CreateColor",
+	"GetCursorPosition",
 	-- unit and group
 	"UnitExists",
 	"UnitIsPlayer",

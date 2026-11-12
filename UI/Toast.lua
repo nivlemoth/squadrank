@@ -42,14 +42,10 @@ local function build()
 	frame.body:SetWordWrap(true)
 	frame.body:SetSpacing(2)
 
-	local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-	close:SetPoint("TOPRIGHT", 2, 2)
-	close:SetScript(
-		"OnClick",
-		ns.Safe("toast close", function()
-			Toast.Dismiss()
-		end)
-	)
+	local close = UI.CloseButton(frame, function()
+		Toast.Dismiss()
+	end, 20)
+	close:SetPoint("TOPRIGHT", -4, -4)
 
 	frame:SetScript(
 		"OnClick",

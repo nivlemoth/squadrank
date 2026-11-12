@@ -1,4 +1,4 @@
-# SquadRank 0.2.0: in-game test checklist
+# SquadRank 0.3.0: in-game test checklist
 
 Run these in order on a WoW Forever character. Each step has what to type or do, and what should happen.
 You need one other player (a friend or a second account) for steps 9 to 27.
@@ -8,7 +8,7 @@ back to me. If the window itself fails, type `/reload` and send the file
 `WTF\Account\<ACCOUNT>\SavedVariables\SquadRank.lua` (the `SquadRankDebug` part).
 To see Lua errors on screen, type `/console scriptErrors 1` once.
 
-**Before you start:** if you have ratings from 0.1.0 you want to keep, nothing to do: 0.2.0 reads them as is.
+**Before you start:** ratings from 0.1.0 and 0.2.0 are kept: 0.3.0 reads them as is.
 
 ## A. Loading
 
@@ -16,15 +16,16 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 |---|---|---|
 | 1 | `/console scriptErrors 1` then `/reload` | No error window. Nothing printed by SquadRank (it is silent at load). |
 | 2 | `/dump select(4, GetBuildInfo())` | `16001`. If it is another number, tell me: the TOC needs it. |
-| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 0.2.0** is listed under the "Group" category and is not marked out of date. |
-| 4 | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The SquadRank window opens. Click it again: it closes. |
-| 5 | `/sr help` | Five help lines are printed. |
+| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 0.3.0** is listed under the "Group" category and is not marked out of date. |
+| 4 | Look at the edge of the minimap | A round SquadRank button (group icon in a gold ring). Hover it: a tooltip with three hints. **Left-click**: one window **fades in** with a sidebar (Rate, Players, Runs, Settings, About) and "by Nivlemoth" at the bottom left. Left-click again: it fades out. **Right-click**: the window opens on Settings. **Drag** it: it slides round the minimap; `/reload` keeps the spot. If the ring or the icon is missing, tell me (screenshot). |
+| 4b | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The same window toggles. |
+| 5 | `/sr help` | Six help lines are printed. |
 
 ## B. Debug and self-test
 
 | # | Do this | Expected |
 |---|---|---|
-| 6 | `/sr selftest` | One line: `Self-test: N pass, 0 fail, M info`. Any number of fails other than 0 is worth sending me. Two new rows: "animation groups" and "role and checkmark atlases" should say PASS. |
+| 6 | `/sr selftest` | One line: `Self-test: N pass, 0 fail, M info`. Any number of fails other than 0 is worth sending me. Rows "animation groups", "role and checkmark atlases", "minimap button" and "flat look" should say PASS. |
 | 7 | `/sr debug` | A window with a text box. It shows the addon version, `interface 16001`, counts, settings, the self-test rows and a log. No player names anywhere in it. |
 | 8 | In that window click **Run self-test**, then **Refresh** | The self-test section updates with a new time. |
 
@@ -35,11 +36,11 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 9 | Invite the other player to a party. Wait 2 seconds. `/sr` | The other player is in the list with reputation "New" and 0 ratings. No toast (you have not rated them). |
 | 10 | In the party: `/sr selftest`, then `/sr debug` | Rows "group members can be identified" and "group member values are not secret" say PASS. "current run" says `group`. Note what "UnitName second value" says: I need that line. |
 | 11 | Right-click the other player's party frame | The menu has "Rate in SquadRank" at the bottom. |
-| 12 | Click it | The "Rate a player" window **fades in**. One card: role icon on the left, their name in class color, a grey line with role, level, class and reputation, and five colored score squares (1 red to 5 green) on the right. |
+| 12 | Click it | The SquadRank window **fades in** on the **Rate** page. One card: role icon on the left, their name in class color, a grey line with role, level, class and reputation, and five colored score squares (1 red to 5 green) on the right. |
 | 13 | Hover a score square | Tooltip such as "4: Good". The square lightens. |
 | 14 | Click **4** | One click saves it: the square fills green-yellow and **pops**, a checkmark pops in, the bar at the top fills, and the card **slides open** to show 7 positive tags, a "Negative tags..." link and a note box. No chat line. |
 | 15 | Click **Efficient**, click the role icon until it shows the healer cross, type a note, press Enter | The tag lights up green. The grey line now says Healer. Nothing else to click. |
-| 16 | Click **Done**. `/sr`, click the player's row | The window fades out. History: one rating, score 4, Healer, tag Efficient, your note. |
+| 16 | Click **Done**. `/sr`, click the player's row | The window fades out. Reopened, the Players page shows the player with a score bar. Clicking the row slides their **history drawer** in from the right: big "4.0", a Healer bar that grows, tag Efficient, then one rating with your note. Click another row: the drawer stays and its content changes. The cross slides it away. |
 | 17 | Have the other player leave the party, then invite them again | A toast **slides down** near the top of the screen: their name, "New", "Rated once, score 4.0", "Healer 4.0 over 1 run", the tag, your note. It fades away after 8 seconds. |
 | 18 | `/reload` while still grouped | No second toast. |
 | 19 | Leave and re-form the group while you are in combat (hit a training dummy or a mob) | No toast during combat. It appears when combat ends. |
@@ -51,7 +52,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 |---|---|---|
 | 21 | Stay grouped with the other player for **at least 5 minutes** anywhere outside a dungeon. Then leave the party | About 2 seconds later a small card **slides down** from the top of the screen: three role icons, "Rate your squad", "Group in <zone>, 1 to rate", with a slow gold pulse. It stays until you act. |
 | 22 | Fight something while it is showing | It disappears in combat and slides back after the fight. |
-| 23 | Click the card | It slides away and "Rate your squad" opens. A section header "Group in <zone>  <date>  0/1 rated", then the card; cards **fade in one after another**. |
+| 23 | Click the card | It slides away and SquadRank opens on the **Rate** page. A section header "Group in <zone>  <date>  0/1 rated", then the card; cards **fade in one after another**. |
 | 24 | Click a score, then click **Done** | Saved with one click, as in step 14. The card does not come back. In `/sr` > **Runs** the group shows `1/1 rated`. |
 | 25 | Group again, walk into any dungeon together. `/sr debug` | "current run: instance". The log has `[RUN] started`. The open-world group turned into the dungeon run. |
 | 26 | `/reload` inside the dungeon, then `/sr debug`. Walk out, wait 30 seconds, `/sr debug` | Still "current run: instance" after the reload (`[RUN] resumed`), and outside (`[RUN] pending`). |
@@ -67,11 +68,18 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 31 | `/sr`, type part of a name in the search box | The list narrows as you type. |
 | 32 | Click **Label: All**, choose **Trusted** | Only Trusted players remain; the button reads "Label: Trusted". Set it back to All. |
 | 33 | Scroll the list (rate a few players first, or skip if the list is short) | Smooth scrolling. If the list is blank or broken: `/sr debug lists`, `/reload`, and tell me. |
-| 34 | Esc > Options > AddOns > SquadRank | Seven controls. The fourth now reads "Offer to rate your squad when a group ends". |
+| 34 | Esc > Options > AddOns > SquadRank | Eight controls. The last is "Show the minimap button". |
 | 35 | Untick "Show a toast when a rated player joins". Repeat step 17 | No toast. Tick it again. |
 | 36 | Untick "Offer to rate your squad when a group ends". Repeat step 21 | No alert. Tick it again. |
 | 37 | Set "Ratings needed for a label" to 1, reopen `/sr` | Players with one rating now show a label instead of "New". Set it back to 3. |
 | 38 | `/reload`, reopen the settings | Your changes are still there. |
+| 38a | `/sr settings` | The window opens on **Settings**: four sections (Alerts, Reputation, Interface, Your data). The switches show the same values as Blizzard's panel. |
+| 38b | Click the "Show the minimap button" switch | The knob **slides** and the minimap button disappears. Click again: it is back. `/sr minimap` does the same. |
+| 38c | Click **+** next to "Ratings needed for a label" | The number pops and goes up. Open Esc > Options > AddOns > SquadRank: the slider shows the same number. Set it back to 3. |
+| 38d | Click **About** in the sidebar | The page slides in: logo with a soft glow, "SquadRank", version, "by Nivlemoth", three feature cards and the commands. |
+| 38e | Click through the sidebar entries quickly | Each page slides in, the blue marker on the left glides to the entry. No flicker, no Lua error. |
+| 38f | Open Players, scroll the history drawer and the Rate page with the mouse wheel | Scrolling glides instead of jumping. The thin bar on the right can be dragged. |
+| 38g | Leave the party with a group waiting to be rated (as in step 21), then look at the sidebar and the minimap | "Rate" has a gold number; the minimap button has a pulsing gold dot. Click Rate: the waiting groups are there. Rate them all: the number and the dot go away. |
 
 ## F. Deleting data
 
@@ -85,5 +93,5 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 
 1. The full `/sr debug` text after step 10 and after step 29.
 2. Any Lua error text.
-3. How the motion feels: too fast, too slow, or right (steps 12, 14, 21, 23, 30). Screenshots of the rating
-   window with a card open help a lot.
+3. How the motion feels: too fast, too slow, or right (steps 4, 12, 14, 16, 21, 23, 30, 38e). Screenshots of
+   the Rate page with a card open, the Players page with the drawer open, and the minimap button help a lot.

@@ -1,7 +1,8 @@
--- The rating window: one card per player, grouped by run. One click on a score (1-5) saves
--- the rating. The card then opens to show the tags that fit that score and a note box;
--- those are optional and saved as you click. Used for "Rate your squad" (one or several runs)
--- and for single players (unit menu, /sr rate <name>, main window).
+-- The Rate page of the SquadRank window: one card per player, grouped by run. One click on a
+-- score (1-5) saves the rating. The card then opens to show the tags that fit that score and
+-- a note box; those are optional and saved as you click. Used for "Rate your squad" (one or
+-- several runs) and for single players (unit menu, /sr rate <name>, the Players page).
+-- Opening the page by itself shows every group still waiting for a rating.
 local _, ns = ...
 
 local L = ns.L
@@ -15,27 +16,24 @@ local Debug = ns.Debug
 local RateFrame = {}
 ns.RateFrame = RateFrame
 
-local WIDTH, HEIGHT = 600, 520
-local CARD_W, CARD_H, DETAIL_H, HEADER_H, GAP = 548, 52, 86, 28, 6
-local PIP, PIP_GAP = 28, 4
-local CHIP_W, CHIP_H, CHIP_GAP, CHIPS_PER_ROW = 126, 22, 6, 4
+local CARD_W, CARD_H, DETAIL_H, HEADER_H, GAP = 590, 54, 90, 30, 6
+local PIP, PIP_GAP = 30, 4
+local CHIP_W, CHIP_H, CHIP_GAP, CHIPS_PER_ROW = 120, 22, 6, 4
 local STAGGER, ENTER = 0.035, 0.24
+local PENDING_LIMIT = 6
 
-local SCORE_COLORS = {
-	{ 0.86, 0.24, 0.20 },
-	{ 0.93, 0.52, 0.18 },
-	{ 0.92, 0.78, 0.22 },
-	{ 0.55, 0.80, 0.30 },
-	{ 0.25, 0.76, 0.36 },
-}
+local SCORE_COLORS = UI.SCORE_COLORS
+local C = UI.C
 local ROLE_ATLAS = {
 	tank = "groupfinder-icon-role-large-tank",
 	healer = "groupfinder-icon-role-large-heal",
 	dps = "groupfinder-icon-role-large-dps",
 }
 
-local frame, scroll, child
+local page, scroll, child
 local w = {}
+local hasContent = false
+local opening = false
 local cardPool, headerPool = {}, {}
 local layoutItems = {}
 local sections = {}
@@ -161,7 +159,7 @@ local function updateProgress(animated)
 	end
 	local target = total > 0 and math.max(1, barWidth * rated / total) or 1
 	local from = w.fill.current or 1
-	setColor(w.fill, done and SCORE_COLORS[5] or { 1, 0.78, 0.1 })
+	setColor(w.fill, done and SCORE_COLORS[5] or C.accent)
 	if animated then
 		Anim.Tween("rate progress", 0.35, function(p)
 			w.fill.current = Anim.Lerp(from, target, p)
@@ -259,13 +257,13 @@ local function paintCard(card)
 		card.accent:SetColorTexture(0.4, 0.4, 0.4, 0.6)
 	end
 	card.check:SetShown(entry.ratingId ~= nil)
-	card.bg:SetColorTexture(1, 1, 1, card == expanded and 0.07 or 0.035)
+	UI.SetColor(card.bg, card == expanded and C.cardHi or C.card)
 	if card == expanded then
 		paintChips(card)
 		if not card.note:HasFocus() then
 			card.note:SetText(entry.note or "")
 		end
-		card.placeholder:SetShown((card.note:GetText() or "") == "" and not card.note:HasFocus())
+		card.noteHolder.PaintHint()
 	end
 end
 
@@ -313,6 +311,7 @@ local function persist(card)
 	Events.Debounce("rate refresh", 0.4, function()
 		ns.Slash.RefreshWindows()
 	end)
+	ns.Hub.UpdateBadges()
 	return true
 end
 
@@ -417,19 +416,19 @@ local function buildCard()
 		return L.RATE_ROLE_TIP:format(L["ROLE_" .. card.entry.role])
 	end)
 
-	card.name = UI.Text(card, "GameFontNormalLarge")
-	card.name:SetPoint("TOPLEFT", 50, -10)
+	card.name = UI.Text(card, "GameFontHighlightMedium")
+	card.name:SetPoint("TOPLEFT", 50, -11)
 	card.name:SetWidth(200)
 	card.name:SetWordWrap(false)
 	card.sub = UI.Text(card, "GameFontDisableSmall")
-	card.sub:SetPoint("TOPLEFT", 50, -31)
+	card.sub:SetPoint("TOPLEFT", 50, -32)
 	card.sub:SetWidth(250)
 	card.sub:SetWordWrap(false)
 
 	card.pips = {}
 	for score = 5, 1, -1 do
 		local pip = makeButton(card, PIP, PIP, "GameFontNormalLarge")
-		pip:SetPoint("TOPRIGHT", -10 - (5 - score) * (PIP + PIP_GAP), -12)
+		pip:SetPoint("TOPRIGHT", -12 - (5 - score) * (PIP + PIP_GAP), -12)
 		pip:SetText(tostring(score))
 		pip:SetScript(
 			"OnClick",
@@ -443,7 +442,7 @@ local function buildCard()
 
 	card.check = card:CreateTexture(nil, "OVERLAY")
 	card.check:SetSize(18, 18)
-	card.check:SetPoint("RIGHT", card.pips[1], "LEFT", -8, 0)
+	card.check:SetPoint("RIGHT", card.pips[1], "LEFT", -10, 0)
 	pcall(card.check.SetAtlas, card.check, "checkmark-minimal")
 
 	card.details = CreateFrame("Frame", nil, card)
@@ -470,7 +469,7 @@ local function buildCard()
 	end
 	card.swap = makeButton(card.details, CHIP_W, CHIP_H)
 	card.swap.bg:SetColorTexture(0, 0, 0, 0)
-	card.swap.label:SetTextColor(0.6, 0.75, 1)
+	card.swap.label:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
 	card.swap:SetScript(
 		"OnClick",
 		ns.Safe("rate swap", function()
@@ -479,14 +478,9 @@ local function buildCard()
 		end)
 	)
 
-	card.note = CreateFrame("EditBox", nil, card.details, "InputBoxTemplate")
-	card.note:SetSize(CARD_W - 76, 20)
-	card.note:SetPoint("TOPLEFT", 6, -2 * (CHIP_H + 4) - 8)
-	card.note:SetAutoFocus(false)
-	card.note:SetMaxLetters(ns.Ratings.NOTE_MAX)
-	card.placeholder = UI.Text(card.note, "GameFontDisableSmall")
-	card.placeholder:SetPoint("LEFT", 2, 0)
-	card.placeholder:SetText(L.RATE_NOTE_HINT)
+	local noteWidth = CHIPS_PER_ROW * CHIP_W + (CHIPS_PER_ROW - 1) * CHIP_GAP
+	card.noteHolder, card.note = UI.TextBox(card.details, noteWidth, 26, L.RATE_NOTE_HINT, ns.Ratings.NOTE_MAX)
+	card.noteHolder:SetPoint("TOPLEFT", 0, -2 * (CHIP_H + 4) - 6)
 	local function commitNote()
 		local text = card.note:GetText() or ""
 		if text ~= (card.entry.note or "") then
@@ -494,23 +488,11 @@ local function buildCard()
 			persist(card)
 		end
 	end
-	card.note:SetScript("OnEnterPressed", function(self)
-		self:ClearFocus()
-	end)
 	card.note:SetScript("OnEscapePressed", function(self)
 		self:SetText(card.entry.note or "")
 		self:ClearFocus()
 	end)
-	card.note:HookScript("OnEditFocusGained", function()
-		card.placeholder:Hide()
-	end)
-	card.note:HookScript(
-		"OnEditFocusLost",
-		ns.Safe("rate note", function()
-			commitNote()
-			card.placeholder:SetShown((card.note:GetText() or "") == "")
-		end)
-	)
+	card.note:HookScript("OnEditFocusLost", ns.Safe("rate note", commitNote))
 
 	card:SetScript(
 		"OnClick",
@@ -524,7 +506,7 @@ end
 local function buildHeader()
 	local header = CreateFrame("Frame", nil, child)
 	header:SetSize(CARD_W, HEADER_H)
-	header.title = UI.Text(header, "GameFontNormal")
+	header.title = UI.Text(header, "GameFontNormalMed2")
 	header.title:SetPoint("BOTTOMLEFT", 2, 7)
 	header.count = UI.Text(header, "GameFontDisableSmall", "RIGHT")
 	header.count:SetPoint("BOTTOMRIGHT", -4, 8)
@@ -532,17 +514,22 @@ local function buildHeader()
 	line:SetPoint("BOTTOMLEFT", 0, 2)
 	line:SetPoint("BOTTOMRIGHT", 0, 2)
 	line:SetHeight(1)
-	line:SetColorTexture(1, 0.82, 0, 0.25)
+	UI.SetColor(line, C.line)
 	return header
 end
 
--- Window ------------------------------------------------------------------------------------
+-- Page --------------------------------------------------------------------------------------
 
-local function close()
+local function leave()
 	if expanded then
 		expanded.note:ClearFocus()
 	end
-	Anim.FadeOut(frame, 0.14, nil, "rate window")
+end
+
+local function finish()
+	leave()
+	hasContent = false
+	ns.Hub.Hide()
 end
 
 local function skipAll()
@@ -556,21 +543,19 @@ local function skipAll()
 		end
 		ns.Slash.RefreshWindows()
 	end
-	close()
+	finish()
 end
 
-local function build()
-	frame = UI.CreateWindow(WIDTH, HEIGHT, L.RATE_TITLE)
-	local content = frame.content
+local function build(f)
+	page = f
+	w.title = UI.Text(page, "GameFontHighlightLarge")
+	w.title:SetPoint("TOPLEFT", 2, -2)
+	w.progressText = UI.Text(page, "GameFontNormalSmall", "RIGHT")
+	w.progressText:SetPoint("TOPRIGHT", -14, -6)
 
-	w.title = UI.Text(content, "GameFontHighlightLarge")
-	w.title:SetPoint("TOPLEFT", 2, -4)
-	w.progressText = UI.Text(content, "GameFontNormalSmall", "RIGHT")
-	w.progressText:SetPoint("TOPRIGHT", -28, -8)
-
-	w.bar = CreateFrame("Frame", nil, content)
+	w.bar = CreateFrame("Frame", nil, page)
 	w.bar:SetPoint("TOPLEFT", 0, -28)
-	w.bar:SetSize(CARD_W, 6)
+	w.bar:SetSize(CARD_W, 4)
 	local track = w.bar:CreateTexture(nil, "BACKGROUND")
 	track:SetAllPoints()
 	track:SetColorTexture(1, 1, 1, 0.08)
@@ -579,31 +564,50 @@ local function build()
 	w.fill:SetPoint("BOTTOMLEFT")
 	w.fill:SetWidth(1)
 
-	scroll = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
-	scroll:SetPoint("TOPLEFT", 0, -42)
-	scroll:SetPoint("BOTTOMRIGHT", -26, 34)
-	child = CreateFrame("Frame", nil, scroll)
+	local holder = CreateFrame("Frame", nil, page)
+	holder:SetPoint("TOPLEFT", 0, -42)
+	holder:SetPoint("BOTTOMRIGHT", 0, 40)
+	scroll, child = UI.SmoothScroll(holder)
 	child:SetSize(CARD_W, 1)
-	scroll:SetScrollChild(child)
 
-	w.hint = UI.Text(content, "GameFontDisableSmall")
-	w.hint:SetPoint("BOTTOMLEFT", 2, 10)
+	w.empty = CreateFrame("Frame", nil, page)
+	w.empty:SetAllPoints()
+	w.empty:Hide()
+	local check = w.empty:CreateTexture(nil, "ARTWORK")
+	check:SetSize(48, 48)
+	check:SetPoint("CENTER", 0, 50)
+	pcall(check.SetAtlas, check, "checkmark-minimal")
+	w.emptyCheck = check
+	local emptyTitle = UI.Text(w.empty, "GameFontHighlightLarge", "CENTER")
+	emptyTitle:SetPoint("TOP", check, "BOTTOM", 0, -12)
+	emptyTitle:SetText(L.RATE_CAUGHT_UP)
+	local emptyText = UI.Text(w.empty, "GameFontDisable", "CENTER")
+	emptyText:SetPoint("TOP", emptyTitle, "BOTTOM", 0, -8)
+	emptyText:SetWidth(420)
+	emptyText:SetText(L.RATE_CAUGHT_UP_TEXT)
+
+	w.hint = UI.Text(page, "GameFontDisableSmall")
+	w.hint:SetPoint("BOTTOMLEFT", 2, 8)
 	w.hint:SetText(L.RATE_HINT)
 
-	w.done = UI.Button(content, L.BTN_DONE, 96, 24, close)
-	w.done:SetPoint("BOTTOMRIGHT", -2, 2)
-	w.skip = UI.Button(content, L.BTN_SKIP, 96, 24, skipAll)
-	w.skip:SetPoint("RIGHT", w.done, "LEFT", -6, 0)
+	w.done = UI.FlatButton(page, L.BTN_DONE, 104, 28, finish, "primary")
+	w.done:SetPoint("BOTTOMRIGHT", -14, 0)
+	w.skip = UI.FlatButton(page, L.BTN_SKIP, 96, 28, skipAll, "ghost")
+	w.skip:SetPoint("RIGHT", w.done, "LEFT", -8, 0)
 	UI.SetTooltip(w.skip, L.BTN_SKIP_TIP)
+end
 
-	frame:HookScript("OnHide", function()
-		if GameTooltip then
-			GameTooltip:Hide()
-		end
-		if ns.SquadAlert and not frame.srCombatHidden then
-			ns.SquadAlert.Schedule()
-		end
-	end)
+local function setEmpty(empty)
+	w.empty:SetShown(empty)
+	w.title:SetShown(not empty)
+	w.progressText:SetShown(not empty)
+	w.bar:SetShown(not empty)
+	w.hint:SetShown(not empty)
+	w.done:SetShown(not empty)
+	if empty then
+		w.skip:Hide()
+		Anim.Pop(w.emptyCheck, 1.3)
+	end
 end
 
 local function newEntry(pid, runId, role)
@@ -627,10 +631,10 @@ local function newEntry(pid, runId, role)
 end
 
 -- groups = { { run = run or nil, members = { { pid, role }, ... } }, ... }
-local function open(groups, title)
+local function populate(groups, title)
 	local db = ns.db
-	if not frame then
-		build()
+	if not ns.Hub.Page("rate") then
+		return 0
 	end
 	if expanded then
 		expanded.note:ClearFocus()
@@ -679,19 +683,26 @@ local function open(groups, title)
 		headerPool[i]:Hide()
 	end
 
+	hasContent = cardIndex > 0
+	setEmpty(cardIndex == 0)
 	if cardIndex == 0 then
-		ns.Print(L.RATE_EMPTY)
-		return
+		child:SetHeight(1)
+		return 0
 	end
 
-	frame:SetWindowTitle(title)
 	local runs = 0
 	for _, section in ipairs(sections) do
 		if section.run then
 			runs = runs + 1
 		end
 	end
-	w.title:SetText(runs > 1 and L.RATE_HEADLINE_MANY:format(runs, cardIndex) or title)
+	if runs > 1 then
+		w.title:SetText(L.RATE_HEADLINE_MANY:format(runs, cardIndex))
+	elseif runs == 1 then
+		w.title:SetText(cardIndex == 1 and L.RATE_HEADLINE_ONE or L.RATE_HEADLINE_RUN:format(cardIndex))
+	else
+		w.title:SetText(title)
+	end
 	w.skip:SetShown(runs > 0)
 	for _, section in ipairs(sections) do
 		for _, card in ipairs(section.cards) do
@@ -699,14 +710,26 @@ local function open(groups, title)
 		end
 	end
 	updateProgress(false)
-	scroll:SetVerticalScroll(0)
-	frame.srCombatHidden = nil
-	Anim.FadeIn(frame, 0.18, "rate window")
+	scroll.Reset()
 	animateEntrance()
+	return cardIndex
 end
 
--- Rate the members of several stored runs in one window, newest first.
-function RateFrame.OpenRuns(runs)
+local function open(groups, title)
+	if Compat.InCombat() then
+		ns.Print(L.MSG_COMBAT)
+		return
+	end
+	if populate(groups, title) == 0 then
+		ns.Print(L.RATE_EMPTY)
+		return
+	end
+	opening = true
+	ns.Hub.Show("rate")
+	opening = false
+end
+
+local function runGroups(runs)
 	local groups = {}
 	for _, run in ipairs(runs) do
 		local members = {}
@@ -715,7 +738,26 @@ function RateFrame.OpenRuns(runs)
 		end
 		groups[#groups + 1] = { run = run, members = members }
 	end
-	open(groups, L.RATE_TITLE)
+	return groups
+end
+
+-- Every group still waiting for a rating, newest first.
+local function pendingRuns()
+	local runs = {}
+	for _, run in ipairs(ns.Runs.List(ns.db)) do
+		if run.prompt == "pending" then
+			runs[#runs + 1] = run
+			if #runs >= PENDING_LIMIT then
+				break
+			end
+		end
+	end
+	return runs
+end
+
+-- Rate the members of several stored runs in one window, newest first.
+function RateFrame.OpenRuns(runs)
+	open(runGroups(runs), L.RATE_TITLE)
 end
 
 -- Rate the members of one stored run. Ratings are tied to the run, so reopening edits them.
@@ -758,24 +800,18 @@ function RateFrame.FindCard(pid)
 end
 
 function RateFrame.IsShown()
-	return frame ~= nil and frame:IsShown() and true or false
+	return ns.Hub.IsShown("rate")
 end
 
--- In combat the window steps aside and comes back when the fight is over.
-Events.On("PLAYER_REGEN_DISABLED", "RateFrame", function()
-	if frame and frame:IsShown() then
-		if expanded then
-			expanded.note:ClearFocus()
+ns.Hub.AddPage("rate", {
+	label = L.NAV_RATE,
+	title = L.RATE_TITLE,
+	build = build,
+	show = function()
+		local rated, total = countRated()
+		if not opening and (not hasContent or rated >= total) then
+			populate(runGroups(pendingRuns()), L.RATE_TITLE)
 		end
-		frame.srCombatHidden = true
-		Anim.Cancel("rate window")
-		frame:Hide()
-	end
-end)
-
-Events.On("PLAYER_REGEN_ENABLED", "RateFrame", function()
-	if frame and frame.srCombatHidden then
-		frame.srCombatHidden = nil
-		Anim.FadeIn(frame, 0.25, "rate window")
-	end
-end)
+	end,
+	hide = leave,
+})

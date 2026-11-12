@@ -2,7 +2,7 @@
 local addonName, ns = ...
 
 ns.ADDON = addonName or "SquadRank"
-ns.VERSION = "0.2.0"
+ns.VERSION = "0.3.0"
 ns.SCHEMA = 1
 
 -- The only global this addon defines on purpose, besides its two SavedVariables and the

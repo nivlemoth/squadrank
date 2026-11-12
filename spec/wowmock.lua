@@ -142,6 +142,10 @@ function mock.install()
 		world.frames[#world.frames + 1] = frame
 		return frame
 	end
+	_G.Minimap = newObject("Frame")
+	_G.GetCursorPosition = function()
+		return 0, 0
+	end
 	_G.ButtonFrameTemplate_HidePortrait = noop
 	_G.ButtonFrameTemplate_HideButtonBar = noop
 

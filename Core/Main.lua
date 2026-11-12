@@ -54,6 +54,7 @@ Events.On("PLAYER_LOGIN", "Main", function()
 	if ns.readOnly then
 		ns.Print(L.MSG_READONLY:format(tostring(ns.readOnlyReason)))
 	end
+	optional("MinimapButton", "Update")
 end)
 
 Events.On("PLAYER_LOGOUT", "Main", function()

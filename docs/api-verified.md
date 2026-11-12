@@ -104,3 +104,23 @@ fails, the window still works without that motion or art.
 | `Button:SetFontString` | SimpleButtonAPIDocumentation.lua | verified-src | |
 | `GetZoneText()` | listed above | verified-src | open-world group runs are named after the zone; nil shows "Group in the world" |
 | `GameTooltip:SetOwner/SetText/Show/Hide` | Blizzard FrameXML global | not in generated docs | nil check before use |
+
+## Added for 0.3.0 (2026-11-11)
+
+Checked in the Forever source (`forever` @ 4cd0ab7). None has run in the client yet. All are cosmetic or
+optional: if one fails, SquadRank still works (no minimap button, or a plainer look). Two new self-test rows
+cover them: "minimap button" and "flat look".
+
+| API | Source in Forever | Status | Guard / fallback |
+|---|---|---|---|
+| `Minimap` (global frame) | Blizzard_Minimap/Mainline/Minimap.xml (`<Minimap name="Minimap">`) | verified-src | type check; no button if missing |
+| `GetCursorPosition()` | InputDocumentation.lua | verified-src | nil check while dragging |
+| `Region:GetCenter`, `Frame:GetEffectiveScale`, `Frame:GetFrameLevel/SetFrameLevel` | SimpleScriptRegionResizingAPI, SimpleFrameAPI documentation | verified-src | |
+| `Texture:SetRotation`, `Texture:SetGradient`, `Texture:SetDesaturated`, `Texture:SetTexCoord` | SimpleTextureBaseAPIDocumentation.lua | verified-src | SetRotation, SetGradient, SetDesaturated in pcall |
+| `CreateColor` | Blizzard SharedXML (Color.lua) | not in generated docs | checked for nil; plain colour if missing |
+| `ScrollFrame:EnableMouseWheel/GetVerticalScrollRange/GetVerticalScroll/SetVerticalScroll`, `OnMouseWheel`, `OnScrollRangeChanged` | SimpleScrollFrameAPIDocumentation.lua | verified-src | self-test row "flat look" |
+| `EditBox:SetTextInsets/SetFontObject` | SimpleEditBoxAPIDocumentation.lua | verified-src | |
+| `Setting:SetValueChangedCallback` | Blizzard_Settings_Shared/Blizzard_Setting.lua line 265 | verified-src | checked for nil, in pcall |
+| Font objects `GameFontHighlightHuge`, `GameFontHighlightHuge2`, `GameFontHighlightMedium`, `GameFontNormalMed2`, `GameFontHighlightExtraSmall` | Blizzard_Fonts_Shared Fonts.xml | verified-src | |
+| Textures `Interface\Minimap\UI-Minimap-ZoomButton-Highlight` | Blizzard_Minimap/Mainline/Minimap.xml | verified-src | |
+| Textures `Interface\Minimap\MiniMap-TrackingBorder`, `Interface\Minimap\UI-Minimap-Background`, icons `INV_Misc_Note_01`, `INV_Misc_Map_01`, `Trade_Engineering`, `INV_Misc_Book_09` | game files, not referenced in Forever's UI source | **unverified** (art only) | a missing file shows nothing; TESTING step 4 checks them by eye |

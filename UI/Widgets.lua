@@ -109,22 +109,98 @@ function UI.SetTooltip(owner, textOrFn)
 	end)
 end
 
--- A frame with the tooltip-style border and dark background (falls back to a plain backdrop).
-function UI.Panel(frameType, parent)
-	local frame
-	local ok = pcall(function()
-		frame = CreateFrame(frameType, nil, parent, "TooltipBackdropTemplate")
-	end)
-	if not ok or not frame then
-		frame = CreateFrame(frameType, nil, parent, "BackdropTemplate")
-		pcall(frame.SetBackdrop, frame, {
-			bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-			edgeSize = 14,
-			insets = { left = 3, right = 3, top = 3, bottom = 3 },
-		})
-		pcall(frame.SetBackdropColor, frame, 0, 0, 0, 0.9)
+-- Theme -------------------------------------------------------------------------------------
+-- One flat, dark look for every SquadRank surface: colours live here, nowhere else.
+UI.C = {
+	bg = { 0.047, 0.051, 0.063, 0.97 },
+	side = { 0.031, 0.035, 0.043, 1 },
+	card = { 1, 1, 1, 0.035 },
+	cardHi = { 1, 1, 1, 0.07 },
+	line = { 1, 1, 1, 0.07 },
+	accent = { 0.25, 0.72, 1 },
+	gold = { 1, 0.80, 0.30 },
+	text = { 0.92, 0.93, 0.95 },
+	muted = { 0.56, 0.59, 0.65 },
+	good = { 0.30, 0.80, 0.42 },
+	bad = { 0.90, 0.32, 0.28 },
+}
+
+UI.SCORE_COLORS = {
+	{ 0.86, 0.24, 0.20 },
+	{ 0.93, 0.52, 0.18 },
+	{ 0.92, 0.78, 0.22 },
+	{ 0.55, 0.80, 0.30 },
+	{ 0.25, 0.76, 0.36 },
+}
+
+-- Colour for an average score (1.0 to 5.0), blended between the five score colours.
+function UI.ScoreColor(score)
+	score = Util.Clamp(tonumber(score) or 3, 1, 5)
+	local low = math.floor(score)
+	local high = math.min(5, low + 1)
+	local t = score - low
+	local a, b = UI.SCORE_COLORS[low], UI.SCORE_COLORS[high]
+	return { a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, a[3] + (b[3] - a[3]) * t }
+end
+
+function UI.Hex(color)
+	return ("ff%02x%02x%02x"):format(
+		math.floor(color[1] * 255 + 0.5),
+		math.floor(color[2] * 255 + 0.5),
+		math.floor(color[3] * 255 + 0.5)
+	)
+end
+
+function UI.Colorize(text, color)
+	return "|c" .. UI.Hex(color) .. text .. "|r"
+end
+
+function UI.SetColor(texture, color, alpha)
+	texture:SetColorTexture(color[1], color[2], color[3], alpha or color[4] or 1)
+end
+
+-- A solid colour texture covering the whole frame.
+function UI.Fill(frame, color, alpha, layer, sublevel)
+	local texture = frame:CreateTexture(nil, layer or "BACKGROUND", nil, sublevel)
+	texture:SetAllPoints()
+	UI.SetColor(texture, color, alpha)
+	return texture
+end
+
+-- A one-pixel outline.
+function UI.Border(frame, color, alpha)
+	color = color or UI.C.line
+	local edges = {}
+	local function edge(p1, p2, horizontal)
+		local t = frame:CreateTexture(nil, "BORDER")
+		t:SetPoint(p1)
+		t:SetPoint(p2)
+		if horizontal then
+			t:SetHeight(1)
+		else
+			t:SetWidth(1)
+		end
+		UI.SetColor(t, color, alpha)
+		edges[#edges + 1] = t
 	end
+	edge("TOPLEFT", "TOPRIGHT", true)
+	edge("BOTTOMLEFT", "BOTTOMRIGHT", true)
+	edge("TOPLEFT", "BOTTOMLEFT", false)
+	edge("TOPRIGHT", "BOTTOMRIGHT", false)
+	return edges
+end
+
+-- A floating surface (toasts, alerts): dark flat background, hairline border, accent top edge.
+function UI.Panel(frameType, parent)
+	local frame = CreateFrame(frameType, nil, parent)
+	frame.srBg = UI.Fill(frame, UI.C.bg)
+	UI.Border(frame, UI.C.line)
+	local top = frame:CreateTexture(nil, "ARTWORK")
+	top:SetPoint("TOPLEFT")
+	top:SetPoint("TOPRIGHT")
+	top:SetHeight(2)
+	UI.SetColor(top, UI.C.accent, 0.9)
+	frame.srAccent = top
 	return frame
 end
 

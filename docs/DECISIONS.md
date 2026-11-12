@@ -75,3 +75,35 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
     (`UI/Anim.lua`). Pops and the alert pulse use Blizzard animation groups. If an animation API is missing,
     the UI still works without motion; `/sr selftest` reports it.
 29. **Version 0.2.0.** Bumped so the AddOns list shows which build is loaded. No database change; schema stays 1.
+
+## 0.3.0: one window, minimap button, new look (2026-11-11)
+
+30. **One window.** John found three separate windows (list, history, rating) clunky. Everything now lives
+    in one window with a sidebar: Rate, Players, Runs, Settings, About. Pages switch in place with a short
+    slide and fade. A player's history is a drawer that slides in over the right of the Players page, so the
+    list stays in view. The old `MainWindow`, `PlayerDetail` and `RateFrame` modules keep their public
+    functions, so slash commands, menus and toasts did not change.
+31. **Own flat look instead of Blizzard panel art.** Dark flat surfaces, hairline borders and one blue accent
+    (the colour of the chat prefix), drawn with colour textures only. This looks the same on every client,
+    needs no templates (several, such as `ScrollFrameTemplate`, are absent in Forever), and matches what
+    current popular addons look like. The colours live in `UI.C` in `UI/Widgets.lua`.
+32. **Smooth scrolling written by hand.** The rating cards and the history drawer use a plain ScrollFrame
+    whose mouse wheel glides (0.22 s ease-out) with a slim draggable bar (`UI.SmoothScroll`). The player and
+    run lists keep Blizzard's ScrollBox, which already scrolls smoothly and recycles rows.
+33. **Minimap button by hand, no LibDBIcon.** Zero third-party libraries is a project rule, so the button is
+    about 150 lines in `UI/MinimapButton.lua`: left-click opens SquadRank, right-click opens Settings, drag
+    moves it round the minimap (angle saved in `settings.minimapAngle`). The border art is the classic minimap
+    file textures; if Forever lacks them, the icon still shows without a ring. It can be hidden from Settings,
+    Blizzard's options panel or `/sr minimap`. The Addon Compartment entry stays.
+34. **Settings in the window too.** The Settings page edits the same saved table as Blizzard's panel, which
+    reads that table live, so both always agree. New setting `minimapButton` (default on); Blizzard's panel
+    gained that checkbox (8 controls).
+35. **No Esc-to-close.** Esc closing needs either a named global frame in `UISpecialFrames` (a second
+    global, against the rules) or taking keyboard input with `SetPropagateKeyboardInput`, which is restricted
+    in combat. Safest option: the close cross, `/sr`, the minimap button and the compartment all toggle the
+    window.
+36. **Rate page by itself.** Opening the Rate page from the sidebar shows every group still waiting (up to 6,
+    newest first), or an "All caught up" state. A count of players waiting shows on the Rate entry and as a
+    pulsing gold dot on the minimap button.
+37. **Author credit.** "by Nivlemoth" on the About page and at the foot of the sidebar, as John asked.
+38. **Version 0.3.0.** No database change; schema stays 1. Two new settings keys get defaults on load.
