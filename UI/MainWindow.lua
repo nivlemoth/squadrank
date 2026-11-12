@@ -52,8 +52,11 @@ local function playerItems()
 			stats.trusted = stats.trusted + 1
 		end
 		local name = ns.Players.DisplayName(rec)
+		local labelPass = not view.label
+			or (view.label == "avoid" and rec.avoid)
+			or (view.label ~= "avoid" and summary.label == view.label)
 		local pass = (view.search == "" or name:lower():find(view.search, 1, true))
-			and (not view.label or summary.label == view.label)
+			and labelPass
 			and (not view.role or summary.roles[view.role])
 			and (not view.tag or hasTag(summary, view.tag))
 		if pass then
@@ -138,6 +141,12 @@ local function playerMenu(row, item)
 			end)
 		)
 		root:CreateButton(
+			item.rec.avoid and L.MENU_UNAVOID or L.MENU_AVOID,
+			ns.Safe("menu avoid", function()
+				MainWindow.SetAvoid(item.pid, not item.rec.avoid)
+			end)
+		)
+		root:CreateButton(
 			L.MENU_PURGE,
 			ns.Safe("menu purge", function()
 				ns.Slash.ConfirmPurgePlayer(item.pid)
@@ -196,8 +205,12 @@ local function fillPlayerRow(row, item)
 	row.srItem = item
 	local cols, summary = row.cols, item.summary
 	cols[1]:SetText(Compat.ClassColored(item.name, item.rec.classFile))
-	UI.SetColor(row.stripe, classColor(item.rec.classFile), 0.9)
-	row.pill:Set(L["LABEL_" .. summary.label], LABEL_COLORS[summary.label] or C.muted, 0.2)
+	UI.SetColor(row.stripe, item.rec.avoid and C.bad or classColor(item.rec.classFile), 0.9)
+	if item.rec.avoid then
+		row.pill:Set(L.LABEL_avoid, C.bad, 0.35)
+	else
+		row.pill:Set(L["LABEL_" .. summary.label], LABEL_COLORS[summary.label] or C.muted, 0.2)
+	end
 	cols[3]:SetText(tostring(summary.count))
 	local avg = summary.weighted
 	if summary.count > 0 and avg then
@@ -375,7 +388,7 @@ local function buildPlayers(page)
 	w.search = search
 
 	local labelOptions, roleOptions, tagOptions = {}, {}, {}
-	for _, label in ipairs({ "trusted", "mixed", "caution", "new" }) do
+	for _, label in ipairs({ "trusted", "mixed", "caution", "new", "avoid" }) do
 		labelOptions[#labelOptions + 1] = { value = label, text = L["LABEL_" .. label] }
 	end
 	for _, role in ipairs(ns.Ratings.ROLES) do
@@ -475,6 +488,39 @@ function MainWindow.Refresh()
 	if ns.Hub.IsShown() then
 		Events.RunOutOfCombat("main refresh", doRefresh)
 	end
+end
+
+-- Puts a player on the avoid list or takes them off it. Writes only out of combat.
+function MainWindow.SetAvoid(pid, on)
+	if ns.readOnly then
+		ns.Print(L.MSG_READONLY:format(tostring(ns.readOnlyReason)))
+		return
+	end
+	if Compat.InCombat() then
+		ns.Print(L.MSG_COMBAT)
+		return
+	end
+	if ns.Players.SetAvoid(ns.db, pid, on) then
+		local name = ns.Players.DisplayName(ns.db.players[pid])
+		ns.Print((on and L.MSG_AVOID_ADDED or L.MSG_AVOID_REMOVED):format(name))
+		ns.Debug.Log("AVOID", "%s, hash %d", on and "added" or "removed", Util.Hash(pid))
+		ns.Slash.RefreshWindows()
+	end
+end
+
+-- From a unit's right-click menu: saves the player if needed, then toggles the flag.
+function MainWindow.ToggleAvoidUnit(unit)
+	if Compat.InCombat() then
+		ns.Print(L.MSG_COMBAT)
+		return
+	end
+	local ident = Compat.UnitIdentity(unit)
+	if not ident then
+		ns.Print(L.MSG_UNIT_UNKNOWN)
+		return
+	end
+	local pid = ns.Players.Resolve(ns.db, ident, Compat.Now(), Compat.Ruleset())
+	MainWindow.SetAvoid(pid, not ns.db.players[pid].avoid)
 end
 
 function MainWindow.Show(key)

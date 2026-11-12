@@ -11,7 +11,7 @@ local Compat = ns.Compat
 local SettingsUI = {}
 ns.SettingsUI = SettingsUI
 
-local CONTROLS = 8
+local CONTROLS = 13
 
 function SettingsUI.Register()
 	if not (Settings and Settings.RegisterVerticalLayoutCategory and Settings.RegisterAddOnSetting) then
@@ -81,6 +81,11 @@ function SettingsUI.Register()
 	slider("minRatings", L.SET_MIN, L.SET_MIN_TIP, 1, 10)
 	checkbox("promptAfterRun", L.SET_PROMPT, L.SET_PROMPT_TIP)
 	checkbox("recentAllies", L.SET_RECENT, L.SET_RECENT_TIP)
+	checkbox("avoidWarning", L.SET_AVOID, L.SET_AVOID_TIP)
+	checkbox("sound", L.SET_SOUND, L.SET_SOUND_TIP)
+	slider("minRunMinutes", L.SET_MIN_RUN, L.SET_MIN_RUN_TIP, 0, 30)
+	checkbox("tooltipInfo", L.SET_TOOLTIP, L.SET_TOOLTIP_TIP)
+	checkbox("allowShare", L.SET_SHARE, L.SET_SHARE_TIP)
 	checkbox("minimapButton", L.SET_MINIMAP, L.SET_MINIMAP_TIP, function()
 		if ns.MinimapButton then
 			ns.MinimapButton.Update()
@@ -109,6 +114,8 @@ local function changed(key)
 		ns.MinimapButton.Update()
 	elseif key == "minRatings" and ns.MainWindow then
 		ns.MainWindow.Refresh()
+	elseif key == "allowShare" and ns.PlayerDetail then
+		ns.PlayerDetail.Refresh()
 	end
 end
 
@@ -131,9 +138,14 @@ end
 
 local function buildPage(page)
 	local y = 0
+	-- More rows than fit: the page scrolls (mouse wheel glides, as elsewhere).
+	local holder = CreateFrame("Frame", nil, page)
+	holder:SetAllPoints()
+	local scroll, parent = UI.SmoothScroll(holder)
+	parent:SetWidth(600)
 
 	local function section(title)
-		local text = UI.Text(page, "GameFontNormalSmall")
+		local text = UI.Text(parent, "GameFontNormalSmall")
 		text:SetPoint("TOPLEFT", 2, -y - 6)
 		text:SetText(UI.Caps(title))
 		text:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
@@ -141,7 +153,7 @@ local function buildPage(page)
 	end
 
 	local function row(label, tip, makeControl)
-		local f = CreateFrame("Frame", nil, page)
+		local f = CreateFrame("Frame", nil, parent)
 		f:SetPoint("TOPLEFT", 0, -y)
 		f:SetPoint("TOPRIGHT", -14, -y)
 		f:SetHeight(ROW_H - 6)
@@ -176,19 +188,26 @@ local function buildPage(page)
 
 	section(L.SET_SECTION_ALERTS)
 	toggle("promptAfterRun", L.SET_PROMPT, L.SET_PROMPT_TIP_SHORT)
+	stepper("minRunMinutes", L.SET_MIN_RUN, L.SET_MIN_RUN_TIP, 0, 30)
 	toggle("toastEnabled", L.SET_TOAST, L.SET_TOAST_TIP)
 	stepper("toastDuration", L.SET_DURATION, L.SET_DURATION_TIP, 3, 30)
+	toggle("avoidWarning", L.SET_AVOID, L.SET_AVOID_TIP)
+	toggle("sound", L.SET_SOUND, L.SET_SOUND_TIP)
 	section(L.SET_SECTION_REPUTATION)
 	stepper("minRatings", L.SET_MIN, L.SET_MIN_TIP, 1, 10)
 	section(L.SET_SECTION_INTERFACE)
 	toggle("minimapButton", L.SET_MINIMAP, L.SET_MINIMAP_TIP)
+	toggle("tooltipInfo", L.SET_TOOLTIP, L.SET_TOOLTIP_TIP)
 	toggle("recentAllies", L.SET_RECENT, L.SET_RECENT_TIP)
 	section(L.SET_SECTION_DATA)
+	toggle("allowShare", L.SET_SHARE, L.SET_SHARE_TIP)
 	row(L.SET_PURGE_ALL, L.SET_PURGE_ALL_TIP, function(f)
 		return UI.FlatButton(f, L.BTN_DELETE_ALL, 110, 26, function()
 			UI.Confirm(L.CONFIRM_PURGE_ALL, ns.Slash.PurgeAll)
 		end, "danger")
 	end)
+	parent:SetHeight(y)
+	scroll.Repaint()
 end
 
 -- Values can change in Blizzard's panel too, so the controls re-read them on every visit.

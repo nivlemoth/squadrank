@@ -156,6 +156,14 @@ function mock.install()
 		end,
 	}
 	_G.GameTooltip = newObject("GameTooltip")
+	_G.PlaySound = noop
+	_G.SOUNDKIT = nil
+	_G.Enum = { TooltipDataType = { Unit = 2 } }
+	_G.TooltipDataProcessor = {
+		AddTooltipPostCall = function(_, fn)
+			world.tooltipPostCall = fn
+		end,
+	}
 	_G.Minimap = newObject("Frame")
 	_G.GetCursorPosition = function()
 		return 0, 0

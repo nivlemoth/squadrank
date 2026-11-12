@@ -22,7 +22,29 @@ describe("Runs.Evaluate", function()
 	before_each(function()
 		ns = helper.load()
 		db = ns.DB.Open(nil, NOW)
+		db.settings.minRunMinutes = 0
 		Runs = ns.Runs
+	end)
+
+	it("keeps a very short dungeon visit without asking for a rating", function()
+		db.settings.minRunMinutes = 3
+		Runs.Evaluate(db, inside(), NOW)
+		Runs.AddMember(db, "g:x", "dps")
+		local short = Runs.Finish(db, NOW + 60)
+		assert.equals("skipped", short.prompt)
+		Runs.Evaluate(db, inside(), NOW + 100)
+		Runs.AddMember(db, "g:x", "dps")
+		Runs.Evaluate(db, inside(), NOW + 400)
+		local long = Runs.Finish(db, NOW + 400)
+		assert.equals("pending", long.prompt)
+	end)
+
+	it("counts wipes on the current run only", function()
+		assert.is_false(Runs.AddWipe(db))
+		Runs.Evaluate(db, inside(), NOW)
+		Runs.AddWipe(db)
+		Runs.AddWipe(db)
+		assert.equals(2, db.currentRun.wipes)
 	end)
 
 	it("is idle in the open world when not grouped", function()

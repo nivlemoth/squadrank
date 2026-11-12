@@ -12,6 +12,10 @@ local PLURAL_FAMILIES = {
 	"MSG_LIST",
 	"RUN_BOSSES",
 	"RUN_QUESTS",
+	"STATS_GROUPED",
+	"RUN_WIPES",
+	"TOOLTIP_RATED",
+	"SHARE_RATED",
 }
 
 local function run(path, ns)

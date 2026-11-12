@@ -150,3 +150,13 @@ cover them: "minimap button" and "flat look".
 
 Self-test: "events seen" now also counts QUEST_TURNED_IN and QUEST_WATCH_UPDATE; the API list checks
 `C_QuestLog.GetTitleForQuestID` and `C_PvP.GetZonePVPInfo`.
+
+## Added for avoid list, tooltips and sounds (2026-11-12)
+
+| API | Source in Forever | Status | Guard / fallback |
+|---|---|---|---|
+| `PlaySound(soundKitID, ...)` | SoundDocumentation.lua | verified-src | type check, pcall; setting can turn it off |
+| `SOUNDKIT.IG_PLAYER_INVITE` (880), `TELL_MESSAGE` (3081), `RAID_WARNING` (8959) | Blizzard_SharedXML/Mainline/SoundKitConstants.lua | verified-src | numeric IDs used if SOUNDKIT is missing |
+| `TooltipDataProcessor.AddTooltipPostCall(type, func)` | Blizzard_SharedXMLGame/Tooltip/TooltipDataHandler.lua line 199 | verified-src | checked for nil; note in /sr debug |
+| `Enum.TooltipDataType.Unit` (2) | TooltipInfoSharedDocumentation.lua | verified-src | checked for nil |
+| `GameTooltip:GetUnit()` -> name, unit | Blizzard FrameXML (tooltip mixin) | not in generated docs | pcall; no line if it fails |

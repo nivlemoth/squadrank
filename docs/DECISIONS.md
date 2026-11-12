@@ -174,3 +174,29 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
 54. **Support link.** The About page shows `buymeacoffee.com/nivlemoth` in a read-only text box that selects
     itself on click for Ctrl+C. Addons cannot open web pages and SquadRank makes no network calls, so copy
     and paste is the only option. The link is not translated.
+
+## Avoid list, stats, sharing, wipes, sounds, short visits (2026-11-12, still 0.9.0-beta)
+
+55. **Avoid list = a flag on the player** (`rec.avoid = true`), never a label string. Set from the player list
+    menu, the history drawer or the party frame's right-click menu (which saves the player first). When an
+    avoided player joins, a red toast with the raid-warning sound appears, even if join toasts are off
+    (own setting, default on). They are listed under the "Avoid" option of the Label filter and on the
+    Stats page. Group-finder applicants are **not** checked: Forever's group finder (VanillaStyle) applicant
+    API is not verified, so this is left out rather than guessed.
+56. **Tooltip line.** Hovering a player you rated adds one line (label, average, count) or the red avoid
+    warning, via `TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit)`. Never in combat (no
+    database reads in combat), never for unknown players, never creates a record (`Players.Lookup`).
+    Setting "Show SquadRank in player tooltips", default on.
+57. **Short visits.** A dungeon or raid run shorter than `minRunMinutes` (default 3, 0 to 30) is stored with
+    prompt "skipped": it stays in the Runs tab and can be rated there, but no alert. Open-world groups keep
+    their own 5-minute rule.
+58. **Stats page** (new sidebar entry): totals (groups, hours, bosses, quests), most grouped with, highest
+    rated (2+ ratings), the avoid list, and groups by type. Computed on display by `Data/Stats.lua` (pure,
+    unit-tested); nothing new is saved.
+59. **Sharing is opt-in** (setting off by default). The Share link in the history drawer offers one plain
+    line to copy into chat: name, label, average, count, role averages and up to three tags. Notes are never
+    included, colour and escape codes are stripped. Nothing is sent by the addon itself.
+60. **Wipes.** `ENCOUNTER_END` with success 0 adds a wipe to the current run, queued like bosses. Shown in
+    the run summary and tooltip.
+61. **Sounds** use Blizzard sound kits (`SOUNDKIT.IG_PLAYER_INVITE` for the rating alert, `TELL_MESSAGE`
+    for join toasts, `RAID_WARNING` for avoid warnings), one setting for all (default on).

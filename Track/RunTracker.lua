@@ -6,7 +6,7 @@ local Debug = ns.Debug
 local Compat = ns.Compat
 local Events = ns.Events
 
-local RunTracker = { pendingBosses = {}, pendingQuests = {}, ticking = false, lastAction = nil }
+local RunTracker = { pendingBosses = {}, pendingQuests = {}, pendingWipes = 0, ticking = false, lastAction = nil }
 ns.RunTracker = RunTracker
 
 local RECHECK_SECONDS = 30
@@ -37,7 +37,10 @@ local function check()
 	for _, quest in ipairs(RunTracker.pendingQuests) do
 		ns.Runs.AddQuest(db, quest.id, quest.title, quest.done)
 	end
-	RunTracker.pendingBosses, RunTracker.pendingQuests = {}, {}
+	for _ = 1, RunTracker.pendingWipes do
+		ns.Runs.AddWipe(db)
+	end
+	RunTracker.pendingBosses, RunTracker.pendingQuests, RunTracker.pendingWipes = {}, {}, 0
 
 	local state = Compat.InstanceState()
 	local action, finished = ns.Runs.Evaluate(db, state, Compat.Now(), Compat.Ruleset())
@@ -101,8 +104,12 @@ end
 -- Bosses and quests are metadata only: nothing else depends on these events firing in Forever.
 -- Outside a run (not grouped) they are dropped when the queue is applied.
 Events.On("ENCOUNTER_END", "RunTracker", function(_, encounterID, encounterName, _, _, success)
-	if Compat.Clean(success, "number") == 1 then
+	local result = Compat.Clean(success, "number")
+	if result == 1 then
 		queue(RunTracker.pendingBosses, { id = Compat.Clean(encounterID, "number"), name = cleanName(encounterName) })
+	elseif result == 0 and RunTracker.pendingWipes < QUEUE_LIMIT then
+		RunTracker.pendingWipes = RunTracker.pendingWipes + 1
+		schedule()
 	end
 end)
 

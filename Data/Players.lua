@@ -127,6 +127,29 @@ function Players.Resolve(db, ident, now, ruleset)
 	return pid, rec
 end
 
+-- The pid of an identity already saved, or nil. Never creates a record (used by tooltips).
+function Players.Lookup(db, ident)
+	if type(ident) ~= "table" or type(ident.name) ~= "string" then
+		return nil
+	end
+	if ident.guid and db.players["g:" .. ident.guid] then
+		return "g:" .. ident.guid
+	end
+	local nameKey = Util.NameKey(ident.name, ident.suffix)
+	local pid = Players.index[nameKey] or nameKey
+	return db.players[pid] and pid or nil
+end
+
+-- The avoid list is a flag on the player record (true or nil), never a translated label.
+function Players.SetAvoid(db, pid, on)
+	local rec = db.players[pid]
+	if not rec then
+		return false
+	end
+	rec.avoid = on and true or nil
+	return true
+end
+
 -- Exact, case-insensitive match on "Name" or "Name-Suffix". Returns a list of pids.
 function Players.Find(db, query)
 	local q = Util.Trim(tostring(query or "")):lower()

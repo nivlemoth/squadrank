@@ -15,6 +15,11 @@ DB.DEFAULT_SETTINGS = {
 	simpleLists = false,
 	minimapButton = true,
 	minimapAngle = 200,
+	avoidWarning = true,
+	sound = true,
+	minRunMinutes = 3,
+	tooltipInfo = true,
+	allowShare = false,
 }
 
 DB.LIMITS = {
@@ -45,6 +50,7 @@ local function repair(db)
 	db.settings.toastDuration = Util.Clamp(db.settings.toastDuration, 3, 30)
 	db.settings.minRatings = Util.Clamp(math.floor(db.settings.minRatings), 1, 10)
 	db.settings.minimapAngle = db.settings.minimapAngle % 360
+	db.settings.minRunMinutes = Util.Clamp(math.floor(db.settings.minRunMinutes), 0, 30)
 end
 
 -- Turns whatever was loaded from SavedVariables into a usable database.

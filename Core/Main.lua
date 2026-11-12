@@ -48,6 +48,7 @@ Events.On("ADDON_LOADED", "Main", function(_, name)
 
 	optional("SettingsUI", "Register")
 	optional("UnitMenu", "Register")
+	optional("UnitTooltip", "Register")
 end)
 
 Events.On("PLAYER_LOGIN", "Main", function()

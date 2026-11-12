@@ -25,6 +25,60 @@ function UI.LabelText(label)
 	return "|c" .. (LABEL_COLOR[label] or LABEL_COLOR.new) .. L["LABEL_" .. label] .. "|r"
 end
 
+-- Sounds, from Blizzard's own sound kits (SoundKitConstants.lua). Off when the setting is off.
+local SOUNDS = {
+	alert = { "IG_PLAYER_INVITE", 880 },
+	join = { "TELL_MESSAGE", 3081 },
+	avoid = { "RAID_WARNING", 8959 },
+}
+
+function UI.PlaySound(kind)
+	local db = ns.db
+	local sound = SOUNDS[kind]
+	if not (db and db.settings.sound and sound and type(PlaySound) == "function") then
+		return
+	end
+	local id = type(SOUNDKIT) == "table" and SOUNDKIT[sound[1]] or sound[2]
+	pcall(PlaySound, id)
+end
+
+-- A one-line, plain-text summary of a player for chat: no colours, no escape codes, never notes.
+function UI.ShareText(rec)
+	local summary = ns.Ratings.Summary(rec, Compat.Now(), ns.db.settings.minRatings)
+	local name = Util.Sanitize(ns.Players.DisplayName(rec), 64)
+	if summary.count == 0 or not summary.weighted then
+		return L.SHARE_NONE:format(name)
+	end
+	local parts = {
+		ns.Locale.Count(
+			"SHARE_RATED",
+			summary.count,
+			name,
+			L["LABEL_" .. summary.label],
+			summary.weighted,
+			summary.count
+		),
+	}
+	local roles = {}
+	for _, role in ipairs(ns.Ratings.ROLES) do
+		local stat = summary.roles[role]
+		if stat then
+			roles[#roles + 1] = ("%s %.1f"):format(L["ROLE_" .. role], stat.avg)
+		end
+	end
+	if #roles > 0 then
+		parts[#parts + 1] = L.SHARE_ROLES:format(table.concat(roles, L.LIST_SEP))
+	end
+	if #summary.topTags > 0 then
+		local ids = {}
+		for i = 1, math.min(3, #summary.topTags) do
+			ids[i] = summary.topTags[i].id
+		end
+		parts[#parts + 1] = L.FMT_TAGS:format(UI.TagNames(ids))
+	end
+	return (table.concat(parts, " "):gsub("|", ""))
+end
+
 -- Upper case for small headings. string.upper only knows ASCII, so text with any other
 -- letters (German umlauts, Cyrillic, Korean, Chinese) is shown as written instead of mangled.
 function UI.Caps(text)
@@ -153,6 +207,10 @@ function UI.RunSummary(run)
 	if bosses > 0 then
 		parts[#parts + 1] = ns.Locale.Count("RUN_BOSSES", bosses, bosses)
 	end
+	local wipes = run.wipes or 0
+	if wipes > 0 then
+		parts[#parts + 1] = ns.Locale.Count("RUN_WIPES", wipes, wipes)
+	end
 	local quests = #(run.quests or {})
 	if quests > 0 then
 		parts[#parts + 1] = ns.Locale.Count("RUN_QUESTS", quests, quests)
@@ -188,6 +246,9 @@ function UI.RunTooltip(owner, run)
 	if run.startedAt and run.endedAt and run.endedAt > run.startedAt then
 		local minutes = math.max(1, math.floor((run.endedAt - run.startedAt) / 60 + 0.5))
 		GameTooltip:AddLine(L.RUN_TIP_DURATION:format(minutes), 0.7, 0.7, 0.7)
+	end
+	if (run.wipes or 0) > 0 then
+		GameTooltip:AddLine(ns.Locale.Count("RUN_WIPES", run.wipes, run.wipes), 0.9, 0.45, 0.4)
 	end
 
 	local function section(title, names)

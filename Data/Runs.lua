@@ -108,8 +108,11 @@ function Runs.Finish(db, now)
 	run.outsideSince = nil
 	run.lastInside = nil
 	run.groupSize = #run.members + 1
-	-- Battlegrounds hold up to 40 strangers: kept in the Runs tab, but no "Rate your squad" alert.
-	run.prompt = run.instanceType == "pvp" and "skipped" or "pending"
+	-- Battlegrounds hold up to 40 strangers, and a dungeon left after a minute or two is not worth
+	-- asking about: both are kept in the Runs tab, but without the "Rate your squad" alert.
+	local minimum = (db.settings and tonumber(db.settings.minRunMinutes) or 0) * 60
+	local short = run.kind ~= "group" and (run.endedAt - (run.startedAt or run.endedAt)) < minimum
+	run.prompt = (run.instanceType == "pvp" or short) and "skipped" or "pending"
 	db.runs[run.id] = run
 	return run
 end
@@ -218,6 +221,16 @@ function Runs.AddBoss(db, encounterID, name, now)
 	if #run.bosses < Runs.MAX_BOSSES then
 		run.bosses[#run.bosses + 1] = { id = encounterID, name = name, at = now }
 	end
+	return true
+end
+
+-- A failed boss attempt (a wipe) during the current run.
+function Runs.AddWipe(db)
+	local run = db.currentRun
+	if not run then
+		return false
+	end
+	run.wipes = (run.wipes or 0) + 1
 	return true
 end
 

@@ -64,15 +64,20 @@ local function scan()
 		Roster.retries = 0
 	end
 
-	if #fresh > 0 and db.settings.toastEnabled and ns.Toast then
-		local known = {}
+	if #fresh > 0 and ns.Toast then
+		local known, avoided = {}, {}
 		for _, pid in ipairs(fresh) do
 			local rec = db.players[pid]
-			if rec and #rec.ratings > 0 then
+			if rec and rec.avoid then
+				avoided[#avoided + 1] = pid
+			elseif rec and #rec.ratings > 0 then
 				known[#known + 1] = pid
 			end
 		end
-		if #known > 0 then
+		if #avoided > 0 and db.settings.avoidWarning then
+			ns.Toast.ShowAvoid(avoided)
+		end
+		if #known > 0 and db.settings.toastEnabled then
 			ns.Toast.ShowJoin(known)
 		end
 	end

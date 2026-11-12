@@ -37,6 +37,8 @@ read_globals = {
 	"CreateSettingsButtonInitializer",
 	"MinimalSliderWithSteppersMixin",
 	"CreateColor",
+	"PlaySound",
+	"SOUNDKIT",
 	"GetCursorPosition",
 	"GetLocale",
 	-- unit and group

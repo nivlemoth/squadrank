@@ -14,6 +14,18 @@ Everything from 0.1.0 to 0.3.0 below, plus:
 - **New tags:** "Needed off-spec loot" (negative) and "Led the group well" (positive).
 - **Support SquadRank:** the About page has a link to copy: buymeacoffee.com/nivlemoth.
 
+## New: avoid list, stats and more
+
+- **Avoid list.** Mark a player to avoid (player list, history, or right-click their party frame). If they
+  join your group you get a red warning with a sound. They show in red in your list and on the Stats page.
+- **Player tooltips.** Hover a player you rated to see their SquadRank reputation, or the avoid warning.
+- **Stats page.** Groups, hours, bosses and quests in total; who you group with most; who you rated highest;
+  your avoid list; and your groups by type.
+- **Wipes** are counted per dungeon or raid run.
+- **No prompt for quick dungeon visits** (under 3 minutes by default, adjustable).
+- **Share a player summary** (opt-in in Settings): one line to copy into chat. Your notes are never included.
+- **Sounds** for the rating alert, join toasts and avoid warnings, with a setting to turn them off.
+
 ## New: SquadRank in your language
 
 - **Follows your game language.** German, French, Spanish (Spain and Latin America), Brazilian Portuguese,

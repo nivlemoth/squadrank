@@ -48,8 +48,10 @@ describe("whole addon against a fake client", function()
 		assert.equals(ns.db, SquadRankDB)
 		assert.equals("function", type(SlashCmdList.SQUADRANK))
 		assert.equals("function", type(SquadRank_OnAddonCompartmentClick))
-		assert.equals("ok, 8 of 8 controls", ns.Debug.notes.settings)
+		assert.equals("ok, 13 of 13 controls", ns.Debug.notes.settings)
 		assert.equals("ok, 5 of 5 menus", ns.Debug.notes.unitMenu)
+		assert.equals("ok", ns.Debug.notes.tooltip)
+		world.tooltipPostCall(GameTooltip)
 	end)
 
 	it("runs the self-test and builds the debug report without errors", function()
@@ -296,13 +298,74 @@ describe("whole addon against a fake client", function()
 		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
 		mock.flush()
 		local stored = ns.Runs.List(SquadRankDB)[1]
-		assert.equals("Dungeon  ·  1 boss  ·  2 quests", ns.UI.RunSummary(stored))
+		assert.equals("Dungeon  ·  1 boss  ·  1 wipe  ·  2 quests", ns.UI.RunSummary(stored))
+		assert.equals(1, stored.wipes)
 		ns.Hub.Show("runs")
 		assert.is_true(mock.click("Type: All"))
 		world.lastMenu.entries.Dungeon()
 		assert.is_true(mock.click("Type: Dungeon"))
 		ns.UI.RunTooltip(UIParent, stored)
 		ns.Hub.Show("about")
+		noErrors()
+	end)
+
+	it("warns about avoided players, shows stats, shares only when allowed, and plays sounds", function()
+		local sounds = {}
+		_G.PlaySound = function(id)
+			sounds[#sounds + 1] = id
+		end
+		_G.SOUNDKIT = { RAID_WARNING = 8959, TELL_MESSAGE = 3081, IG_PLAYER_INVITE = 880 }
+
+		SlashCmdList.SQUADRANK("rate Bob")
+		assert.is_true(mock.click("5"))
+		ns.db.players["n:bob"].ratings[1].note = "private words"
+
+		-- Avoid from the party frame menu; the record is re-keyed to Bob's GUID.
+		world.units.party1 = BOB
+		local root = mock.menuRoot()
+		world.menus.MENU_UNIT_PARTY(nil, root, { unit = "party1" })
+		root.entries["Add to avoid list"]()
+		local pid = "g:" .. BOB.guid
+		assert.is_true(ns.db.players[pid].avoid)
+		assert.equals(1, #ns.db.players[pid].ratings)
+		assert.equals("SquadRank: on your avoid list", (ns.UnitTooltip.Line("party1")))
+		local again = mock.menuRoot()
+		world.menus.MENU_UNIT_PARTY(nil, again, { unit = "party1" })
+		assert.is_not_nil(again.entries["Remove from avoid list"])
+
+		-- Bob joins: a red warning with the warning sound instead of the usual toast.
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		roster()
+		assert.is_not_nil(ns.Toast.current.title:find("avoid list", 1, true))
+		assert.equals(8959, sounds[#sounds])
+
+		-- The Players page filter and the Stats page both know the avoid list.
+		ns.Hub.Show("players")
+		assert.is_true(mock.click("Label: All"))
+		world.lastMenu.entries.Avoid()
+		assert.is_true(listedPlayers()[pid])
+		ns.Hub.Show("stats")
+		assert.same({ pid }, ns.Stats.Compute(ns.db, world.now, 3).avoided)
+
+		-- Sharing is off by default; when allowed, the line never carries notes or escape codes.
+		ns.PlayerDetail.Open(pid)
+		assert.is_false(ns.PlayerDetail.ShareButton():IsShown())
+		ns.db.settings.allowShare = true
+		ns.PlayerDetail.Refresh()
+		assert.is_true(ns.PlayerDetail.ShareButton():IsShown())
+		mock.press(ns.PlayerDetail.ShareButton())
+		local text = ns.PlayerDetail.ShareText()
+		assert.equals("[SquadRank] Bob: New, average 5.0 from 1 rating. Roles: DPS 5.0.", text)
+		assert.is_nil(text:find("private", 1, true))
+
+		-- Taking Bob off the list from the drawer; sounds stay quiet when switched off.
+		assert.is_true(mock.click("Don't avoid"))
+		assert.is_nil(ns.db.players[pid].avoid)
+		ns.db.settings.sound = false
+		local before = #sounds
+		ns.UI.PlaySound("alert")
+		assert.equals(before, #sounds)
+		_G.PlaySound, _G.SOUNDKIT = nil, nil
 		noErrors()
 	end)
 

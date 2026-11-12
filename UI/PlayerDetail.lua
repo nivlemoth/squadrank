@@ -93,6 +93,16 @@ local function paint(rec)
 
 	local labelColor = ({ trusted = C.good, mixed = C.gold, caution = C.bad })[summary.label] or C.muted
 	w.label:Set(L["LABEL_" .. summary.label], labelColor, 0.22)
+	w.avoidPill:SetShown(rec.avoid == true)
+	w.avoid:SetText(rec.avoid and L.BTN_UNAVOID or L.BTN_AVOID)
+	w.share:SetShown(db.settings.allowShare == true)
+	if w.sharePanel:IsShown() then
+		if db.settings.allowShare then
+			w.shareBox:SetText(UI.ShareText(rec))
+		else
+			w.sharePanel:Hide()
+		end
+	end
 
 	if summary.count > 0 and summary.weighted then
 		w.score:SetText(UI.Colorize(("%.1f"):format(summary.weighted), UI.ScoreColor(summary.weighted)))
@@ -161,6 +171,26 @@ local function build(page)
 	w.sub:SetPoint("TOPLEFT", 18, -38)
 	w.label = UI.Pill(drawer)
 	w.label:SetPoint("TOPLEFT", 18, -56)
+	w.avoidPill = UI.Pill(drawer)
+	w.avoidPill:SetPoint("LEFT", w.label, "RIGHT", 6, 0)
+	w.avoidPill:Set(L.LABEL_avoid, C.bad, 0.35)
+	w.avoidPill:Hide()
+
+	-- Share (opt-in): a plain one-line summary to copy into chat. Never includes notes.
+	w.share = UI.FlatButton(drawer, L.SHARE_BTN, 64, 20, function()
+		if not currentPid then
+			return
+		end
+		if w.sharePanel:IsShown() then
+			w.sharePanel:Hide()
+			return
+		end
+		w.shareBox:SetText(UI.ShareText(ns.db.players[currentPid]))
+		w.sharePanel:Show()
+		w.shareBox:SetFocus()
+		w.shareBox:HighlightText()
+	end, "link")
+	w.share:SetPoint("TOPRIGHT", -34, -8)
 
 	w.score = UI.Text(drawer, "GameFontHighlightHuge2")
 	w.score:SetPoint("TOPLEFT", 18, -84)
@@ -191,18 +221,25 @@ local function build(page)
 	w.tags:SetPoint("TOPLEFT", 18, -144)
 	w.tags:SetWidth(WIDTH - 36)
 
-	local rate = UI.FlatButton(drawer, L.BTN_RATE, 140, 28, function()
+	local rate = UI.FlatButton(drawer, L.BTN_RATE, 96, 28, function()
 		if currentPid and not Compat.InCombat() then
 			ns.RateFrame.OpenPlayers({ currentPid })
 		end
 	end, "primary")
 	rate:SetPoint("TOPLEFT", 18, -168)
-	local purge = UI.FlatButton(drawer, L.BTN_PURGE, 100, 28, function()
+	w.avoid = UI.FlatButton(drawer, L.BTN_AVOID, 96, 28, function()
+		local rec = currentPid and ns.db.players[currentPid]
+		if rec then
+			ns.MainWindow.SetAvoid(currentPid, not rec.avoid)
+		end
+	end, "ghost")
+	w.avoid:SetPoint("LEFT", rate, "RIGHT", 8, 0)
+	local purge = UI.FlatButton(drawer, L.BTN_PURGE, 96, 28, function()
 		if currentPid then
 			ns.Slash.ConfirmPurgePlayer(currentPid)
 		end
 	end, "danger")
-	purge:SetPoint("LEFT", rate, "RIGHT", 8, 0)
+	purge:SetPoint("LEFT", w.avoid, "RIGHT", 8, 0)
 
 	local history = UI.Text(drawer, "GameFontDisableSmall")
 	history:SetPoint("TOPLEFT", 18, -212)
@@ -223,11 +260,34 @@ local function build(page)
 	body:SetWidth(WIDTH - 50)
 	body:SetWordWrap(true)
 	body:SetSpacing(3)
+
+	-- The share panel covers the top of the history while open.
+	w.sharePanel = CreateFrame("Frame", nil, drawer)
+	w.sharePanel:SetPoint("TOPLEFT", 12, -204)
+	w.sharePanel:SetPoint("TOPRIGHT", -12, -204)
+	w.sharePanel:SetHeight(64)
+	w.sharePanel:SetFrameLevel((drawer:GetFrameLevel() or 1) + 10)
+	w.sharePanel:EnableMouse(true)
+	UI.Fill(w.sharePanel, C.bg, 1)
+	UI.Border(w.sharePanel, C.accent, 0.5)
+	local holderBox
+	holderBox, w.shareBox = UI.TextBox(w.sharePanel, WIDTH - 48, 24, "", 255)
+	holderBox:SetPoint("TOPLEFT", 6, -8)
+	w.shareBox:HookScript("OnEditFocusGained", function(self)
+		self:HighlightText()
+	end)
+	local shareHint = UI.Text(w.sharePanel, "GameFontDisableSmall")
+	shareHint:SetPoint("TOPLEFT", 8, -40)
+	shareHint:SetWidth(WIDTH - 52)
+	shareHint:SetWordWrap(false)
+	shareHint:SetText(L.SHARE_HINT)
+	w.sharePanel:Hide()
 end
 
 function PlayerDetail.Close()
 	if drawer and drawer:IsShown() then
 		currentPid = nil
+		w.sharePanel:Hide()
 		slide(false)
 	end
 end
@@ -264,6 +324,9 @@ function PlayerDetail.Open(pid)
 		build(page)
 	end
 	local switching = currentPid ~= nil and currentPid ~= pid and drawer:IsShown()
+	if currentPid ~= pid then
+		w.sharePanel:Hide()
+	end
 	currentPid = pid
 	paint(ns.db.players[pid])
 	scroll.Reset()
@@ -277,4 +340,13 @@ end
 
 function PlayerDetail.Current()
 	return currentPid
+end
+
+-- The text currently offered for copying, or nil (used by the tests).
+function PlayerDetail.ShareText()
+	return w.sharePanel and w.sharePanel:IsShown() and w.shareBox:GetText() or nil
+end
+
+function PlayerDetail.ShareButton()
+	return w.share
 end

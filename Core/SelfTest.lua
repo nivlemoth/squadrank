@@ -221,6 +221,8 @@ for _, path in ipairs({
 	"C_ClassColor.GetClassColor",
 	"C_QuestLog.GetTitleForQuestID",
 	"C_PvP.GetZonePVPInfo",
+	"TooltipDataProcessor.AddTooltipPostCall",
+	"PlaySound",
 	"C_Timer.After",
 	"StaticPopup_Show",
 	"ButtonFrameTemplate_HidePortrait",

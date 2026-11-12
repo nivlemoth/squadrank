@@ -68,7 +68,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 31 | `/sr`, type part of a name in the search box | The list narrows as you type. |
 | 32 | Click **Label: All**, choose **Trusted** | Only Trusted players remain; the button reads "Label: Trusted". Set it back to All. |
 | 33 | Scroll the list (rate a few players first, or skip if the list is short) | Smooth scrolling. If the list is blank or broken: `/sr debug lists`, `/reload`, and tell me. |
-| 34 | Esc > Options > AddOns > SquadRank | Eight controls. The last is "Show the minimap button". |
+| 34 | Esc > Options > AddOns > SquadRank | 13 controls, including "Show the minimap button", "Warn when an avoided player joins" and "Play sounds". |
 | 35 | Untick "Show a toast when a rated player joins". Repeat step 17 | No toast. Tick it again. |
 | 36 | Untick "Offer to rate your squad when a group ends". Repeat step 21 | No alert. Tick it again. |
 | 37 | Set "Ratings needed for a label" to 1, reopen `/sr` | Players with one rating now show a label instead of "New". Set it back to 3. |
@@ -112,6 +112,21 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 53 | Rate someone, open the card: tags | 8 positive tags including "Led the group well"; "Negative tags..." next to the note box shows 8 including "Needed off-spec loot". |
 | 54 | About page, click the coffee link, Ctrl+C, paste it in a browser | The link selects itself, cannot be edited, and pastes as buymeacoffee.com/nivlemoth. |
 | 55 | `/sr selftest`, `/sr debug` after 49-50 | "events seen" shows QUEST_TURNED_IN and QUEST_WATCH_UPDATE above 0. Send me the line. |
+
+## I. Avoid list, stats, sharing, sounds
+
+| # | Do this | Expected |
+|---|---|---|
+| 56 | Right-click a party member's frame | Under "Rate in SquadRank": "Add to avoid list". Click it: chat says they are on your avoid list. |
+| 57 | Hover that player | Their tooltip has a red line "SquadRank: on your avoid list". Hover someone you rated (not avoided): "SquadRank: <label>, 4.0 from 1 rating". |
+| 58 | Leave the group, invite them again | A red toast "A player on your avoid list joined your group" with the raid-warning sound. |
+| 59 | `/sr` > Players > **Label: All** > Avoid | Only avoided players, with a red "Avoid" label. Open one: the drawer shows Avoid in red and a **Don't avoid** button. Click it. |
+| 60 | Sidebar > **Stats** | Four totals, three lists (names open the history drawer), bars by group type that grow in. |
+| 61 | Settings > Your data > turn on "Allow sharing player summaries". Open a player, click **Share** (top right of the drawer) | A box with one line, already selected: Ctrl+C, paste in chat. No notes, no colours. |
+| 62 | Enter a dungeon and leave within a minute, then leave the group | No alert. The run is in the Runs tab as Skipped. |
+| 63 | Wipe on a boss | Runs tab tooltip shows "1 wipe" for that run. |
+| 64 | Settings > Play sounds off; repeat step 58 | The warning shows with no sound. |
+| 65 | `/sr selftest` | "TooltipDataProcessor.AddTooltipPostCall" and "PlaySound" rows PASS; `/sr debug` notes show "tooltip: ok". |
 
 ## What I most need back
 

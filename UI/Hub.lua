@@ -15,11 +15,12 @@ ns.Hub = Hub
 local WIDTH, HEIGHT = 820, 560
 local SIDEBAR, HEADER, PAD = 176, 52, 16
 local NAV_H = 36
-local ORDER = { "rate", "players", "runs", "settings", "about" }
+local ORDER = { "rate", "players", "runs", "stats", "settings", "about" }
 local ICONS = {
 	rate = "Interface\\Icons\\INV_Misc_Note_01",
 	players = "Interface\\Icons\\INV_Misc_GroupLooking",
 	runs = "Interface\\Icons\\INV_Misc_Map_01",
+	stats = "Interface\\Icons\\INV_Misc_Spyglass_03",
 	settings = "Interface\\Icons\\Trade_Engineering",
 	about = "Interface\\Icons\\INV_Misc_Book_09",
 }

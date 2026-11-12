@@ -15,6 +15,7 @@ local FILES = {
 	"Data/Ratings.lua",
 	"Data/Runs.lua",
 	"Data/Session.lua",
+	"Data/Stats.lua",
 }
 
 local helper = {}

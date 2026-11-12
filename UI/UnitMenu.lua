@@ -1,4 +1,4 @@
--- Adds "Rate in SquadRank" to the right-click menu of player unit frames, using
+-- Adds "Rate in SquadRank" and the avoid-list toggle to the right-click menu of player unit frames, using
 -- Blizzard's supported Menu.ModifyMenu hook. Tags are "MENU_UNIT_" .. menu name, as built in
 -- Blizzard_UnitPopupShared/UnitPopupShared.lua.
 local _, ns = ...
@@ -31,6 +31,16 @@ local function addEntry(_, root, contextData)
 		L.MENU_RATE,
 		ns.Safe("unit menu click", function()
 			ns.RateFrame.OpenUnit(unit)
+		end)
+	)
+	-- The label shows the current state only when the player is already saved (read out of combat).
+	local db = ns.db
+	local pid = db and not ns.Compat.InCombat() and ns.Players.Lookup(db, ns.Compat.UnitIdentity(unit))
+	local avoided = pid and db.players[pid].avoid
+	root:CreateButton(
+		avoided and L.MENU_UNAVOID or L.MENU_AVOID,
+		ns.Safe("unit menu avoid", function()
+			ns.MainWindow.ToggleAvoidUnit(unit)
 		end)
 	)
 end

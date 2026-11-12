@@ -64,6 +64,10 @@ local function display(toast)
 		build()
 	end
 	frame.title:SetText(toast.title)
+	UI.SetColor(frame.srAccent, toast.accent or UI.C.accent, 0.9)
+	if toast.sound then
+		UI.PlaySound(toast.sound)
+	end
 	frame.body:SetText(table.concat(toast.lines, "\n"))
 	frame:SetHeight(PADDING + frame.title:GetStringHeight() + 6 + frame.body:GetStringHeight() + PADDING)
 
@@ -92,7 +96,7 @@ local function pump()
 	display(table.remove(Toast.queue, 1))
 end
 
--- toast = { title, lines = {...}, duration, onClick }
+-- toast = { title, lines = {...}, duration, onClick, accent = colour?, sound = kind? }
 function Toast.Push(toast)
 	Toast.queue[#Toast.queue + 1] = toast
 	Events.RunOutOfCombat("toast", pump)
@@ -142,7 +146,13 @@ function Toast.ShowJoin(pids)
 		local summary = ns.Ratings.Summary(rec, now, minRatings)
 		local lines = UI.SummaryLines(summary)
 		table.insert(lines, 1, UI.ColoredName(rec) .. "   " .. UI.LabelText(summary.label))
-		Toast.Push({ title = L.TOAST_JOIN_PLAYER, lines = lines, duration = duration, onClick = openHistory(pids[1]) })
+		Toast.Push({
+			title = L.TOAST_JOIN_PLAYER,
+			lines = lines,
+			duration = duration,
+			onClick = openHistory(pids[1]),
+			sound = "join",
+		})
 		return
 	end
 
@@ -164,10 +174,33 @@ function Toast.ShowJoin(pids)
 		title = L.TOAST_JOIN_PLAYERS,
 		lines = lines,
 		duration = duration + 4,
+		sound = "join",
 		onClick = function()
 			if ns.MainWindow then
 				ns.MainWindow.Show()
 			end
 		end,
+	})
+end
+
+-- A red warning: players on the avoid list are in the group. Shown even when join toasts are off.
+function Toast.ShowAvoid(pids)
+	local db = ns.db
+	local lines = {}
+	for i, pid in ipairs(pids) do
+		if i > MAX_ROWS then
+			lines[#lines + 1] = L.FMT_MORE:format(#pids - MAX_ROWS)
+			break
+		end
+		lines[#lines + 1] = UI.ColoredName(db.players[pid])
+	end
+	Debug.Log("TOAST", "avoid warning for %d players", #pids)
+	Toast.Push({
+		title = UI.Colorize(#pids == 1 and L.TOAST_AVOID_PLAYER or L.TOAST_AVOID_PLAYERS, UI.C.bad),
+		lines = lines,
+		duration = db.settings.toastDuration + 4,
+		onClick = openHistory(pids[1]),
+		accent = UI.C.bad,
+		sound = "avoid",
 	})
 end

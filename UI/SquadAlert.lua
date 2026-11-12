@@ -113,6 +113,7 @@ local function show(runs)
 		return
 	end
 	Debug.Log("ALERT", "shown: %d runs, %d players", #runs, players)
+	UI.PlaySound("alert")
 	place(SLIDE)
 	frame:SetAlpha(0)
 	frame:Show()
