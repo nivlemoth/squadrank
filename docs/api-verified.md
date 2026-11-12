@@ -160,3 +160,5 @@ Self-test: "events seen" now also counts QUEST_TURNED_IN and QUEST_WATCH_UPDATE;
 | `TooltipDataProcessor.AddTooltipPostCall(type, func)` | Blizzard_SharedXMLGame/Tooltip/TooltipDataHandler.lua line 199 | verified-src | checked for nil; note in /sr debug |
 | `Enum.TooltipDataType.Unit` (2) | TooltipInfoSharedDocumentation.lua | verified-src | checked for nil |
 | `GameTooltip:GetUnit()` -> name, unit | Blizzard FrameXML (tooltip mixin) | not in generated docs | pcall; no line if it fails |
+
+| `C_PvP.IsWarModeActive()` -> bool | PvpInfoDocumentation.lua (namespace C_PvP) | verified-src | checked for nil; secret-checked; false if missing |

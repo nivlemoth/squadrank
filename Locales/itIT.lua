@@ -301,4 +301,15 @@ ns.Locale.Register("itIT", function(L)
 	L.TOOLTIP_RATED_OTHER = "SquadRank: %s, %.1f su %d valutazioni"
 	L.SHARE_RATED_ONE = "[SquadRank] %s: %s, media %.1f su %d valutazione."
 	L.SHARE_RATED_OTHER = "[SquadRank] %s: %s, media %.1f su %d valutazioni."
+
+	-- PvP page (1.0)
+	L.NAV_PVP = "PvP"
+	L.PVP_TITLE = "PvP e incursioni mondiali"
+	L.PVP_VIEW_GROUPS = "Gruppi"
+	L.PVP_VIEW_PLAYERS = "Giocatori incontrati"
+	L.PVP_INFO =
+		"Campi di battaglia, arene, PvP mondiale e incursioni mondiali stanno qui, così le altre liste restano pulite."
+	L.PVP_HINT = "I gruppi grandi non chiedono mai una valutazione. Clicca su un gruppo per valutarlo."
+	L.EMPTY_PVP_GROUPS = "Ancora nessun gruppo PvP o incursione mondiale."
+	L.EMPTY_PVP_PLAYERS = "Ancora nessuno incontrato in PvP o incursioni mondiali."
 end)

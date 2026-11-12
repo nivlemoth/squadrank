@@ -767,7 +767,7 @@ end
 local function pendingRuns()
 	local runs = {}
 	for _, run in ipairs(ns.Runs.List(ns.db)) do
-		if run.prompt == "pending" then
+		if run.prompt == "pending" and not ns.Runs.IsCrowd(run) then
 			runs[#runs + 1] = run
 			if #runs >= PENDING_LIMIT then
 				break

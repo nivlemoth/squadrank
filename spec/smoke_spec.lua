@@ -462,6 +462,74 @@ describe("whole addon against a fake client", function()
 		noErrors()
 	end)
 
+	it("keeps a 40-player world PvP raid on the PvP page, out of the main lists and the alert", function()
+		-- A dungeon friend first, rated, so the main list has something real in it.
+		world.units.party1 = EVE
+		world.instance = { name = "The Deadmines", type = "party", id = 36 }
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		mock.fire(ns, "PLAYER_ENTERING_WORLD", false, false)
+		roster()
+		world.now = world.now + 1200
+		world.instance = nil
+		world.units.party1 = nil
+		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
+		mock.flush()
+		ns.SquadAlert.Open()
+		mock.press(ns.RateFrame.FindCard("g:" .. EVE.guid).pips[5])
+		mock.flush()
+
+		-- Now a world PvP raid at Tarren Mill with 12 strangers and Bob, whom we rated before.
+		SlashCmdList.SQUADRANK("rate Bob")
+		assert.is_true(mock.click("4"))
+		world.zonePvP = "combat"
+		world.units.raid1 = BOB
+		for i = 2, 12 do
+			world.units["raid" .. i] = { name = "Grunt" .. i, guid = "Player-1-0000" .. (1000 + i), class = "WARRIOR" }
+		end
+		mock.fire(ns, "GROUP_JOINED", 0, "Raid-1-AAAA")
+		roster()
+		assert.equals("wpvp", ns.Runs.Category(SquadRankDB.currentRun))
+		world.now = world.now + 1800
+		for i = 1, 12 do
+			world.units["raid" .. i] = nil
+		end
+		mock.fire(ns, "GROUP_LEFT", 0, "Raid-1-AAAA")
+		mock.flush()
+		noErrors()
+
+		-- No alert, no badge, nothing on the Rate page for the raid.
+		assert.is_false(ns.SquadAlert.IsShown())
+		assert.equals(0, ns.Hub.PendingCount())
+
+		-- Players page: Eve and Bob (rated), none of the 11 strangers.
+		ns.Hub.Show("players")
+		local shown = listedPlayers()
+		assert.is_true(shown["g:" .. EVE.guid])
+		assert.is_true(shown["g:" .. BOB.guid])
+		assert.is_nil(shown["g:Player-1-00001002"])
+
+		-- PvP page: the raid in Groups, all 12 under Players met, the drawer opens there.
+		ns.Hub.Show("pvp")
+		assert.is_true(mock.click("Players met"))
+		shown = listedPlayers()
+		assert.is_true(shown["g:Player-1-00001002"])
+		assert.is_true(shown["g:" .. BOB.guid])
+		ns.PlayerDetail.Open("g:Player-1-00001002")
+		assert.is_true(ns.Hub.IsShown("pvp"))
+		assert.is_true(mock.click("Groups"))
+		assert.is_true(mock.click("Type: All"))
+		world.lastMenu.entries["World PvP"]()
+		assert.is_true(mock.click("Type: World PvP"))
+
+		-- Stats: the raid is counted as a group but not as "grouped with" for 12 people.
+		local stats = ns.Stats.Compute(ns.db, world.now, 3)
+		assert.equals(1, stats.byType.wpvp)
+		for _, entry in ipairs(stats.topGrouped) do
+			assert.is_nil(entry.pid:find("Player-1-00001", 1, true))
+		end
+		noErrors()
+	end)
+
 	it("records group members but shows no toast for unrated players", function()
 		world.units.party1 = BOB
 		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")

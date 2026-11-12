@@ -39,9 +39,12 @@ function Stats.Compute(db, now, minRatings)
 		result.quests = result.quests + (ns.Runs.QuestCounts(run))
 		local category = ns.Runs.Category(run)
 		result.byType[category] = (result.byType[category] or 0) + 1
-		for _, member in ipairs(run.members or {}) do
-			if db.players[member.pid] then
-				shared[member.pid] = (shared[member.pid] or 0) + 1
+		-- A 40-player raid is not "grouping with" 39 people: crowds don't count here.
+		if not ns.Runs.IsCrowd(run) then
+			for _, member in ipairs(run.members or {}) do
+				if db.players[member.pid] then
+					shared[member.pid] = (shared[member.pid] or 0) + 1
+				end
 			end
 		end
 	end

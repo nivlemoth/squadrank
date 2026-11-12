@@ -15,11 +15,12 @@ ns.Hub = Hub
 local WIDTH, HEIGHT = 820, 560
 local SIDEBAR, HEADER, PAD = 176, 52, 16
 local NAV_H = 36
-local ORDER = { "rate", "players", "runs", "stats", "settings", "about" }
+local ORDER = { "rate", "players", "runs", "pvp", "stats", "settings", "about" }
 local ICONS = {
 	rate = "Interface\\Icons\\INV_Misc_Note_01",
 	players = "Interface\\Icons\\INV_Misc_GroupLooking",
 	runs = "Interface\\Icons\\INV_Misc_Map_01",
+	pvp = "Interface\\Icons\\INV_BannerPVP_02",
 	stats = "Interface\\Icons\\INV_Misc_Spyglass_03",
 	settings = "Interface\\Icons\\Trade_Engineering",
 	about = "Interface\\Icons\\INV_Misc_Book_09",
@@ -340,7 +341,7 @@ function Hub.PendingCount()
 	end
 	local count = 0
 	for _, run in ipairs(ns.Runs.List(db)) do
-		if run.prompt == "pending" then
+		if run.prompt == "pending" and not ns.Runs.IsCrowd(run) then
 			count = count + math.max(0, #(run.members or {}) - ns.Runs.RatedCount(db, run))
 		end
 	end

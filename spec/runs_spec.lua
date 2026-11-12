@@ -64,6 +64,80 @@ describe("Runs.Evaluate", function()
 		assert.equals("skipped", finished.prompt)
 	end)
 
+	describe("the PvP area keeps crowds out of the main views", function()
+		local function stored(id, fields, members)
+			local run = { id = id, members = {}, prompt = "pending", endedAt = NOW - 60, startedAt = NOW - 3600 }
+			for k, v in pairs(fields) do
+				run[k] = v
+			end
+			for _, pid in ipairs(members) do
+				run.members[#run.members + 1] = { pid = pid }
+			end
+			db.runs[id] = run
+			return run
+		end
+
+		it("treats a raid group roaming with War Mode on as world PvP", function()
+			local state = outside(true)
+			state.inRaid, state.warMode = true, true
+			Runs.Evaluate(db, state, NOW)
+			assert.equals("wpvp", Runs.Category(db.currentRun))
+		end)
+
+		it("knows crowds from small groups", function()
+			assert.is_true(Runs.IsCrowd({ kind = "group", wpvp = true }))
+			assert.is_true(Runs.IsCrowd({ kind = "group", raid = true }))
+			assert.is_true(Runs.IsCrowd({ instanceType = "pvp" }))
+			assert.is_false(Runs.IsCrowd({ instanceType = "arena" }))
+			assert.is_true(Runs.InPvPArea({ instanceType = "arena" }))
+			assert.is_false(Runs.InPvPArea({ instanceType = "party" }))
+			assert.is_false(Runs.IsCrowd({ kind = "group", quests = { { id = 1 } } }))
+		end)
+
+		it("never offers a crowd in the alert, even one saved as pending by an older version", function()
+			stored("old", { kind = "group", wpvp = true, instanceName = "Hillsbrad" }, { "g:a", "g:b" })
+			stored("dm", { instanceType = "party", instanceName = "Deadmines" }, { "g:c" })
+			local list = Runs.AlertList(db, NOW)
+			assert.equals(1, #list)
+			assert.equals("dm", list[1].id)
+		end)
+
+		it("finishes a world PvP raid without asking", function()
+			local state = outside(true)
+			state.inRaid, state.zonePvP = true, "combat"
+			Runs.Evaluate(db, state, NOW)
+			Runs.AddMember(db, "g:x", "dps")
+			assert.equals("skipped", Runs.Finish(db, NOW + 1800).prompt)
+		end)
+
+		it("splits players met only in crowds from everyone else", function()
+			stored("raid", { kind = "group", raid = true }, { "g:stranger", "g:friend" })
+			stored("dm", { instanceType = "party" }, { "g:friend" })
+			stored("arena", { instanceType = "arena" }, { "g:mate" })
+			local crowdOnly, pvp = Runs.PlayerAreas(db)
+			assert.is_true(crowdOnly["g:stranger"])
+			assert.is_nil(crowdOnly["g:friend"])
+			assert.is_nil(crowdOnly["g:mate"])
+			assert.is_true(pvp["g:stranger"] and pvp["g:friend"] and pvp["g:mate"])
+		end)
+
+		it("forgets unrated crowd strangers after two weeks, keeps everyone who matters", function()
+			local old = NOW - 20 * 86400
+			for _, pid in ipairs({ "g:stranger", "g:rated", "g:avoided", "g:friend" }) do
+				db.players[pid] = { name = pid, lastSeen = old, ratings = {}, rulesets = {} }
+			end
+			db.players["g:rated"].ratings = { { score = 4, createdAt = old } }
+			db.players["g:avoided"].avoid = true
+			stored("raid", { kind = "group", wpvp = true }, { "g:stranger", "g:rated", "g:avoided", "g:friend" })
+			stored("dm", { instanceType = "party" }, { "g:friend" })
+			ns.DB.Prune(db, NOW)
+			assert.is_nil(db.players["g:stranger"])
+			assert.is_not_nil(db.players["g:rated"])
+			assert.is_not_nil(db.players["g:avoided"])
+			assert.is_not_nil(db.players["g:friend"])
+		end)
+	end)
+
 	describe("group types, bosses and quests", function()
 		local function run(fields)
 			local r = { members = {} }

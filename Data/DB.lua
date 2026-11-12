@@ -26,6 +26,8 @@ DB.LIMITS = {
 	runs = 300,
 	ratingsPerPlayer = 50,
 	staleDays = 180,
+	-- Unrated strangers met only in crowds (battlegrounds, world PvP, open-world raids) go sooner.
+	crowdStaleDays = 14,
 }
 
 local function fresh()
@@ -121,6 +123,8 @@ function DB.Prune(db, now)
 	end
 
 	local cutoff = now - limits.staleDays * 86400
+	local crowdCutoff = now - limits.crowdStaleDays * 86400
+	local crowdOnly = ns.Runs and ns.Runs.PlayerAreas(db) or {}
 	for pid, rec in pairs(db.players) do
 		if type(rec) ~= "table" then
 			db.players[pid] = nil
@@ -142,7 +146,8 @@ function DB.Prune(db, now)
 					removed.ratings = removed.ratings + 1
 				end
 			end
-			if #ratings == 0 and (rec.lastSeen or 0) < cutoff and not inCurrentRun[pid] then
+			local limit = (crowdOnly[pid] and not rec.avoid) and crowdCutoff or cutoff
+			if #ratings == 0 and not rec.avoid and (rec.lastSeen or 0) < limit and not inCurrentRun[pid] then
 				db.players[pid] = nil
 				removed.players = removed.players + 1
 			end

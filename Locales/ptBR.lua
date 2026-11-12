@@ -302,4 +302,14 @@ ns.Locale.Register("ptBR", function(L)
 	L.TOOLTIP_RATED_OTHER = "SquadRank: %s, %.1f de %d avaliações"
 	L.SHARE_RATED_ONE = "[SquadRank] %s: %s, média %.1f de %d avaliação."
 	L.SHARE_RATED_OTHER = "[SquadRank] %s: %s, média %.1f de %d avaliações."
+
+	-- PvP page (1.0)
+	L.NAV_PVP = "JxJ"
+	L.PVP_TITLE = "JxJ e raides mundiais"
+	L.PVP_VIEW_GROUPS = "Grupos"
+	L.PVP_VIEW_PLAYERS = "Jogadores vistos"
+	L.PVP_INFO = "Campos de batalha, arenas, JxJ mundial e raides mundiais ficam aqui para manter suas listas limpas."
+	L.PVP_HINT = "Grupos grandes nunca pedem avaliação. Clique em um grupo para avaliá-lo."
+	L.EMPTY_PVP_GROUPS = "Nenhum grupo de JxJ ou raide mundial ainda."
+	L.EMPTY_PVP_PLAYERS = "Ninguém visto em JxJ ou raides mundiais ainda."
 end)

@@ -128,6 +128,16 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 64 | Settings > Play sounds off; repeat step 58 | The warning shows with no sound. |
 | 65 | `/sr selftest` | "TooltipDataProcessor.AddTooltipPostCall" and "PlaySound" rows PASS; `/sr debug` notes show "tooltip: ok". |
 
+## J. PvP page (no clutter from big groups)
+
+| # | Do this | Expected |
+|---|---|---|
+| 66 | Join a world PvP or world boss raid (or a battleground) for a few minutes, then leave | No "Rate your squad" card, no gold number on Rate or the minimap. |
+| 67 | `/sr` > Players | None of the raid's strangers appear. Players you rated or avoid still do. |
+| 68 | Sidebar > **PvP** | The raid is under **Groups** (World PvP, World raid or PvP label). **Players met** lists its members; clicking one slides the history drawer in on this page. |
+| 69 | `/sr` > Runs | Only your PvE groups (questing, open world, dungeons, raids). The Type filter has only those four. |
+| 70 | Hover the raid on the PvP page | Same tooltip as on the Runs page (bosses, duration). Clicking it opens the Rate page if you do want to rate someone. |
+
 ## What I most need back
 
 1. The full `/sr debug` text after step 10 and after step 29.

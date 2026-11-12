@@ -226,3 +226,13 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
 68. **Own icon.** `Media/Icon.tga` (128x128, 32-bit, uncompressed) is the CurseForge logo. It is used by the
     TOC `IconTexture` (AddOns list and Addon Compartment), the sidebar, the About page and the minimap button.
     TGA is the format WoW loads for addon textures; the path is given without extension.
+69. **PvP area, so crowds never cause fatigue.** Battlegrounds, arenas, world PvP and open-world raids
+    (`Runs.InPvPArea`) get their own sidebar page with a Groups view and a "Players met" view; the Runs page
+    shows only PvE groups. Every one of them except an arena team is a *crowd* (`Runs.IsCrowd`):
+    - no "Rate your squad" alert and no badge, even for crowd runs an older version saved as pending;
+    - their unrated, unavoided strangers stay off the Players page (rated and avoided players still show);
+    - they don't count for Stats "Most grouped with" (still counted in totals and by type);
+    - unrated strangers met only in crowds are pruned after 14 days instead of 180.
+    Avoid warnings and toasts for rated players still fire in crowds. A raid group with War Mode on now
+    counts as world PvP (`C_PvP.IsWarModeActive`), so a Tarren Mill raid in a contested zone is caught; a raid
+    in the open world without it is a world raid, which is also a crowd. Nothing stored changed.

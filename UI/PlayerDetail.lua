@@ -315,13 +315,22 @@ function PlayerDetail.Open(pid)
 		ns.Print(L.MSG_COMBAT)
 		return
 	end
-	ns.Hub.Show("players")
+	local host = ns.Hub.IsShown("pvp") and "pvp" or "players"
+	ns.Hub.Show(host)
+	local page = ns.Hub.Page(host)
+	if not page then
+		return
+	end
 	if not drawer then
-		local page = ns.Hub.Page("players")
-		if not page then
-			return
-		end
 		build(page)
+	elseif drawer:GetParent() ~= page then
+		-- Move the drawer to this page, closed, so it slides in from that page's edge.
+		drawer:SetParent(page)
+		drawer:SetFrameLevel((page:GetFrameLevel() or 1) + 20)
+		drawer.offset = WIDTH + 8
+		place(drawer.offset)
+		drawer:Hide()
+		currentPid = nil
 	end
 	local switching = currentPid ~= nil and currentPid ~= pid and drawer:IsShown()
 	if currentPid ~= pid then

@@ -5,6 +5,10 @@ scrubbed even from error messages); every window, alert and toast steps aside in
 <name>` removes exactly that player and `/sr purge all` everything but your settings; translated labels fit
 or show in full on hover. Licensed All Rights Reserved (LICENSE.txt); no third-party files are bundled.
 
+**PvP page.** Battlegrounds, arenas, world PvP and open-world raids have their own page. A 40-player raid
+never floods your Players list, never asks you to rate 39 strangers, and never skews "Most grouped with";
+players you rated or avoid still show everywhere and still trigger their warnings.
+
 Everything from 0.1.0 to 0.3.0 below, plus:
 
 ## New: what your group did

@@ -306,3 +306,13 @@ L.TOOLTIP_RATED_ONE = "SquadRank: %s, %.1f from %d rating"
 L.TOOLTIP_RATED_OTHER = "SquadRank: %s, %.1f from %d ratings"
 L.SHARE_RATED_ONE = "[SquadRank] %s: %s, average %.1f from %d rating."
 L.SHARE_RATED_OTHER = "[SquadRank] %s: %s, average %.1f from %d ratings."
+
+-- PvP page (1.0)
+L.NAV_PVP = "PvP"
+L.PVP_TITLE = "PvP and world raids"
+L.PVP_VIEW_GROUPS = "Groups"
+L.PVP_VIEW_PLAYERS = "Players met"
+L.PVP_INFO = "Battlegrounds, arenas, world PvP and open-world raids live here, so your other lists stay clear."
+L.PVP_HINT = "Large groups never ask for a rating. Click a group to rate it anyway."
+L.EMPTY_PVP_GROUPS = "No PvP or world raid groups yet."
+L.EMPTY_PVP_PLAYERS = "Nobody met in PvP or world raids yet."

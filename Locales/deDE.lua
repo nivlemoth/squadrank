@@ -300,4 +300,15 @@ ns.Locale.Register("deDE", function(L)
 	L.TOOLTIP_RATED_OTHER = "SquadRank: %s, %.1f aus %d Bewertungen"
 	L.SHARE_RATED_ONE = "[SquadRank] %s: %s, Schnitt %.1f aus %d Bewertung."
 	L.SHARE_RATED_OTHER = "[SquadRank] %s: %s, Schnitt %.1f aus %d Bewertungen."
+
+	-- PvP page (1.0)
+	L.NAV_PVP = "PvP"
+	L.PVP_TITLE = "PvP und Weltschlachtzüge"
+	L.PVP_VIEW_GROUPS = "Gruppen"
+	L.PVP_VIEW_PLAYERS = "Getroffene Spieler"
+	L.PVP_INFO =
+		"Schlachtfelder, Arenen, Welt-PvP und Weltschlachtzüge landen hier, damit deine Listen übersichtlich bleiben."
+	L.PVP_HINT = "Große Gruppen fragen nie nach einer Bewertung. Klicke auf eine, um sie zu bewerten."
+	L.EMPTY_PVP_GROUPS = "Noch keine PvP- oder Weltschlachtzuggruppen."
+	L.EMPTY_PVP_PLAYERS = "Noch niemand aus PvP oder Weltschlachtzügen."
 end)

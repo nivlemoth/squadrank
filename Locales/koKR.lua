@@ -300,4 +300,15 @@ ns.Locale.Register("koKR", function(L)
 	L.RUN_WIPES_OTHER = "전멸 %d회"
 	L.TOOLTIP_RATED_OTHER = "SquadRank: %s, %.1f (평가 %d회)"
 	L.SHARE_RATED_OTHER = "[SquadRank] %s: %s, 평균 %.1f (평가 %d회)."
+
+	-- PvP page (1.0)
+	L.NAV_PVP = "PvP"
+	L.PVP_TITLE = "PvP 및 필드 공격대"
+	L.PVP_VIEW_GROUPS = "파티"
+	L.PVP_VIEW_PLAYERS = "만난 플레이어"
+	L.PVP_INFO =
+		"전장, 투기장, 필드 PvP, 필드 공격대는 여기에 모아 다른 목록을 깔끔하게 유지합니다."
+	L.PVP_HINT = "큰 파티는 평가를 요청하지 않습니다. 파티를 클릭하면 평가할 수 있습니다."
+	L.EMPTY_PVP_GROUPS = "아직 PvP나 필드 공격대 기록이 없습니다."
+	L.EMPTY_PVP_PLAYERS = "아직 PvP나 필드 공격대에서 만난 플레이어가 없습니다."
 end)

@@ -165,6 +165,9 @@ function Compat.InstanceState()
 		if C_PvP and C_PvP.GetZonePVPInfo then
 			state.zonePvP = clean((C_PvP.GetZonePVPInfo()), "string")
 		end
+		if C_PvP and C_PvP.IsWarModeActive then
+			state.warMode = clean((C_PvP.IsWarModeActive()), "boolean") or false
+		end
 	end)
 	if not ok then
 		Debug.Error("InstanceState", err)

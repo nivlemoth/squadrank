@@ -346,4 +346,16 @@ ns.Locale.Register("ruRU", function(L)
 	L.SHARE_RATED_ONE = "[SquadRank] %s: %s, в среднем %.1f по %d оценке."
 	L.SHARE_RATED_FEW = "[SquadRank] %s: %s, в среднем %.1f по %d оценкам."
 	L.SHARE_RATED_MANY = "[SquadRank] %s: %s, в среднем %.1f по %d оценкам."
+
+	-- PvP page (1.0)
+	L.NAV_PVP = "PvP"
+	L.PVP_TITLE = "PvP и мировые рейды"
+	L.PVP_VIEW_GROUPS = "Группы"
+	L.PVP_VIEW_PLAYERS = "Встреченные игроки"
+	L.PVP_INFO =
+		"Поля боя, арены, мировое PvP и мировые рейды собраны здесь, чтобы не засорять другие списки."
+	L.PVP_HINT =
+		"Большие группы никогда не просят оценку. Нажмите на группу, чтобы оценить её."
+	L.EMPTY_PVP_GROUPS = "Пока нет групп PvP или мировых рейдов."
+	L.EMPTY_PVP_PLAYERS = "Пока никого не встречено в PvP или мировых рейдах."
 end)

@@ -1,6 +1,7 @@
--- The Players and Runs pages of the SquadRank window. Players: stat tiles, search, filters and
+-- The Players, Runs and PvP pages of the SquadRank window. Players: stat tiles, search, filters and
 -- a list; clicking a player slides their history in from the right (UI/PlayerDetail.lua).
--- Runs: every recorded group, click one to rate it.
+-- Runs: every PvE group, click one to rate it. PvP: battlegrounds, arenas, world PvP and open-world
+-- raids, with the players met there, kept apart so a 40-player raid never floods the main lists.
 local _, ns = ...
 
 local L = ns.L
@@ -19,7 +20,7 @@ local SCORE_BAR = 62
 local RUN_COLS = { 88, 166, 80, 62, 106, 78 }
 local TYPE_PILL_MAX = 84
 
-local view = { search = "", label = nil, role = nil, tag = nil, runType = nil }
+local view = { search = "", label = nil, role = nil, tag = nil, runType = nil, pvpType = nil, pvpMode = "groups" }
 local pages = {}
 
 local function hasTag(summary, tagId)
@@ -41,25 +42,39 @@ end
 
 local LABEL_COLORS = { trusted = C.good, mixed = C.gold, caution = C.bad, new = C.muted }
 
-local function playerItems()
+-- area "pve" (Players page): everyone except unrated strangers met only in crowds.
+-- area "pvp" (PvP page): everyone met in a PvP-area group. Rated and avoided players show on both.
+local function playerItems(area, search)
 	local db = ns.db
 	local now, minRatings = Compat.Now(), db.settings.minRatings
+	local crowdOnly, pvpSeen = ns.Runs.PlayerAreas(db)
 	local items, stats = {}, { players = 0, ratings = 0, trusted = 0 }
 	for pid, rec in pairs(db.players) do
-		local summary = ns.Ratings.Summary(rec, now, minRatings)
-		stats.players = stats.players + 1
-		stats.ratings = stats.ratings + #rec.ratings
-		if summary.label == "trusted" then
-			stats.trusted = stats.trusted + 1
+		local keep
+		if area == "pvp" then
+			keep = pvpSeen[pid]
+		else
+			keep = not crowdOnly[pid] or #rec.ratings > 0 or rec.avoid
 		end
-		local name = ns.Players.DisplayName(rec)
-		local labelPass = not view.label
+		local summary = keep and ns.Ratings.Summary(rec, now, minRatings)
+		if keep and area ~= "pvp" then
+			stats.players = stats.players + 1
+			stats.ratings = stats.ratings + #rec.ratings
+			if summary.label == "trusted" then
+				stats.trusted = stats.trusted + 1
+			end
+		end
+		local name = keep and ns.Players.DisplayName(rec) or ""
+		local filtered = area ~= "pvp"
+		local labelPass = not filtered
+			or not view.label
 			or (view.label == "avoid" and rec.avoid)
-			or (view.label ~= "avoid" and summary.label == view.label)
-		local pass = (view.search == "" or name:lower():find(view.search, 1, true))
+			or (summary and view.label ~= "avoid" and summary.label == view.label)
+		local pass = keep
+			and (search == "" or name:lower():find(search, 1, true))
 			and labelPass
-			and (not view.role or summary.roles[view.role])
-			and (not view.tag or hasTag(summary, view.tag))
+			and (not filtered or not view.role or summary.roles[view.role])
+			and (not filtered or not view.tag or hasTag(summary, view.tag))
 		if pass then
 			items[#items + 1] = {
 				kind = "player",
@@ -84,12 +99,14 @@ local function playerItems()
 	return items, stats
 end
 
-local function runItems(search, category)
+-- area "pve" (Runs page) or "pvp" (PvP page).
+local function runItems(search, category, area)
 	local db = ns.db
 	local items = {}
 	for _, run in ipairs(ns.Runs.List(db)) do
 		local name = UI.RunName(run)
-		local pass = (search == "" or name:lower():find(search, 1, true))
+		local pass = (ns.Runs.InPvPArea(run) == (area == "pvp"))
+			and (search == "" or name:lower():find(search, 1, true))
 			and (not category or ns.Runs.Category(run) == category)
 		if pass then
 			items[#items + 1] = { kind = "run", run = run, name = name, rated = ns.Runs.RatedCount(db, run) }
@@ -436,7 +453,7 @@ local function buildRuns(page)
 	)
 	w.searchText = ""
 	local typeOptions = {}
-	for _, category in ipairs(ns.Runs.CATEGORIES) do
+	for _, category in ipairs(ns.Runs.PVE_CATEGORIES) do
 		typeOptions[#typeOptions + 1] = { value = category, text = L["CAT_" .. category] }
 	end
 	w.filterType = UI.FlatButton(page, "", 150, 26, function(self)
@@ -457,7 +474,7 @@ end
 
 local function refreshPlayers()
 	local w = pages.players
-	local items, stats = playerItems()
+	local items, stats = playerItems("pve", view.search)
 	w.list:SetData(index(items))
 	w.tiles[1].value:SetText(tostring(stats.players))
 	w.tiles[2].value:SetText(tostring(stats.ratings))
@@ -472,12 +489,95 @@ end
 
 local function refreshRuns()
 	local w = pages.runs
-	local items = runItems(w.searchText, view.runType)
+	local items = runItems(w.searchText, view.runType, "pve")
 	w.filterType:SetText(L.FILTER_FMT:format(L.FILTER_TYPE, view.runType and L["CAT_" .. view.runType] or L.FILTER_ALL))
 	w.list:SetData(index(items))
 	w.count:SetText(L.COUNT_FMT:format(#items))
 	w.empty:SetShown(#items == 0)
 	w.empty:SetText(L.EMPTY_RUNS)
+end
+
+-- PvP page ---------------------------------------------------------------------------------------
+
+local function buildPvP(page)
+	local w = { page = page, searchText = "" }
+	pages.pvp = w
+
+	-- Two views of the same area: the groups, or the players met in them.
+	local function mode(key)
+		return function()
+			view.pvpMode = key
+			MainWindow.Refresh()
+		end
+	end
+	w.groupsButton = UI.FlatButton(page, L.PVP_VIEW_GROUPS, 110, 26, mode("groups"), "ghost")
+	w.groupsButton:SetPoint("TOPLEFT", 0, 0)
+	w.playersButton = UI.FlatButton(page, L.PVP_VIEW_PLAYERS, 130, 26, mode("players"), "ghost")
+	w.playersButton:SetPoint("LEFT", w.groupsButton, "RIGHT", 4, 0)
+
+	local typeOptions = {}
+	for _, category in ipairs(ns.Runs.PVP_CATEGORIES) do
+		typeOptions[#typeOptions + 1] = { value = category, text = L["CAT_" .. category] }
+	end
+	w.filterType = UI.FlatButton(page, "", 150, 26, function(self)
+		filterMenu(self, "pvpType", typeOptions)
+	end)
+	w.filterType:SetPoint("TOPRIGHT", 0, 0)
+	local holder, search = UI.TextBox(page, 160, 26, L.SEARCH_HINT, 48)
+	holder:SetPoint("RIGHT", w.filterType, "LEFT", -6, 0)
+	search:HookScript(
+		"OnTextChanged",
+		ns.Safe("pvp search", function(self)
+			w.searchText = Util.Sanitize(self:GetText(), 48):lower()
+			MainWindow.Refresh()
+		end)
+	)
+
+	local info = UI.Text(page, "GameFontDisableSmall")
+	info:SetPoint("TOPLEFT", 2, -34)
+	info:SetWidth(600)
+	info:SetWordWrap(false)
+	info:SetText(L.PVP_INFO)
+
+	w.runHeader = header(
+		page,
+		RUN_COLS,
+		{ "COL_TYPE", "COL_INSTANCE", "COL_DATE", "COL_PLAYERS", "COL_RATED", "COL_STATUS" },
+		-54
+	)
+	w.runList, w.runEmpty, w.runHolder = listArea(page, -74, buildRunRow, fillRunRow)
+	w.playerHeader =
+		header(page, PLAYER_COLS, { "COL_PLAYER", "COL_LABEL", "COL_RATINGS", "COL_SCORE", "COL_SEEN" }, -54)
+	w.playerList, w.playerEmpty, w.playerHolder = listArea(page, -74, buildPlayerRow, fillPlayerRow)
+	w.count = footer(page, L.PVP_HINT)
+end
+
+local function refreshPvP()
+	local w = pages.pvp
+	local groups = view.pvpMode ~= "players"
+	UI.SetColor(w.groupsButton.bg, groups and C.accent or { 1, 1, 1 }, groups and 0.35 or 0.06)
+	UI.SetColor(w.playersButton.bg, groups and { 1, 1, 1 } or C.accent, groups and 0.06 or 0.35)
+	w.runHeader:SetShown(groups)
+	w.runHolder:SetShown(groups)
+	w.filterType:SetShown(groups)
+	w.playerHeader:SetShown(not groups)
+	w.playerHolder:SetShown(not groups)
+	local items
+	if groups then
+		items = runItems(w.searchText, view.pvpType, "pvp")
+		w.filterType:SetText(
+			L.FILTER_FMT:format(L.FILTER_TYPE, view.pvpType and L["CAT_" .. view.pvpType] or L.FILTER_ALL)
+		)
+		w.runList:SetData(index(items))
+		w.runEmpty:SetShown(#items == 0)
+		w.runEmpty:SetText(L.EMPTY_PVP_GROUPS)
+	else
+		items = playerItems("pvp", w.searchText)
+		w.playerList:SetData(index(items))
+		w.playerEmpty:SetShown(#items == 0)
+		w.playerEmpty:SetText(L.EMPTY_PVP_PLAYERS)
+	end
+	w.count:SetText(L.COUNT_FMT:format(#items))
 end
 
 local function doRefresh()
@@ -486,6 +586,8 @@ local function doRefresh()
 		refreshPlayers()
 	elseif Hub.IsShown("runs") and pages.runs then
 		refreshRuns()
+	elseif Hub.IsShown("pvp") and pages.pvp then
+		refreshPvP()
 	end
 	Hub.UpdateBadges()
 end
@@ -549,4 +651,11 @@ ns.Hub.AddPage("runs", {
 	title = L.RUNS_TITLE,
 	build = buildRuns,
 	show = refreshRuns,
+})
+
+ns.Hub.AddPage("pvp", {
+	label = L.NAV_PVP,
+	title = L.PVP_TITLE,
+	build = buildPvP,
+	show = refreshPvP,
 })

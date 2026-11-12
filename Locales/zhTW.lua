@@ -287,4 +287,14 @@ ns.Locale.Register("zhTW", function(L)
 	L.RUN_WIPES_OTHER = "滅團 %d 次"
 	L.TOOLTIP_RATED_OTHER = "SquadRank：%s，%.1f（%d 次評價）"
 	L.SHARE_RATED_OTHER = "[SquadRank] %s：%s，平均 %.1f（%d 次評價）。"
+
+	-- PvP page (1.0)
+	L.NAV_PVP = "PvP"
+	L.PVP_TITLE = "PvP 與世界首領團"
+	L.PVP_VIEW_GROUPS = "隊伍"
+	L.PVP_VIEW_PLAYERS = "遇到的玩家"
+	L.PVP_INFO = "戰場、競技場、野外PvP和野外團隊都放在這裡，讓其他清單保持清爽。"
+	L.PVP_HINT = "大型隊伍不會主動要求評價。點擊隊伍即可評價。"
+	L.EMPTY_PVP_GROUPS = "尚無PvP或世界首領團紀錄。"
+	L.EMPTY_PVP_PLAYERS = "尚未在PvP或世界首領團中遇到玩家。"
 end)

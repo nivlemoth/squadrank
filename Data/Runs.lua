@@ -33,9 +33,59 @@ local function markGroup(run, state)
 	if state.inRaid then
 		run.raid = true
 	end
-	if WORLD_PVP_ZONES[state.zonePvP] then
+	-- A PvP zone, or a raid group roaming with War Mode on, is world PvP.
+	if WORLD_PVP_ZONES[state.zonePvP] or (state.inRaid and state.warMode) then
 		run.wpvp = true
 	end
+end
+
+-- The PvP area: battlegrounds, arenas, world PvP and open-world raids. These groups have their own
+-- page, so the main Players, Runs and Rate views stay about the groups you actually play with.
+Runs.PVE_CATEGORIES = { "quest", "world", "dungeon", "raid" }
+Runs.PVP_CATEGORIES = { "pvp", "wpvp", "worldraid" }
+local PVP_AREA = { pvp = true, wpvp = true, worldraid = true }
+
+function Runs.InPvPArea(run)
+	return PVP_AREA[Runs.Category(run)] == true
+end
+
+-- A crowd: a PvP-area group too big to rate one by one (everything there but an arena team).
+-- Crowds never raise the "Rate your squad" alert, and their strangers stay off the main lists.
+function Runs.IsCrowd(run)
+	return Runs.InPvPArea(run) and run.instanceType ~= "arena"
+end
+
+-- Returns two sets of pids: players met only in crowds (never in another group), and players
+-- met in any PvP-area group. The current run counts too.
+function Runs.PlayerAreas(db)
+	local crowd, normal, pvp = {}, {}, {}
+	local function scan(run)
+		if type(run) ~= "table" or type(run.members) ~= "table" then
+			return
+		end
+		local isCrowd, inArea = Runs.IsCrowd(run), Runs.InPvPArea(run)
+		for _, member in ipairs(run.members) do
+			if isCrowd then
+				crowd[member.pid] = true
+			else
+				normal[member.pid] = true
+			end
+			if inArea then
+				pvp[member.pid] = true
+			end
+		end
+	end
+	for _, run in pairs(db.runs) do
+		scan(run)
+	end
+	scan(db.currentRun)
+	local crowdOnly = {}
+	for pid in pairs(crowd) do
+		if not normal[pid] then
+			crowdOnly[pid] = true
+		end
+	end
+	return crowdOnly, pvp
 end
 
 local function setInstance(run, state)
@@ -108,11 +158,11 @@ function Runs.Finish(db, now)
 	run.outsideSince = nil
 	run.lastInside = nil
 	run.groupSize = #run.members + 1
-	-- Battlegrounds hold up to 40 strangers, and a dungeon left after a minute or two is not worth
-	-- asking about: both are kept in the Runs tab, but without the "Rate your squad" alert.
+	-- Crowds (battlegrounds, world PvP, open-world raids: up to 40 strangers) and a dungeon left after
+	-- a minute or two are not worth asking about: both are kept, but without the alert.
 	local minimum = (db.settings and tonumber(db.settings.minRunMinutes) or 0) * 60
 	local short = run.kind ~= "group" and (run.endedAt - (run.startedAt or run.endedAt)) < minimum
-	run.prompt = (run.instanceType == "pvp" or short) and "skipped" or "pending"
+	run.prompt = (Runs.IsCrowd(run) or short) and "skipped" or "pending"
 	db.runs[run.id] = run
 	return run
 end
@@ -321,7 +371,7 @@ function Runs.AlertList(db, now)
 	local list = {}
 	local since = math.max(now - Runs.ALERT_WINDOW, db.alertDismissedAt or 0)
 	for _, run in ipairs(Runs.List(db)) do
-		if run.prompt == "pending" and (run.endedAt or 0) > since then
+		if run.prompt == "pending" and (run.endedAt or 0) > since and not Runs.IsCrowd(run) then
 			list[#list + 1] = run
 		end
 	end
