@@ -200,3 +200,26 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
     the run summary and tooltip.
 61. **Sounds** use Blizzard sound kits (`SOUNDKIT.IG_PLAYER_INVITE` for the rating alert, `TELL_MESSAGE`
     for join toasts, `RAID_WARNING` for avoid warnings), one setting for all (default on).
+
+## 1.0.0 release checks (2026-11-12)
+
+62. **Privacy.** The luacheck global allowlist is the complete list of game APIs SquadRank can call; it has
+    no chat, whisper, addon-message, mail, Battle.net, club or note-writing function, so nothing can be sent
+    to other players. The only Blizzard data read about other players is the unit API and (opt-in) Recent
+    Allies lookups. Sharing only fills a text box the user copies by hand.
+63. **Diagnostics.** Log lines use counts, hashes and fixed words. Lua error messages are the only free text
+    that reaches the report, so `Debug.Scrub` replaces any saved player name or realm in them with
+    `<name>`. A test fills the database with a name, realm, GUID and note and checks the report holds none.
+64. **Combat.** The window, history drawer and share box, the debug window, the "Rate your squad" card and
+    toasts all hide when combat starts and come back after it; the tooltip line and every command that
+    reads the database refuse in combat. Covered by a test.
+65. **Purge.** An exact "Name-Realm" or same-realm "Name" now wins over name-only matches, so `/sr purge Bob`
+    removes your own realm's Bob even when a Bob-Vale is saved; two Bobs from other realms are still refused
+    as ambiguous. Purging strips the player from every run and the session. `purge all` keeps settings.
+66. **Layout audit.** `width_audit.py` (scratchpad) measured every translated label against its widget.
+    Fixes: Players columns re-balanced, header tooltips, Rate page hint wraps to two lines, wider Share and
+    Label filter buttons, and shorter wording for tags and links that were cut on the rating card. No label
+    in any language is cut without a way to read it in full.
+67. **License.** All Rights Reserved (`LICENSE.txt`, shipped in the package). No third-party code, fonts,
+    images or sounds are bundled; Blizzard's fonts, icons, atlases and sound kits are referenced at run time
+    only. The file carries the Blizzard trademark and non-affiliation notice.

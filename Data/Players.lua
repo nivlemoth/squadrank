@@ -157,12 +157,19 @@ function Players.Find(db, query)
 	if q == "" then
 		return found
 	end
+	local exact = {}
 	for pid, rec in pairs(db.players) do
 		if type(rec.name) == "string" then
-			if rec.name:lower() == q or Util.FullName(rec.name, rec.suffix):lower() == q then
+			if Util.FullName(rec.name, rec.suffix):lower() == q then
+				exact[#exact + 1] = pid
+			elseif rec.name:lower() == q then
 				found[#found + 1] = pid
 			end
 		end
+	end
+	-- "Bob" names the Bob from your own realm even when a "Bob-Vale" is also saved.
+	if #exact > 0 then
+		found = exact
 	end
 	table.sort(found)
 	return found

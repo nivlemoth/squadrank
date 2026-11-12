@@ -14,7 +14,8 @@ ns.MainWindow = MainWindow
 
 local C = UI.C
 local ROW_H = 30
-local PLAYER_COLS = { 196, 104, 64, 130, 90 }
+local PLAYER_COLS = { 160, 98, 90, 114, 116 }
+local SCORE_BAR = 62
 local RUN_COLS = { 88, 166, 80, 62, 106, 78 }
 local TYPE_PILL_MAX = 84
 
@@ -193,10 +194,10 @@ local function buildPlayerRow(row)
 	row.pill = UI.Pill(row)
 	row.pill:SetPoint("LEFT", row.cols[2].x, 0)
 	row.cols[2]:Hide()
-	row.track, row.fill = miniBar(row, row.cols[4].x, 70)
+	row.track, row.fill = miniBar(row, row.cols[4].x, SCORE_BAR)
 	row.cols[4]:ClearAllPoints()
-	row.cols[4]:SetPoint("LEFT", row.cols[4].x + 78, 0)
-	row.cols[4]:SetWidth(48)
+	row.cols[4]:SetPoint("LEFT", row.cols[4].x + SCORE_BAR + 6, 0)
+	row.cols[4]:SetWidth(40)
 	row.cols[3]:SetFontObject("GameFontHighlightSmall")
 	row.cols[5]:SetFontObject("GameFontDisableSmall")
 end
@@ -215,7 +216,7 @@ local function fillPlayerRow(row, item)
 	local avg = summary.weighted
 	if summary.count > 0 and avg then
 		local color = UI.ScoreColor(avg)
-		row.fill:SetWidth(math.max(1, 70 * avg / 5))
+		row.fill:SetWidth(math.max(1, SCORE_BAR * avg / 5))
 		UI.SetColor(row.fill, color)
 		row.fill:Show()
 		cols[4]:SetText(UI.Colorize(("%.1f"):format(avg), color))
@@ -298,6 +299,12 @@ local function header(page, widths, keys, y, x0)
 	local cols = columns(bar, widths, "GameFontDisableSmall", x0)
 	for i, key in ipairs(keys) do
 		cols[i]:SetText(UI.Caps(L[key]))
+		-- A header cut short by a long translation shows in full on hover.
+		local hit = CreateFrame("Frame", nil, bar)
+		hit:SetPoint("LEFT", cols[i].x, 0)
+		hit:SetSize(widths[i] - 8, 18)
+		hit:EnableMouse(true)
+		UI.TruncationTooltip(hit, cols[i])
 	end
 	return bar
 end
@@ -405,7 +412,7 @@ local function buildPlayers(page)
 		filterMenu(self, "role", roleOptions)
 	end)
 	w.filterRole:SetPoint("RIGHT", w.filterTag, "LEFT", -6, 0)
-	w.filterLabel = UI.FlatButton(page, "", 116, 26, function(self)
+	w.filterLabel = UI.FlatButton(page, "", 132, 26, function(self)
 		filterMenu(self, "label", labelOptions)
 	end)
 	w.filterLabel:SetPoint("RIGHT", w.filterRole, "LEFT", -6, 0)

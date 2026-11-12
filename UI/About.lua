@@ -114,6 +114,10 @@ local function build(page)
 	supportHint:SetText(L.ABOUT_SUPPORT_HINT)
 	page.supportLink = link
 
+	local copyright = UI.Text(page, "GameFontDisableSmall")
+	copyright:SetPoint("BOTTOMLEFT", 2, 36)
+	copyright:SetText(L.ABOUT_COPYRIGHT)
+
 	local privacy = UI.Text(page, "GameFontDisableSmall")
 	privacy:SetPoint("BOTTOMLEFT", 2, 4)
 	privacy:SetWidth(590)

@@ -54,9 +54,29 @@ function Debug.Log(kind, fmt, ...)
 	push(Debug.lines, Debug.maxLines, stamp() .. " [" .. kind .. "] " .. msg)
 end
 
+-- Error messages come from Lua and could, in theory, quote a value. Any saved player name or
+-- realm found in one is replaced before the message is kept, so the report never carries names.
+function Debug.Scrub(text)
+	local db = ns.db
+	if type(text) ~= "string" or not db or type(db.players) ~= "table" then
+		return text
+	end
+	local function plain(s)
+		return (s:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0"))
+	end
+	for _, rec in pairs(db.players) do
+		for _, value in ipairs({ rec.name, rec.suffix }) do
+			if type(value) == "string" and #value >= 2 and text:find(value, 1, true) then
+				text = text:gsub(plain(value), "<name>")
+			end
+		end
+	end
+	return text
+end
+
 function Debug.Error(label, err)
 	Debug.errorCount = Debug.errorCount + 1
-	local text = isSecret(err) and "<secret>" or tostring(err)
+	local text = isSecret(err) and "<secret>" or Debug.Scrub(tostring(err))
 	push(Debug.errors, Debug.maxErrors, stamp() .. " " .. label .. ": " .. text)
 	Debug.Log("ERROR", "%s: %s", label, text)
 end

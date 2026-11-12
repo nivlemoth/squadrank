@@ -1,4 +1,4 @@
-# SquadRank 0.9.0-beta: in-game test checklist
+# SquadRank 1.0.0: in-game test checklist
 
 Run these in order on a WoW Forever character. Each step has what to type or do, and what should happen.
 You need one other player (a friend or a second account) for steps 9 to 27.
@@ -8,7 +8,7 @@ back to me. If the window itself fails, type `/reload` and send the file
 `WTF\Account\<ACCOUNT>\SavedVariables\SquadRank.lua` (the `SquadRankDebug` part).
 To see Lua errors on screen, type `/console scriptErrors 1` once.
 
-**Before you start:** ratings from 0.1.0 and 0.2.0 are kept: 0.9.0-beta reads them as is.
+**Before you start:** ratings from 0.1.0 and 0.2.0 are kept: 1.0.0 reads them as is.
 
 ## A. Loading
 
@@ -16,7 +16,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 |---|---|---|
 | 1 | `/console scriptErrors 1` then `/reload` | No error window. Nothing printed by SquadRank (it is silent at load). |
 | 2 | `/dump select(4, GetBuildInfo())` | `16001`. If it is another number, tell me: the TOC needs it. |
-| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 0.9.0-beta** is listed under the "Group" category and is not marked out of date. |
+| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.0.0** is listed under the "Group" category and is not marked out of date. |
 | 4 | Look at the edge of the minimap | A round SquadRank button (group icon in a gold ring). Hover it: a tooltip with three hints. **Left-click**: one window **fades in** with a sidebar (Rate, Players, Runs, Settings, About) and "by Nivlemoth" at the bottom left. Left-click again: it fades out. **Right-click**: the window opens on Settings. **Drag** it: it slides round the minimap; `/reload` keeps the spot. If the ring or the icon is missing, tell me (screenshot). |
 | 4b | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The same window toggles. |
 | 5 | `/sr help` | Six help lines are printed. |

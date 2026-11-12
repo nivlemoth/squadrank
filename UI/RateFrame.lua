@@ -601,7 +601,9 @@ local function build(f)
 	emptyText:SetText(L.RATE_CAUGHT_UP_TEXT)
 
 	w.hint = UI.Text(page, "GameFontDisableSmall")
-	w.hint:SetPoint("BOTTOMLEFT", 2, 8)
+	w.hint:SetPoint("BOTTOMLEFT", 2, 4)
+	w.hint:SetWidth(380)
+	w.hint:SetWordWrap(true)
 	w.hint:SetText(L.RATE_HINT)
 
 	w.done = UI.FlatButton(page, L.BTN_DONE, 104, 28, finish, "primary")

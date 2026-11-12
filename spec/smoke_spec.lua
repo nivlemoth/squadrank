@@ -369,6 +369,99 @@ describe("whole addon against a fake client", function()
 		noErrors()
 	end)
 
+	it("v1.0 check: the debug report never carries names, notes, realms or GUIDs", function()
+		world.units.party1 = EVE
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		roster()
+		local pid = "g:" .. EVE.guid
+		SlashCmdList.SQUADRANK("rate Eve-Vale")
+		assert.is_true(mock.click("2"))
+		ns.db.players[pid].ratings[1].note = "secret remark"
+		ns.MainWindow.SetAvoid(pid, true)
+		-- Even an error whose message quotes a name is scrubbed.
+		ns.Debug.Error("test", "something failed near Eve-Vale")
+		SlashCmdList.SQUADRANK("debug")
+		mock.fire(ns, "PLAYER_LOGOUT")
+		local text = table.concat(SquadRankDebug.report, "\n")
+		for _, forbidden in ipairs({ "Eve", "Vale", EVE.guid, "secret remark" }) do
+			assert.is_nil(text:find(forbidden, 1, true), forbidden .. " leaked into the report")
+		end
+		assert.is_not_nil(text:find("<name>", 1, true))
+		assert.is_not_nil(text:find("ratings: 1", 1, true))
+	end)
+
+	it("v1.0 check: every SquadRank surface steps aside in combat and comes back", function()
+		SlashCmdList.SQUADRANK("rate Bob")
+		assert.is_true(mock.click("4"))
+		ns.db.settings.allowShare = true
+		ns.PlayerDetail.Open("n:bob")
+		mock.press(ns.PlayerDetail.ShareButton())
+		ns.Toast.Push({ title = "t", lines = {}, duration = 30 })
+		mock.flush()
+		SlashCmdList.SQUADRANK("debug")
+		assert.is_true(ns.Hub.IsShown())
+		assert.is_true(ns.DebugPanel.IsShown())
+		assert.is_not_nil(ns.Toast.current)
+
+		world.combat = true
+		mock.fire(ns, "PLAYER_REGEN_DISABLED")
+		assert.is_false(ns.Hub.IsShown())
+		assert.is_false(ns.DebugPanel.IsShown())
+		assert.is_nil(ns.Toast.current)
+		world.units.party1 = BOB
+		assert.is_nil(ns.UnitTooltip.Line("party1"))
+		SlashCmdList.SQUADRANK("")
+		assert.is_false(ns.Hub.IsShown())
+		assert.is_true(printed("Not available in combat"))
+
+		world.combat = false
+		mock.fire(ns, "PLAYER_REGEN_ENABLED")
+		mock.flush()
+		assert.is_true(ns.Hub.IsShown())
+		assert.is_true(ns.DebugPanel.IsShown())
+		assert.is_not_nil(ns.Toast.current)
+		noErrors()
+	end)
+
+	it("v1.0 check: /sr purge removes exactly the named player, purge all removes everything else", function()
+		SlashCmdList.SQUADRANK("rate Bob")
+		assert.is_true(mock.click("3"))
+		SlashCmdList.SQUADRANK("rate Bob-Vale")
+		assert.is_true(mock.click("4"))
+		SlashCmdList.SQUADRANK("rate Eve-Vale")
+		assert.is_true(mock.click("5"))
+		local run = { id = "r1", members = { { pid = "n:bob" }, { pid = "n:bob-vale" } }, prompt = "pending" }
+		ns.db.runs.r1 = run
+
+		-- "Bob" is the same-realm Bob, not Bob-Vale.
+		SlashCmdList.SQUADRANK("purge bob")
+		assert.is_nil(ns.db.players["n:bob"])
+		assert.is_not_nil(ns.db.players["n:bob-vale"])
+		assert.equals(1, #run.members)
+		assert.equals("n:bob-vale", run.members[1].pid)
+		SlashCmdList.SQUADRANK("purge Bob-Vale")
+		assert.is_nil(ns.db.players["n:bob-vale"])
+		assert.equals(0, #run.members)
+		assert.is_not_nil(ns.db.players["n:eve-vale"])
+		assert.equals(2, world.popups)
+
+		-- With two Bobs from other realms, a bare "Bob" is refused, not guessed.
+		ns.Players.Resolve(ns.db, { name = "Bob", suffix = "Alpha" }, world.now)
+		ns.Players.Resolve(ns.db, { name = "Bob", suffix = "Beta" }, world.now)
+		SlashCmdList.SQUADRANK("purge Bob")
+		assert.is_true(printed("More than one player matches"))
+		assert.is_not_nil(ns.db.players["n:bob-alpha"])
+		assert.is_not_nil(ns.db.players["n:bob-beta"])
+
+		ns.db.settings.toastDuration = 12
+		SlashCmdList.SQUADRANK("purge all")
+		assert.is_nil(next(ns.db.players))
+		assert.is_nil(next(ns.db.runs))
+		assert.is_nil(ns.db.currentRun)
+		assert.equals(12, ns.db.settings.toastDuration)
+		noErrors()
+	end)
+
 	it("records group members but shows no toast for unrated players", function()
 		world.units.party1 = BOB
 		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")

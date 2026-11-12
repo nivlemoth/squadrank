@@ -53,3 +53,22 @@ function DebugPanel.Show()
 	refresh()
 	frame:Show()
 end
+
+-- Like every SquadRank window, it steps aside in combat and comes back afterwards.
+ns.Events.On("PLAYER_REGEN_DISABLED", "DebugPanel", function()
+	if frame and frame:IsShown() then
+		frame.srCombatHidden = true
+		frame:Hide()
+	end
+end)
+
+ns.Events.On("PLAYER_REGEN_ENABLED", "DebugPanel", function()
+	if frame and frame.srCombatHidden then
+		frame.srCombatHidden = nil
+		frame:Show()
+	end
+end)
+
+function DebugPanel.IsShown()
+	return frame ~= nil and frame:IsShown() and true or false
+end

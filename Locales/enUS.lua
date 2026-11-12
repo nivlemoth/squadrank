@@ -178,6 +178,7 @@ L.CONFIRM_PURGE_PLAYER = "Delete %s and every rating you gave them?"
 -- About page
 L.ABOUT_BY = "by %s"
 L.ABOUT_VERSION = "Version %s"
+L.ABOUT_COPYRIGHT = "© 2026 Nivlemoth. All rights reserved."
 L.ABOUT_TAGLINE = "Remember who made your group great, and who didn't."
 L.ABOUT_F1_TITLE = "One-click ratings"
 L.ABOUT_F1_TEXT =

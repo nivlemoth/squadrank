@@ -1,0 +1,34 @@
+SquadRank
+Copyright (c) 2026 Nivlemoth. All rights reserved.
+
+You may download, install and use SquadRank for your own personal, non-commercial play of
+World of Warcraft.
+
+Without prior written permission from the copyright holder you may not:
+  - copy, modify, merge, translate or create derivative works of SquadRank or any part of it;
+  - redistribute, re-upload, mirror, sell, sublicense or bundle SquadRank, in whole or in part,
+    on any site, launcher or package, modified or not.
+
+SquadRank is provided "as is", without warranty of any kind, express or implied, including but
+not limited to the warranties of merchantability, fitness for a particular purpose and
+non-infringement. In no event shall the copyright holder be liable for any claim, damages or
+other liability arising from, out of or in connection with SquadRank or its use.
+
+---------------------------------------------------------------------------------------------
+Third-party material and notices
+
+SquadRank contains no third-party code, libraries, fonts, images or sounds. Every file in this
+package was written for SquadRank.
+
+At run time SquadRank uses resources that belong to the World of Warcraft game client and are
+not included in, or redistributed with, this package: Blizzard's user-interface API, fonts,
+icon textures, interface atlases and sound kits. Those remain the property of Blizzard
+Entertainment, Inc. and are used under Blizzard's terms for World of Warcraft user-interface
+add-ons.
+
+World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks
+of Blizzard Entertainment, Inc. in the U.S. and/or other countries. SquadRank is a fan-made
+add-on and is not affiliated with, endorsed or sponsored by Blizzard Entertainment.
+
+Privacy: SquadRank makes no network connections and sends nothing to other players. All data
+stays in your own SavedVariables file.

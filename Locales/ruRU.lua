@@ -28,7 +28,7 @@ ns.Locale.Register("ruRU", function(L)
 	L.TAG_afk = "АФК"
 	L.TAG_toxic = "Токсичен"
 	L.TAG_reckless = "Безрассудные пуллы"
-	L.TAG_ignores_mechanics = "Игнорирует механики"
+	L.TAG_ignores_mechanics = "Игнорит механики"
 
 	-- Сводка (уведомление и история)
 	L.FMT_RATED_ONCE = "Одна оценка: %.1f"
@@ -71,8 +71,8 @@ ns.Locale.Register("ruRU", function(L)
 		"Нажмите на оценку, чтобы сохранить её. Нажмите на карточку для меток и заметки."
 	L.RATE_ROLE_TIP = "Роль: %s. Нажмите, чтобы сменить."
 	L.RATE_NOTE_HINT = "Добавить заметку (необязательно)"
-	L.RATE_SHOW_NEGATIVE = "Отрицательные метки..."
-	L.RATE_SHOW_POSITIVE = "Положительные метки..."
+	L.RATE_SHOW_NEGATIVE = "Негативные..."
+	L.RATE_SHOW_POSITIVE = "Позитивные..."
 	L.RATE_FAILED = "Не удалось сохранить оценку (%s)."
 	L.RATE_EMPTY = "Здесь некого оценивать."
 	L.RATE_CAUGHT_UP = "Всё оценено"

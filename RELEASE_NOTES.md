@@ -1,4 +1,9 @@
-# SquadRank 0.9.0-beta: first public beta
+# SquadRank 1.0.0: first release
+
+Checked for 1.0: nothing is ever sent to other players; the debug report holds counts only (names are
+scrubbed even from error messages); every window, alert and toast steps aside in combat; `/sr purge
+<name>` removes exactly that player and `/sr purge all` everything but your settings; translated labels fit
+or show in full on hover. Licensed All Rights Reserved (LICENSE.txt); no third-party files are bundled.
 
 Everything from 0.1.0 to 0.3.0 below, plus:
 

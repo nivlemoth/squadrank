@@ -177,7 +177,7 @@ local function build(page)
 	w.avoidPill:Hide()
 
 	-- Share (opt-in): a plain one-line summary to copy into chat. Never includes notes.
-	w.share = UI.FlatButton(drawer, L.SHARE_BTN, 64, 20, function()
+	w.share = UI.FlatButton(drawer, L.SHARE_BTN, 80, 20, function()
 		if not currentPid then
 			return
 		end

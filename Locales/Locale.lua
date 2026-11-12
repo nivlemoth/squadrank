@@ -38,6 +38,7 @@ Locale.NEUTRAL = {
 	RUN_RATED_SHORT = true,
 	DETAIL_SCORE_FMT = true,
 	RATE_RUN_FMT = true,
+	ABOUT_COPYRIGHT = true,
 }
 
 local base = {}
