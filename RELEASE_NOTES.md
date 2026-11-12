@@ -1,4 +1,8 @@
-# Unreleased: SquadRank in your language
+# SquadRank 0.9.0-beta: first public beta
+
+Everything from 0.1.0 to 0.3.0 below, plus:
+
+## New: SquadRank in your language
 
 - **Follows your game language.** German, French, Spanish (Spain and Latin America), Brazilian Portuguese,
   Italian, Russian, Korean, Simplified and Traditional Chinese, with English for everything else.
