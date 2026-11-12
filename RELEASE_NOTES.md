@@ -1,4 +1,4 @@
-# SquadRank 1.0.0: first release
+# SquadRank 1.0.0-release: first release
 
 Checked for 1.0: nothing is ever sent to other players; the debug report holds counts only (names are
 scrubbed even from error messages); every window, alert and toast steps aside in combat; `/sr purge

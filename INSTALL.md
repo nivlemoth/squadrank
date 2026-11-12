@@ -1,4 +1,4 @@
-# Installing SquadRank 1.0.0 (WoW Forever)
+# Installing SquadRank 1.0.0-release (WoW Forever)
 
 ## Install
 
