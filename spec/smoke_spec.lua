@@ -132,6 +132,129 @@ describe("whole addon against a fake client", function()
 		noErrors()
 	end)
 
+	-- Players shown in the (simple, fake-client) player list right now.
+	local function listedPlayers()
+		local pids = {}
+		for _, frame in ipairs(world.frames) do
+			local item = rawget(frame, "srItem")
+			if item and item.kind == "player" and frame:IsShown() then
+				pids[item.pid] = true
+			end
+		end
+		return pids
+	end
+
+	it("keeps stored identifiers and scores when the client language changes", function()
+		world.locale = "deDE"
+		boot()
+		local L = ns.L
+		assert.equals("deDE", ns.Locale.code)
+		SlashCmdList.SQUADRANK("rate Bob")
+		assert.is_true(mock.click("4"))
+		assert.is_true(mock.click(L.TAG_fair_loot))
+		SlashCmdList.SQUADRANK("rate Eve-Vale")
+		assert.is_true(mock.click("2"))
+		noErrors()
+		local bob = SquadRankDB.players["n:bob"].ratings[1]
+		assert.equals(4, bob.score)
+		assert.same({ "fair_loot" }, bob.tags)
+		assert.is_true(ns.Ratings.ROLE_SET[bob.role])
+
+		-- A translated tag filter matches the stored id.
+		ns.Hub.Show("players")
+		assert.is_true(mock.click(L.FILTER_FMT:format(L.FILTER_TAG, L.FILTER_ALL)))
+		world.lastMenu.entries[L.TAG_fair_loot]()
+		assert.is_true(mock.click(L.FILTER_FMT:format(L.FILTER_TAG, L.TAG_fair_loot)))
+		local shown = listedPlayers()
+		assert.is_true(shown["n:bob"])
+		assert.is_nil(shown["n:eve-vale"])
+		noErrors()
+
+		-- Same saved data under Russian: nothing stored changes, filters still match.
+		local before = SquadRankDB.players["n:bob"].ratings[1]
+		local snapshot = { score = before.score, role = before.role, tag = before.tags[1], id = before.id }
+		world.locale = "ruRU"
+		boot()
+		L = ns.L
+		assert.equals("ruRU", ns.Locale.code)
+		local after = SquadRankDB.players["n:bob"].ratings[1]
+		assert.same(snapshot, { score = after.score, role = after.role, tag = after.tags[1], id = after.id })
+		assert.equals(1, #SquadRankDB.players["n:bob"].ratings)
+		ns.Hub.Show("players")
+		assert.is_true(mock.click(L.FILTER_FMT:format(L.FILTER_ROLE, L.FILTER_ALL)))
+		world.lastMenu.entries[L["ROLE_" .. after.role]]()
+		assert.is_true(listedPlayers()["n:bob"])
+		noErrors()
+	end)
+
+	it("renders every page and message without errors in every supported language", function()
+		for _, code in ipairs({
+			"enUS",
+			"enGB",
+			"deDE",
+			"frFR",
+			"esES",
+			"esMX",
+			"ptBR",
+			"itIT",
+			"ruRU",
+			"koKR",
+			"zhCN",
+			"zhTW",
+		}) do
+			SquadRankDB, SquadRankDebug = nil, nil
+			world.locale = code
+			world.units.party1 = nil
+			boot()
+			local L = ns.L
+
+			-- An open-world group ends: the alert, the Rate page, one-click scoring, a tag.
+			world.units.party1 = BOB
+			mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+			roster()
+			world.now = world.now + 900
+			world.units.party1 = nil
+			mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
+			mock.flush()
+			assert.is_true(ns.SquadAlert.IsShown(), code)
+			ns.SquadAlert.Open()
+			local pid = "g:" .. BOB.guid
+			mock.press(ns.RateFrame.FindCard(pid).pips[2])
+			assert.is_true(mock.click(L.TAG_toxic), code)
+			assert.same({ "toxic" }, SquadRankDB.players[pid].ratings[1].tags)
+
+			-- Every page, the drawer, chat output and the debug report.
+			ns.Hub.Show("players")
+			ns.PlayerDetail.Open(pid)
+			ns.Hub.Show("runs")
+			ns.Hub.Show("settings")
+			ns.Hub.Show("about")
+			ns.Hub.Show("rate")
+			SlashCmdList.SQUADRANK("list")
+			SlashCmdList.SQUADRANK("help")
+			SlashCmdList.SQUADRANK("debug")
+			mock.flush()
+			noErrors()
+			assert.is_nil(next(ns.Locale.missing), code .. " looked up a missing key")
+			assert.is_nil(next(ns.Locale.rejected), code .. " rejected a translation")
+		end
+	end)
+
+	it("switches language for development only through the override, and back", function()
+		SlashCmdList.SQUADRANK("debug locale frfr")
+		assert.equals("frFR", SquadRankDB.settings.devLocale)
+		boot()
+		assert.equals("frFR", ns.Locale.code)
+		assert.equals("enUS", ns.Locale.client)
+		SlashCmdList.SQUADRANK("debug locale xx")
+		assert.equals("frFR", SquadRankDB.settings.devLocale)
+		SlashCmdList.SQUADRANK("debug locale off")
+		assert.is_nil(SquadRankDB.settings.devLocale)
+		boot()
+		assert.equals("enUS", ns.Locale.code)
+		noErrors()
+	end)
+
 	it("records group members but shows no toast for unrated players", function()
 		world.units.party1 = BOB
 		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")

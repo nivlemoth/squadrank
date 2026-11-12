@@ -365,6 +365,9 @@ local function makeButton(parent, width, height, font)
 	hover:SetColorTexture(1, 1, 1, 0.12)
 	button.label = button:CreateFontString(nil, "OVERLAY", font or "GameFontHighlightSmall")
 	button.label:SetPoint("CENTER")
+	button.label:SetWidth(math.max(8, width - 8))
+	button.label:SetWordWrap(false)
+	UI.TruncationTooltip(button, button.label)
 	button:SetFontString(button.label)
 	return button
 end
@@ -422,8 +425,9 @@ local function buildCard()
 	card.name:SetWordWrap(false)
 	card.sub = UI.Text(card, "GameFontDisableSmall")
 	card.sub:SetPoint("TOPLEFT", 50, -32)
-	card.sub:SetWidth(250)
+	card.sub:SetWidth(300)
 	card.sub:SetWordWrap(false)
+	UI.TruncationTooltip(card, card.sub)
 
 	card.pips = {}
 	for score = 5, 1, -1 do
@@ -697,9 +701,11 @@ local function populate(groups, title)
 		end
 	end
 	if runs > 1 then
-		w.title:SetText(L.RATE_HEADLINE_MANY:format(runs, cardIndex))
+		w.title:SetText(L.RATE_HEADLINE_GROUPS:format(runs, cardIndex))
 	elseif runs == 1 then
-		w.title:SetText(cardIndex == 1 and L.RATE_HEADLINE_ONE or L.RATE_HEADLINE_RUN:format(cardIndex))
+		w.title:SetText(
+			cardIndex == 1 and L.RATE_HEADLINE_SINGLE or ns.Locale.Count("RATE_HEADLINE_PLAYERS", cardIndex, cardIndex)
+		)
 	else
 		w.title:SetText(title)
 	end

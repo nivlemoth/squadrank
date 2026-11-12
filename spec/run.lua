@@ -12,6 +12,7 @@ local SPECS = {
 	"spec/runs_spec.lua",
 	"spec/debug_spec.lua",
 	"spec/locale_spec.lua",
+	"spec/l10n_spec.lua",
 	"spec/smoke_spec.lua",
 }
 

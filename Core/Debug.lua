@@ -101,6 +101,9 @@ function Debug.BuildReport()
 	add("SquadRank debug report")
 	add("generated: %s", date("%Y-%m-%d %H:%M:%S"))
 	add("addon version: %s", ns.VERSION)
+	if ns.Locale then
+		add("locale: %s", ns.Locale.Summary())
+	end
 	local Compat = ns.Compat
 	if Compat then
 		local build = Compat.Build()

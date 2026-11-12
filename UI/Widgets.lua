@@ -25,6 +25,37 @@ function UI.LabelText(label)
 	return "|c" .. (LABEL_COLOR[label] or LABEL_COLOR.new) .. L["LABEL_" .. label] .. "|r"
 end
 
+-- Upper case for small headings. string.upper only knows ASCII, so text with any other
+-- letters (German umlauts, Cyrillic, Korean, Chinese) is shown as written instead of mangled.
+function UI.Caps(text)
+	text = tostring(text or "")
+	if text:find("[\128-\255]") then
+		return text
+	end
+	return text:upper()
+end
+
+local function tooltipOwnedBy(owner)
+	return GameTooltip and GameTooltip.IsOwned and GameTooltip:IsOwned(owner) or false
+end
+
+-- Shows the full text of a font string in a tooltip when it does not fit its width.
+function UI.TruncationTooltip(owner, fontString)
+	owner:HookScript("OnEnter", function(self)
+		local ok, truncated = pcall(fontString.IsTruncated, fontString)
+		if ok and truncated and GameTooltip and not tooltipOwnedBy(self) then
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			GameTooltip:SetText(fontString:GetText() or "", 1, 1, 1, 1, true)
+			GameTooltip:Show()
+		end
+	end)
+	owner:HookScript("OnLeave", function(self)
+		if tooltipOwnedBy(self) then
+			GameTooltip:Hide()
+		end
+	end)
+end
+
 function UI.Date(t)
 	if type(t) ~= "number" then
 		return "?"
@@ -40,24 +71,25 @@ function UI.TagNames(tagIds, limit)
 		end
 		names[#names + 1] = L["TAG_" .. id]
 	end
-	return table.concat(names, ", ")
+	return table.concat(names, L.LIST_SEP)
 end
 
 -- Text lines describing a player's reputation, shared by the toast and the history window.
 function UI.SummaryLines(summary)
 	local lines = {}
 	if summary.count == 1 then
-		lines[#lines + 1] = L.FMT_RATED_ONE:format(summary.weighted or 0)
+		lines[#lines + 1] = L.FMT_RATED_ONCE:format(summary.weighted or 0)
 	elseif summary.count > 1 then
-		lines[#lines + 1] = L.FMT_RATED_MANY:format(summary.count, summary.weighted or 0)
+		lines[#lines + 1] = ns.Locale.Count("FMT_RATED_TIMES", summary.count, summary.count, summary.weighted or 0)
 	end
 	for _, role in ipairs(ns.Ratings.ROLES) do
 		local stat = summary.roles[role]
 		if stat then
 			if stat.count == 1 then
-				lines[#lines + 1] = L.FMT_ROLE_ONE:format(L["ROLE_" .. role], stat.avg)
+				lines[#lines + 1] = L.FMT_ROLE_ONCE:format(L["ROLE_" .. role], stat.avg)
 			else
-				lines[#lines + 1] = L.FMT_ROLE_MANY:format(L["ROLE_" .. role], stat.avg, stat.count)
+				lines[#lines + 1] =
+					ns.Locale.Count("FMT_ROLE_RUNS", stat.count, L["ROLE_" .. role], stat.avg, stat.count)
 			end
 		end
 	end

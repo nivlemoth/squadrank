@@ -96,7 +96,10 @@ local function paint(rec)
 
 	if summary.count > 0 and summary.weighted then
 		w.score:SetText(UI.Colorize(("%.1f"):format(summary.weighted), UI.ScoreColor(summary.weighted)))
-		w.scoreSub:SetText(summary.count == 1 and L.DETAIL_AVG_ONE or L.DETAIL_AVG_MANY:format(summary.count))
+		w.scoreSub:SetText(
+			summary.count == 1 and L.DETAIL_AVG_SINGLE
+				or ns.Locale.Count("DETAIL_AVG_RATINGS", summary.count, summary.count)
+		)
 	else
 		w.score:SetText("|cff808080-|r")
 		w.scoreSub:SetText(L.DETAIL_NO_RATINGS)
@@ -203,7 +206,7 @@ local function build(page)
 
 	local history = UI.Text(drawer, "GameFontDisableSmall")
 	history:SetPoint("TOPLEFT", 18, -212)
-	history:SetText(L.DETAIL_HISTORY:upper())
+	history:SetText(UI.Caps(L.DETAIL_HISTORY))
 	local line = drawer:CreateTexture(nil, "BORDER")
 	line:SetPoint("TOPLEFT", 18, -226)
 	line:SetPoint("TOPRIGHT", -18, -226)

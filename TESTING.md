@@ -89,6 +89,18 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 40 | `/sr purge all` and confirm | Chat says all data deleted. The list is empty. Settings are unchanged. |
 | 41 | `/sr rate Testdummy`, click **3**, paste this into the note box: `|TInterface\Icons\x:16|t hi |Hitem:1|h[x]|h` and press Enter. `/sr`, click Testdummy | The note shows as plain text `hi [x]`. No icon, no color, no link. |
 
+## G. Languages
+
+| # | Do this | Expected |
+|---|---|---|
+| 42 | `/sr debug` | A line `locale: client enUS, using enUS; 0 translated, 0 rejected, 0 missing keys` (your client's code). |
+| 43 | `/sr debug locale deDE`, then `/reload`, then `/sr` | Chat says the override is set. After the reload the window is in German: "Bewerten", "Spieler", "Gruppen", "Einstellungen", "Info". Class and zone names stay in your client language. |
+| 44 | In German, open Players, rate someone, click a tag, filter by **Merkmal** | Everything works as in English. Long labels end in "..." and show in full on hover; nothing overflows its button. |
+| 45 | `/sr debug` | `locale: client enUS, using deDE (developer override deDE); N translated, 0 rejected, 0 missing keys`. |
+| 46 | `/sr debug locale ruRU`, `/reload`, open every page | Cyrillic text shows (not boxes). Section headings are not broken. |
+| 47 | `/sr debug locale off`, `/reload` | Back to your client language. Your ratings, tags and notes are exactly as before. |
+| 48 | (If you have a Korean or Chinese client) open every page | Text shows with the client's font. On a Latin client with the override, boxes are expected (font limit). |
+
 ## What I most need back
 
 1. The full `/sr debug` text after step 10 and after step 29.

@@ -97,7 +97,15 @@ function commands.list(arg)
 	local shown = math.min(#rows, 15)
 	for i = 1, shown do
 		local summary = ns.Ratings.Summary(rows[i].rec, now, minRatings)
-		print(L.MSG_LIST_FMT:format(UI.ColoredName(rows[i].rec), UI.LabelText(summary.label), summary.count))
+		print(
+			ns.Locale.Count(
+				"MSG_LIST",
+				summary.count,
+				UI.ColoredName(rows[i].rec),
+				UI.LabelText(summary.label),
+				summary.count
+			)
+		)
 	end
 	if #rows > shown then
 		print(L.MSG_LIST_MORE:format(#rows - shown))
@@ -122,11 +130,34 @@ function commands.purge(arg)
 	end
 end
 
+-- Developer-only: "/sr debug locale deDE" shows SquadRank in another language after /reload;
+-- "/sr debug locale off" goes back to the client language. Never changes saved ratings.
+local function setDeveloperLocale(code)
+	local settings = ns.db.settings
+	if code == "off" or code == "" then
+		settings.devLocale = nil
+		ns.Print(L.MSG_LOCALE_CLEARED)
+		return
+	end
+	if not (ns.Locale.SUPPORTED[code] or code == "enGB") then
+		ns.Print(L.MSG_LOCALE_USAGE)
+		return
+	end
+	settings.devLocale = code
+	ns.Print(L.MSG_LOCALE_SET:format(code))
+end
+
 function commands.debug(arg)
+	local word, rest = arg:match("^(%S*)%s*(%S*)")
+	if word and word:lower() == "locale" then
+		local code = rest or ""
+		setDeveloperLocale(code:lower() == "off" and "off" or (code:sub(1, 2):lower() .. code:sub(3, 4):upper()))
+		return
+	end
 	if arg:lower() == "lists" then
 		local settings = ns.db.settings
 		settings.simpleLists = not settings.simpleLists
-		ns.Print(L.MSG_LISTS_SIMPLE:format(settings.simpleLists and "ON" or "OFF"))
+		ns.Print(L.MSG_LISTS_SIMPLE:format(settings.simpleLists and L.STATE_ON or L.STATE_OFF))
 		return
 	end
 	ns.DebugPanel.Show()

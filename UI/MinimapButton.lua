@@ -41,7 +41,12 @@ local function showTooltip(self)
 	GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 	GameTooltip:SetText(L.ADDON, 1, 1, 1)
 	if pendingCount > 0 then
-		GameTooltip:AddLine(L.MINIMAP_PENDING:format(pendingCount), C.gold[1], C.gold[2], C.gold[3])
+		GameTooltip:AddLine(
+			ns.Locale.Count("MINIMAP_PENDING", pendingCount, pendingCount),
+			C.gold[1],
+			C.gold[2],
+			C.gold[3]
+		)
 	end
 	GameTooltip:AddLine(L.MINIMAP_LEFT, C.muted[1], C.muted[2], C.muted[3])
 	GameTooltip:AddLine(L.MINIMAP_RIGHT, C.muted[1], C.muted[2], C.muted[3])

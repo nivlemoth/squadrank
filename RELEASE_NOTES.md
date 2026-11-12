@@ -1,3 +1,16 @@
+# Unreleased: SquadRank in your language
+
+- **Follows your game language.** German, French, Spanish (Spain and Latin America), Brazilian Portuguese,
+  Italian, Russian, Korean, Simplified and Traditional Chinese, with English for everything else.
+- **Your data is unchanged.** Ratings, tags and notes are stored the same way in every language; switching the
+  game language changes only what you see.
+- **Better counts.** "1 rating" instead of "1 ratings", with proper plural forms in each language.
+- **Long labels fit.** Text that does not fit a button or tag ends in "..." and shows in full on hover.
+- Translations are machine-assisted and waiting for native-speaker review: corrections are welcome
+  (see docs/LOCALIZATION.md).
+
+---
+
 # SquadRank 0.3.0
 
 ## New in 0.3.0: one window, new look

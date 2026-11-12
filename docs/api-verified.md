@@ -124,3 +124,14 @@ cover them: "minimap button" and "flat look".
 | Font objects `GameFontHighlightHuge`, `GameFontHighlightHuge2`, `GameFontHighlightMedium`, `GameFontNormalMed2`, `GameFontHighlightExtraSmall` | Blizzard_Fonts_Shared Fonts.xml | verified-src | |
 | Textures `Interface\Minimap\UI-Minimap-ZoomButton-Highlight` | Blizzard_Minimap/Mainline/Minimap.xml | verified-src | |
 | Textures `Interface\Minimap\MiniMap-TrackingBorder`, `Interface\Minimap\UI-Minimap-Background`, icons `INV_Misc_Note_01`, `INV_Misc_Map_01`, `Trade_Engineering`, `INV_Misc_Book_09` | game files, not referenced in Forever's UI source | **unverified** (art only) | a missing file shows nothing; TESTING step 4 checks them by eye |
+
+## Added for localization (2026-11-12)
+
+| API | Source in Forever | Status | Guard / fallback |
+|---|---|---|---|
+| `GetLocale()` -> localeName | LocaleDocumentation.lua | verified-src | pcall; English if missing or not a four-letter code |
+| `FontString:IsTruncated()` | SimpleFontStringAPIDocumentation.lua | verified-src | pcall; no tooltip if missing |
+| `GameTooltip:IsOwned(owner)` | Blizzard FrameXML (GameTooltip) | not in generated docs | checked for nil before use |
+| `UNKNOWNOBJECT` (localized "Unknown") | GlobalStrings | already used by Compat | compared only; nil-safe |
+| TOC `## Notes-<locale>:` | TOC format (docs/ref/toc-format.md) | documented | English `## Notes:` first |
+| Font families with korean / simplifiedchinese / traditionalchinese / russian members | Blizzard_Fonts_Shared/Mainline/Fonts.xml | verified-src | no font change made |

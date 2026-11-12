@@ -1,0 +1,232 @@
+-- 한국어 (koKR). Machine-assisted translation; needs native-speaker review (docs/LOCALIZATION.md).
+-- Korean has no plural forms: every count uses _OTHER.
+local _, ns = ...
+
+ns.Locale.Register("koKR", function(L)
+	-- 평판
+	L.LABEL_new = "신규"
+	L.LABEL_trusted = "신뢰"
+	L.LABEL_mixed = "보통"
+	L.LABEL_caution = "주의"
+
+	-- 역할
+	L.ROLE_tank = "방어 전담"
+	L.ROLE_healer = "치유 전담"
+	L.ROLE_dps = "공격 전담"
+
+	-- 태그
+	L.TAG_role_good = "역할 수행 우수"
+	L.TAG_communicator = "소통이 좋음"
+	L.TAG_helpful = "친절/참을성 있음"
+	L.TAG_efficient = "효율적"
+	L.TAG_fair_loot = "공정한 전리품 분배"
+	L.TAG_stayed = "끝까지 함께함"
+	L.TAG_knows_dungeon = "던전을 잘 앎"
+	L.TAG_role_bad = "역할 수행 미흡"
+	L.TAG_ninja = "전리품 독식"
+	L.TAG_left_early = "중간에 이탈"
+	L.TAG_afk = "자리 비움"
+	L.TAG_toxic = "비매너"
+	L.TAG_reckless = "무리한 풀링"
+	L.TAG_ignores_mechanics = "공략 무시"
+
+	-- 요약 (알림 및 기록)
+	L.FMT_RATED_ONCE = "평가 1회, 점수 %.1f"
+	L.FMT_RATED_TIMES_OTHER = "평가 %d회, 최근 평균 %.1f"
+	L.FMT_ROLE_ONCE = "%s %.1f (1회)"
+	L.FMT_ROLE_RUNS_OTHER = "%s %.1f (%d회)"
+	L.FMT_TAGS = "태그: %s"
+	L.LIST_SEP = ", "
+	L.FMT_NOTE = "메모: %s"
+	L.FMT_MORE = "...외 %d명"
+
+	-- 알림
+	L.TOAST_JOIN_PLAYER = "함께 플레이한 적 있는 플레이어입니다"
+	L.TOAST_JOIN_PLAYERS = "평가했던 플레이어가 파티에 있습니다"
+	L.BTN_RATE = "평가"
+
+	-- "파티 평가하기"
+	L.ALERT_TITLE = "파티 평가하기"
+	L.ALERT_ONE_GROUP = "%s, 평가 대기 %d명"
+	L.ALERT_GROUPS = "파티 %d개, 평가 대기 %d명"
+	L.ALERT_TIP =
+		"클릭하면 한 창에서 모두 평가할 수 있습니다.\n닫으면 다음 파티까지 기다립니다."
+
+	-- 평가 페이지
+	L.RATE_TITLE = "파티 평가하기"
+	L.RATE_TITLE_PLAYER = "플레이어 평가"
+	L.RATE_HEADLINE_GROUPS = "파티 %d개, 평가 대기 %d명"
+	L.RATE_HEADLINE_SINGLE = "파티원 1명"
+	L.RATE_HEADLINE_PLAYERS_OTHER = "파티원 %d명"
+	L.RATE_NO_RUN = "기타 플레이어"
+	L.RATE_PROGRESS = "%d/%d명 평가 완료"
+	L.RATE_ALL_DONE = "모두 평가했습니다. 감사합니다!"
+	L.RATE_HINT =
+		"점수를 클릭하면 저장됩니다. 카드를 클릭하면 태그와 메모를 추가할 수 있습니다."
+	L.RATE_ROLE_TIP = "역할: %s. 클릭하여 변경합니다."
+	L.RATE_NOTE_HINT = "메모 추가 (선택)"
+	L.RATE_SHOW_NEGATIVE = "부정적 태그..."
+	L.RATE_SHOW_POSITIVE = "긍정적 태그..."
+	L.RATE_FAILED = "평가를 저장하지 못했습니다 (%s)."
+	L.RATE_EMPTY = "평가할 사람이 없습니다."
+	L.RATE_CAUGHT_UP = "모두 완료"
+	L.RATE_CAUGHT_UP_TEXT = "평가를 기다리는 사람이 없습니다. 다음 파티가 끝나면 함께한 플레이어가"
+		.. " 여기에 표시됩니다. 파티원을 오른쪽 클릭해서 평가할 수도 있습니다."
+	L.SCORE_1 = "1: 최악"
+	L.SCORE_2 = "2: 미흡"
+	L.SCORE_3 = "3: 보통"
+	L.SCORE_4 = "4: 좋음"
+	L.SCORE_5 = "5: 최고"
+	L.BTN_DONE = "완료"
+	L.BTN_SKIP = "모두 건너뛰기"
+	L.BTN_SKIP_TIP =
+		"이 파티들에 대해 더 묻지 않습니다.\n파티 탭에서 언제든 평가할 수 있습니다."
+
+	-- 창과 사이드바
+	L.NAV_RATE = "평가"
+	L.NAV_SETTINGS = "설정"
+	L.NAV_ABOUT = "정보"
+	L.ABOUT_TITLE = "SquadRank 정보"
+	L.RUNS_TITLE = "내 파티 기록"
+
+	-- 플레이어와 파티
+	L.STAT_PLAYERS = "만난 플레이어"
+	L.STAT_RATINGS = "남긴 평가"
+	L.STAT_TRUSTED = "신뢰하는 플레이어"
+	L.SEARCH_HINT = "플레이어 검색"
+	L.SEARCH_RUNS_HINT = "파티 검색"
+	L.COL_SCORE = "점수"
+	L.COL_STATUS = "상태"
+	L.RUN_STATUS_PENDING = "평가 대기"
+	L.RUN_STATUS_DONE = "평가 완료"
+	L.RUN_STATUS_SKIPPED = "건너뜀"
+	L.RUNS_HINT = "파티를 클릭하면 평가하거나 평가를 수정할 수 있습니다."
+	L.TAB_PLAYERS = "플레이어"
+	L.TAB_RUNS = "파티"
+	L.FILTER_LABEL = "평판"
+	L.FILTER_ROLE = "역할"
+	L.FILTER_TAG = "태그"
+	L.FILTER_ALL = "전체"
+	L.FILTER_FMT = "%s: %s"
+	L.COUNT_FMT = "%d명 표시"
+	L.COL_PLAYER = "플레이어"
+	L.COL_LABEL = "평판"
+	L.COL_RATINGS = "평가 수"
+	L.COL_SEEN = "마지막으로 본 날"
+	L.COL_INSTANCE = "인스턴스"
+	L.COL_DATE = "날짜"
+	L.COL_PLAYERS = "인원"
+	L.COL_RATED = "평가"
+	L.EMPTY_PLAYERS =
+		"조건에 맞는 플레이어가 없습니다. 파티를 맺고 누군가를 평가해 보세요."
+	L.EMPTY_RUNS = "아직 기록된 파티가 없습니다."
+	L.MAIN_HINT = "플레이어를 클릭하면 기록을 봅니다. 오른쪽 클릭으로 더 많은 기능."
+	L.RUN_PLAYERS_OTHER = "%d명"
+	L.RUN_RATED_FMT = "%d/%d명 평가"
+	L.RUN_GROUP_FMT = "%s 파티"
+	L.UNKNOWN_INSTANCE = "알 수 없는 인스턴스"
+	L.UNKNOWN_ZONE = "필드"
+	L.MENU_RATE = "SquadRank로 평가"
+	L.MENU_HISTORY = "기록 보기"
+	L.MENU_PURGE = "플레이어 삭제"
+
+	-- 플레이어 기록
+	L.DETAIL_CLASS_LEVEL = "%s레벨 %s"
+	L.DETAIL_NO_RATINGS = "아직 평가가 없습니다."
+	L.DETAIL_IMPORTED = "SquadRank 1.x에서 가져옴"
+	L.DETAIL_SEEN_SHORT = "마지막으로 본 날: %s"
+	L.DETAIL_AVG_SINGLE = "평가 1회 기준"
+	L.DETAIL_AVG_RATINGS_OTHER = "평가 %d회 평균"
+	L.DETAIL_HISTORY = "기록"
+	L.BTN_PURGE = "삭제"
+
+	-- 설정
+	L.SET_TOAST = "평가한 플레이어가 들어오면 알림 표시"
+	L.SET_TOAST_TIP = "파티마다 플레이어당 한 번, 전투 중에는 표시하지 않습니다."
+	L.SET_DURATION = "알림 표시 시간 (초)"
+	L.SET_DURATION_TIP = "알림이 화면에 머무는 시간입니다."
+	L.SET_MIN = "평판 표시에 필요한 평가 수"
+	L.SET_MIN_TIP = "평가가 이보다 적은 플레이어는 신규로 표시됩니다."
+	L.SET_PROMPT = "파티가 끝나면 평가를 제안"
+	L.SET_PROMPT_TIP_SHORT = "던전이나 5분 이상의 파티가 끝나고 파티를 떠나면 표시됩니다."
+	L.SET_PROMPT_TIP = "던전, 공격대 또는 5분 이상의 필드 파티가 끝나고 파티를 떠나면"
+		.. " 작은 알림이 기다립니다."
+	L.SET_RECENT = "블리자드 최근 아군 목록 사용 (읽기 전용)"
+	L.SET_RECENT_TIP =
+		"평가하는 플레이어를 이름으로 찾습니다. 블리자드 메모에는 절대 쓰지 않습니다."
+	L.SET_MINIMAP = "미니맵 버튼 표시"
+	L.SET_MINIMAP_TIP = "왼쪽 클릭: SquadRank 열기, 오른쪽 클릭: 설정. 드래그하여 이동합니다."
+	L.SET_SECTION_ALERTS = "알림"
+	L.SET_SECTION_REPUTATION = "평판"
+	L.SET_SECTION_INTERFACE = "인터페이스"
+	L.SET_SECTION_DATA = "내 데이터"
+	L.BTN_DELETE_ALL = "모두 삭제"
+	L.SET_PURGE_ALL = "SquadRank 데이터 모두 삭제"
+	L.SET_PURGE_ALL_TIP = "저장된 모든 플레이어, 평가, 파티를 삭제합니다. 설정은 유지됩니다."
+	L.SET_PURGE_PLAYER = "플레이어 한 명 삭제"
+	L.SET_PURGE_PLAYER_TIP =
+		"플레이어 목록을 엽니다. 플레이어를 오른쪽 클릭하고 삭제를 선택하세요."
+	L.BTN_OPEN_LIST = "목록 열기"
+	L.CONFIRM_PURGE_ALL =
+		"SquadRank에 저장된 모든 플레이어, 평가, 파티를 삭제할까요?\n되돌릴 수 없습니다."
+	L.CONFIRM_PURGE_PLAYER = "%s 및 남긴 모든 평가를 삭제할까요?"
+
+	-- 정보
+	L.ABOUT_BY = "제작: %s"
+	L.ABOUT_VERSION = "버전 %s"
+	L.ABOUT_TAGLINE = "누가 파티를 빛냈는지, 누가 그렇지 않았는지 기억하세요."
+	L.ABOUT_F1_TITLE = "클릭 한 번으로 평가"
+	L.ABOUT_F1_TEXT =
+		"파티가 끝나면 한곳에서 모두 평가하세요. 플레이어당 클릭 한 번, 태그와 메모는 원할 때만."
+	L.ABOUT_F2_TITLE = "누가 들어오는지 확인"
+	L.ABOUT_F2_TEXT =
+		"평가했던 사람이 파티에 들어오면 점수와 메모를 담은 조용한 알림을 띄웁니다."
+	L.ABOUT_F3_TITLE = "철저한 개인 정보 보호"
+	L.ABOUT_F3_TEXT =
+		"모든 데이터는 내 컴퓨터에만 저장됩니다. 어떤 것도 전송, 공유, 업로드하지 않습니다."
+	L.ABOUT_COMMANDS = "명령어"
+	L.ABOUT_PRIVACY = "SquadRank는 네트워크를 사용하지 않으며 블리자드 메모에 쓰지 않습니다."
+		.. " 평가는 SavedVariables 파일에만 저장됩니다."
+
+	-- 미니맵 버튼
+	L.MINIMAP_PENDING_OTHER = "평가 대기 중인 플레이어 %d명"
+	L.MINIMAP_LEFT = "왼쪽 클릭: SquadRank 열기"
+	L.MINIMAP_RIGHT = "오른쪽 클릭: 설정"
+	L.MINIMAP_DRAG = "드래그: 버튼 이동"
+
+	-- 디버그 창
+	L.DEBUG_TITLE = "SquadRank 디버그 보고서"
+	L.DEBUG_HINT = "상자를 클릭하고 Ctrl+A, Ctrl+C를 눌러 복사하세요."
+	L.BTN_SELFTEST = "자가 진단 실행"
+	L.BTN_REFRESH = "새로 고침"
+
+	-- 대화창 메시지
+	L.MSG_COMBAT = "전투 중에는 사용할 수 없습니다. 전투가 끝난 후 다시 시도하세요."
+	L.MSG_READONLY = "읽기 전용 모드 (%s). 아무것도 저장되지 않습니다. /sr debug를 확인하세요."
+	L.MSG_TOO_LARGE =
+		"저장 파일이 너무 커서 불러오지 못할 수 있습니다. /sr purge를 사용하세요."
+	L.MSG_NOT_FOUND = "'%s' 이름으로 저장된 플레이어가 없습니다."
+	L.MSG_AMBIGUOUS = "'%s'에 해당하는 플레이어가 여럿입니다. 하이픈 뒤 부분을 추가하세요:"
+	L.MSG_PURGED = "%s 삭제됨."
+	L.MSG_PURGED_ALL = "SquadRank 데이터를 모두 삭제했습니다."
+	L.MSG_NO_PENDING = "평가를 기다리는 파티가 없습니다."
+	L.MSG_UNIT_UNKNOWN =
+		"지금은 해당 플레이어 정보를 확인할 수 없습니다. 잠시 후 다시 시도하세요."
+	L.MSG_SELFTEST = "자가 진단: 통과 %d, 실패 %d, 정보 %d. 자세한 내용은 /sr debug."
+	L.MSG_LIST_NONE = "일치하는 저장된 플레이어가 없습니다."
+	L.MSG_LIST_OTHER = "%s - %s, 평가 %d회"
+	L.MSG_LIST_MORE = "...외 %d명. 전체 목록은 /sr에서 보세요."
+	L.MSG_LISTS_SIMPLE = "간단한 목록 모드: %s. 적용하려면 /reload를 입력하세요."
+	L.STATE_ON = "켜짐"
+	L.STATE_OFF = "꺼짐"
+	L.MSG_LOCALE_SET = "개발용 언어를 %s(으)로 설정했습니다. 적용하려면 /reload를 입력하세요."
+	L.MSG_LOCALE_CLEARED =
+		"개발용 언어를 해제했습니다. 게임 언어를 쓰려면 /reload를 입력하세요."
+	L.MSG_LOCALE_USAGE = "사용법: /sr debug locale <코드> (예: deDE) 또는 /sr debug locale off."
+	L.MSG_HELP_1 = "/sr - 창 열기"
+	L.MSG_HELP_2 = "/sr rate [이름] - 플레이어 평가, 이름이 없으면 마지막 파티"
+	L.MSG_HELP_3 = "/sr list [텍스트] - 저장된 플레이어 목록"
+	L.MSG_HELP_4 = "/sr purge <이름> | all - 저장된 데이터 삭제"
+	L.MSG_HELP_5 = "/sr settings, /sr about, /sr minimap - 설정, 정보, 미니맵 버튼 표시/숨기기"
+	L.MSG_HELP_6 = "/sr debug - 디버그 보고서 열기;  /sr selftest - 게임 API 점검"
+end)

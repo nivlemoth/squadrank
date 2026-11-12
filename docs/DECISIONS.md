@@ -107,3 +107,40 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
     pulsing gold dot on the minimap button.
 37. **Author credit.** "by Nivlemoth" on the About page and at the foot of the sidebar, as John asked.
 38. **Version 0.3.0.** No database change; schema stays 1. Two new settings keys get defaults on load.
+
+## Localization (2026-11-12, no version bump)
+
+39. **Own small locale engine, no library.** The project already had one `L` table and a "zero third-party
+    libraries" rule, so `Locales/Locale.lua` (about 250 lines) extends it instead of adding AceLocale. English
+    stays the complete base catalog; only the file for the client language runs, so the other nine cost
+    load time but no lookups.
+40. **Language = `GetLocale()` only.** Never realm, faction or OS. enGB uses enUS. Unknown codes use English.
+    A developer override (`/sr debug locale <code>` + `/reload`) is stored in `settings.devLocale` and read
+    from the raw SavedVariable at load (possible because the TOC has `LoadSavedVariablesFirst`). It only
+    accepts four-letter codes and changes no rating data.
+41. **Translations are checked before use.** Unknown keys, blank values, and values whose `%` placeholders
+    or `|` escape codes differ from English are dropped (English shows) and counted in `/sr debug`. A
+    missing English key shows the key name and is logged once; it never raises an error.
+42. **No data migration.** Saved data already used language-independent IDs for roles, tags, reputation
+    labels and run status, and filters compare IDs. Nothing stored was English display text, so no schema
+    change, no backup, nothing to roll back. The 1.x importer's check for an unknown name now also accepts
+    the client's localized `UNKNOWNOBJECT`, so a French 1.x file skips "Inconnu" the way an English one skips
+    "Unknown".
+43. **Plurals as key families.** Count strings use `_ONE/_FEW/_MANY/_OTHER` variants picked by CLDR rules
+    (English-like, French/Portuguese 0-1, Russian three forms, Korean/Chinese none). This also fixes the
+    English "1 ratings" in `/sr list` and "1 players" in the minimap tooltip. Strings with two counts use a
+    colon form ("Groups: %d, players to rate: %d") so no language needs agreement for them. Seven keys the code no
+    longer used were removed from the catalog; a few keys were renamed so `_ONE`/`_MANY` is reserved for
+    plural forms.
+44. **Long and non-Latin text.** Flat buttons, tag chips, sidebar entries, stat tiles, settings hints and the
+    rating card subtitle now have fixed label widths: text that does not fit ends in "..." and the full text
+    shows in a tooltip (`FontString:IsTruncated`). Small headings were upper-cased with `string.upper`, which
+    only knows ASCII and would mangle "Ä" or Cyrillic; `UI.Caps` now leaves non-ASCII text as written. No
+    fonts were changed: every SquadRank font object inherits Blizzard's base fonts, which Forever defines
+    with Korean, Simplified Chinese, Traditional Chinese and Russian alphabets (Blizzard_Fonts_Shared).
+45. **What stays English.** Product name, author name, the chat prefix, the developer debug report body and
+    self-test row names (they are sent to the developer; the window, buttons and chat summary are
+    translated), and slash command words.
+46. **Locales and Forever.** Forever's UI source (`forever` @ 4cd0ab7) documents `GetLocale()` and ships
+    font families for Korean, Chinese and Cyrillic, but it does not say which client languages Blizzard
+    sells for Forever. SquadRank ships all ten catalogs; a language Forever does not offer simply never loads.

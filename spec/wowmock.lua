@@ -142,6 +142,9 @@ function mock.install()
 		world.frames[#world.frames + 1] = frame
 		return frame
 	end
+	_G.GetLocale = function()
+		return world.locale or "enUS"
+	end
 	_G.Minimap = newObject("Frame")
 	_G.GetCursorPosition = function()
 		return 0, 0

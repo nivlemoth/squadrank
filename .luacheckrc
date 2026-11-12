@@ -38,6 +38,7 @@ read_globals = {
 	"MinimalSliderWithSteppersMixin",
 	"CreateColor",
 	"GetCursorPosition",
+	"GetLocale",
 	-- unit and group
 	"UnitExists",
 	"UnitIsPlayer",

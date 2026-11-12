@@ -105,9 +105,9 @@ local function show(runs)
 		players = players + #run.members
 	end
 	if #runs == 1 then
-		frame.body:SetText(L.ALERT_ONE:format(UI.RunName(runs[1]), players))
+		frame.body:SetText(L.ALERT_ONE_GROUP:format(UI.RunName(runs[1]), players))
 	else
-		frame.body:SetText(L.ALERT_MANY:format(#runs, players))
+		frame.body:SetText(L.ALERT_GROUPS:format(#runs, players))
 	end
 	if frame:IsShown() then
 		return

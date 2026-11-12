@@ -22,9 +22,9 @@ Migrations.steps[0] = function(db, now)
 	for key, p in pairs(oldPlayers) do
 		if type(p) == "table" and type(p.name) == "string" then
 			local name = Util.Sanitize(p.name, 48)
-			if name ~= "" and name ~= "Unknown" then
+			if name ~= "" and name ~= "Unknown" and name ~= UNKNOWNOBJECT then
 				local suffix = Util.Sanitize(p.realm, 48)
-				if suffix == "" or suffix == "Unknown" then
+				if suffix == "" or suffix == "Unknown" or suffix == UNKNOWNOBJECT then
 					suffix = nil
 				end
 				local pid = Util.NameKey(name, suffix)

@@ -1,6 +1,16 @@
 ## Interface: 16001
 ## Title: SquadRank
 ## Notes: Remember how past groupmates performed and get a heads-up when they join.
+## Notes-deDE: Merkt sich, wie frühere Gruppenmitglieder gespielt haben, und gibt Bescheid, wenn sie beitreten.
+## Notes-frFR: Retenez comment vos anciens coéquipiers ont joué et soyez prévenu quand ils rejoignent votre groupe.
+## Notes-esES: Recuerda cómo jugaron tus antiguos compañeros de grupo y te avisa cuando se unen.
+## Notes-esMX: Recuerda cómo jugaron tus antiguos compañeros de grupo y te avisa cuando se unen.
+## Notes-ptBR: Lembre como seus antigos colegas de grupo jogaram e seja avisado quando eles entrarem.
+## Notes-itIT: Ricorda come hanno giocato i tuoi ex compagni di gruppo e ti avvisa quando entrano.
+## Notes-ruRU: Запоминает, как играли ваши бывшие согруппники, и предупреждает, когда они входят в группу.
+## Notes-koKR: 함께했던 파티원의 플레이를 기억하고, 그들이 파티에 들어오면 알려 줍니다.
+## Notes-zhCN: 记住以往队友的表现，并在他们加入队伍时提醒你。
+## Notes-zhTW: 記住以往隊友的表現，並在他們加入隊伍時提醒你。
 ## Author: Nivlemoth
 ## Version: 0.3.0
 ## Category: Group
@@ -10,7 +20,18 @@
 ## AddonCompartmentFunc: SquadRank_OnAddonCompartmentClick
 
 Core\Init.lua
+Locales\Locale.lua
 Locales\enUS.lua
+Locales\deDE.lua
+Locales\frFR.lua
+Locales\esES.lua
+Locales\esMX.lua
+Locales\ptBR.lua
+Locales\itIT.lua
+Locales\ruRU.lua
+Locales\koKR.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
 Core\Util.lua
 Core\Debug.lua
 Core\Compat.lua

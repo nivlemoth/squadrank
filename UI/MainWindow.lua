@@ -244,7 +244,8 @@ local function fillRunRow(row, item)
 	)
 	cols[1]:SetText(item.name)
 	cols[2]:SetText(UI.Date(run.endedAt or run.startedAt))
-	cols[3]:SetText(L.RUN_PLAYERS_FMT:format(run.groupSize or (#run.members + 1)))
+	local size = run.groupSize or (#run.members + 1)
+	cols[3]:SetText(ns.Locale.Count("RUN_PLAYERS", size, size))
 	local total = #run.members
 	local share = total > 0 and item.rated / total or 0
 	row.fill:SetWidth(math.max(1, 60 * share))
@@ -265,7 +266,7 @@ local function header(page, widths, keys, y, x0)
 	bar:SetHeight(18)
 	local cols = columns(bar, widths, "GameFontDisableSmall", x0)
 	for i, key in ipairs(keys) do
-		cols[i]:SetText(L[key]:upper())
+		cols[i]:SetText(UI.Caps(L[key]))
 	end
 	return bar
 end
@@ -304,6 +305,10 @@ local function statTile(page, index, label)
 	tile.label = UI.Text(tile, "GameFontDisableSmall")
 	tile.label:SetPoint("BOTTOMLEFT", 14, 8)
 	tile.label:SetText(label)
+	tile.label:SetWidth(176)
+	tile.label:SetWordWrap(false)
+	tile:EnableMouse(true)
+	UI.TruncationTooltip(tile, tile.label)
 	tile.accent = accent
 	return tile
 end

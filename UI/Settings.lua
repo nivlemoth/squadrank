@@ -135,7 +135,7 @@ local function buildPage(page)
 	local function section(title)
 		local text = UI.Text(page, "GameFontNormalSmall")
 		text:SetPoint("TOPLEFT", 2, -y - 6)
-		text:SetText(title:upper())
+		text:SetText(UI.Caps(title))
 		text:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
 		y = y + 26
 	end
@@ -154,6 +154,8 @@ local function buildPage(page)
 		hint:SetWidth(430)
 		hint:SetWordWrap(false)
 		hint:SetText(tip)
+		f:EnableMouse(true)
+		UI.TruncationTooltip(f, hint)
 		local control = makeControl(f)
 		control:SetPoint("RIGHT", -14, 0)
 		controls[#controls + 1] = control

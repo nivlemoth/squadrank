@@ -68,7 +68,7 @@ local function build(page)
 
 	local cmdHead = UI.Text(page, "GameFontNormalSmall")
 	cmdHead:SetPoint("TOPLEFT", 2, -270)
-	cmdHead:SetText(L.ABOUT_COMMANDS:upper())
+	cmdHead:SetText(UI.Caps(L.ABOUT_COMMANDS))
 	cmdHead:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
 	local commands = UI.Text(page, "GameFontHighlightSmall")
 	commands:SetPoint("TOPLEFT", 2, -292)

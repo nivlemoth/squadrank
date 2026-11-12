@@ -1,13 +1,10 @@
--- All user-facing text. To add a language, create Locales/<locale>.lua that fills the same
--- keys when GetLocale() matches, and list it in the TOC after this file.
+-- English: the complete, authoritative catalog. Every key the code uses must be here; every
+-- other locale is checked against it and falls back to it. See docs/LOCALIZATION.md.
+-- Keys ending in _ONE / _FEW / _MANY / _OTHER are plural forms used through ns.Locale.Count;
+-- English needs only _ONE (when the count can be 1) and _OTHER.
 local _, ns = ...
 
-local L = setmetatable({}, {
-	__index = function(_, key)
-		return tostring(key)
-	end,
-})
-ns.L = L
+local L = ns.Locale.base
 
 L.ADDON = "SquadRank"
 L.AUTHOR = "Nivlemoth"
@@ -41,31 +38,32 @@ L.TAG_reckless = "Reckless pulls"
 L.TAG_ignores_mechanics = "Ignores mechanics"
 
 -- Player summary lines (toast and history)
-L.FMT_RATED_ONE = "Rated once, score %.1f"
-L.FMT_RATED_MANY = "Rated %d times, recent average %.1f"
-L.FMT_ROLE_ONE = "%s %.1f over 1 run"
-L.FMT_ROLE_MANY = "%s %.1f over %d runs"
+L.FMT_RATED_ONCE = "Rated once, score %.1f"
+L.FMT_RATED_TIMES_OTHER = "Rated %d times, recent average %.1f"
+L.FMT_ROLE_ONCE = "%s %.1f over 1 run"
+L.FMT_ROLE_RUNS_OTHER = "%s %.1f over %d runs"
 L.FMT_TAGS = "Tags: %s"
+L.LIST_SEP = ", "
 L.FMT_NOTE = "Note: %s"
 L.FMT_MORE = "...and %d more"
 
 -- Toasts
-L.TOAST_JOIN_ONE = "You have played with this player"
-L.TOAST_JOIN_MANY = "Players you have rated are in your group"
+L.TOAST_JOIN_PLAYER = "You have played with this player"
+L.TOAST_JOIN_PLAYERS = "Players you have rated are in your group"
 L.BTN_RATE = "Rate"
 
 -- "Rate your squad" alert
 L.ALERT_TITLE = "Rate your squad"
-L.ALERT_ONE = "%s, %d to rate"
-L.ALERT_MANY = "%d groups, %d players to rate"
+L.ALERT_ONE_GROUP = "%s, %d to rate"
+L.ALERT_GROUPS = "%d groups, %d players to rate"
 L.ALERT_TIP = "Click to rate everyone in one window.\nClose it and it waits for your next group."
 
 -- Rating window
 L.RATE_TITLE = "Rate your squad"
 L.RATE_TITLE_PLAYER = "Rate a player"
-L.RATE_HEADLINE_MANY = "%d groups, %d players to rate"
-L.RATE_HEADLINE_ONE = "1 player from your group"
-L.RATE_HEADLINE_RUN = "%d players from your group"
+L.RATE_HEADLINE_GROUPS = "%d groups, %d players to rate"
+L.RATE_HEADLINE_SINGLE = "1 player from your group"
+L.RATE_HEADLINE_PLAYERS_OTHER = "%d players from your group"
 L.RATE_RUN_FMT = "%s   %s"
 L.RATE_NO_RUN = "Other players"
 L.RATE_PROGRESS = "%d of %d rated"
@@ -97,7 +95,6 @@ L.ABOUT_TITLE = "About SquadRank"
 L.RUNS_TITLE = "Your groups"
 
 -- Players and Runs pages
-L.MAIN_TITLE = "SquadRank"
 L.STAT_PLAYERS = "Players met"
 L.STAT_RATINGS = "Ratings given"
 L.STAT_TRUSTED = "Trusted players"
@@ -121,17 +118,16 @@ L.COUNT_FMT = "%d shown"
 L.COL_PLAYER = "Player"
 L.COL_LABEL = "Reputation"
 L.COL_RATINGS = "Ratings"
-L.COL_ROLES = "Role scores"
 L.COL_SEEN = "Last seen"
 L.COL_INSTANCE = "Instance"
 L.COL_DATE = "Date"
 L.COL_PLAYERS = "Group"
 L.COL_RATED = "Rated"
-L.COL_BOSSES = "Bosses"
 L.EMPTY_PLAYERS = "No players match. Group up, then rate someone."
 L.EMPTY_RUNS = "No runs recorded yet."
 L.MAIN_HINT = "Click a player for history. Right-click for more."
-L.RUN_PLAYERS_FMT = "%d players"
+L.RUN_PLAYERS_ONE = "%d player"
+L.RUN_PLAYERS_OTHER = "%d players"
 L.RUN_RATED_FMT = "%d/%d rated"
 L.RUN_GROUP_FMT = "Group in %s"
 L.UNKNOWN_INSTANCE = "Unknown instance"
@@ -140,18 +136,14 @@ L.MENU_RATE = "Rate in SquadRank"
 L.MENU_HISTORY = "Show history"
 L.MENU_PURGE = "Purge player"
 
--- Player history window
-L.DETAIL_TITLE = "Player history"
-L.DETAIL_SEEN = "First seen %s, last seen %s"
+-- Player history drawer
 L.DETAIL_CLASS_LEVEL = "Level %s %s"
-L.DETAIL_RULESETS = "Seen on: %s"
 L.DETAIL_NO_RATINGS = "No ratings yet."
-L.DETAIL_RATING_FMT = "%s   score %d   %s"
 L.DETAIL_IMPORTED = "imported from SquadRank 1.x"
 L.DETAIL_SEEN_SHORT = "Last seen %s"
 L.DETAIL_SCORE_FMT = "%d/5"
-L.DETAIL_AVG_ONE = "from 1 rating"
-L.DETAIL_AVG_MANY = "average of %d ratings"
+L.DETAIL_AVG_SINGLE = "from 1 rating"
+L.DETAIL_AVG_RATINGS_OTHER = "average of %d ratings"
 L.DETAIL_HISTORY = "History"
 L.BTN_PURGE = "Purge"
 
@@ -199,7 +191,8 @@ L.ABOUT_PRIVACY = "SquadRank makes no network calls and never writes to Blizzard
 	.. " your SavedVariables file only."
 
 -- Minimap button
-L.MINIMAP_PENDING = "%d players waiting to be rated"
+L.MINIMAP_PENDING_ONE = "%d player waiting to be rated"
+L.MINIMAP_PENDING_OTHER = "%d players waiting to be rated"
 L.MINIMAP_LEFT = "Left-click: open SquadRank"
 L.MINIMAP_RIGHT = "Right-click: settings"
 L.MINIMAP_DRAG = "Drag: move this button"
@@ -222,9 +215,15 @@ L.MSG_NO_PENDING = "No run is waiting for a rating."
 L.MSG_UNIT_UNKNOWN = "That player's details are not available right now. Try again in a moment."
 L.MSG_SELFTEST = "Self-test: %d pass, %d fail, %d info. Type /sr debug for details."
 L.MSG_LIST_NONE = "No saved players match."
-L.MSG_LIST_FMT = "%s - %s, %d ratings"
+L.MSG_LIST_ONE = "%s - %s, %d rating"
+L.MSG_LIST_OTHER = "%s - %s, %d ratings"
 L.MSG_LIST_MORE = "...and %d more. Open /sr for the full list."
 L.MSG_LISTS_SIMPLE = "Simple list mode is now %s. Type /reload to apply."
+L.STATE_ON = "on"
+L.STATE_OFF = "off"
+L.MSG_LOCALE_SET = "Developer language override set to %s. Type /reload to apply."
+L.MSG_LOCALE_CLEARED = "Developer language override removed. Type /reload to use the client language."
+L.MSG_LOCALE_USAGE = "Usage: /sr debug locale <code> (for example deDE), or /sr debug locale off."
 L.MSG_HELP_1 = "/sr - open the window"
 L.MSG_HELP_2 = "/sr rate [name] - rate a player, or the last run when no name is given"
 L.MSG_HELP_3 = "/sr list [text] - print saved players"

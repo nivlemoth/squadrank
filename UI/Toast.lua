@@ -142,7 +142,7 @@ function Toast.ShowJoin(pids)
 		local summary = ns.Ratings.Summary(rec, now, minRatings)
 		local lines = UI.SummaryLines(summary)
 		table.insert(lines, 1, UI.ColoredName(rec) .. "   " .. UI.LabelText(summary.label))
-		Toast.Push({ title = L.TOAST_JOIN_ONE, lines = lines, duration = duration, onClick = openHistory(pids[1]) })
+		Toast.Push({ title = L.TOAST_JOIN_PLAYER, lines = lines, duration = duration, onClick = openHistory(pids[1]) })
 		return
 	end
 
@@ -161,7 +161,7 @@ function Toast.ShowJoin(pids)
 		lines[#lines + 1] = line
 	end
 	Toast.Push({
-		title = L.TOAST_JOIN_MANY,
+		title = L.TOAST_JOIN_PLAYERS,
 		lines = lines,
 		duration = duration + 4,
 		onClick = function()

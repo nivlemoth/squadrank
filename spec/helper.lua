@@ -5,6 +5,7 @@ date = os.date
 
 local FILES = {
 	"Core/Init.lua",
+	"Locales/Locale.lua",
 	"Locales/enUS.lua",
 	"Core/Util.lua",
 	"Core/Debug.lua",

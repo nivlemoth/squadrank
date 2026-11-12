@@ -27,9 +27,16 @@ describe("locale table", function()
 			local handle = assert(io.open(path, "r"), "TOC lists a missing file: " .. path)
 			local source = handle:read("*a")
 			handle:close()
-			for key in source:gmatch("L%.([%u][%w_]+)") do
-				if rawget(ns.L, key) == nil then
-					missing[#missing + 1] = path .. ": " .. key
+			if not path:match("^Locales/") then
+				for key in source:gmatch("L%.([%u][%w_]+)") do
+					if ns.Locale.base[key] == nil then
+						missing[#missing + 1] = path .. ": " .. key
+					end
+				end
+				for family in source:gmatch('Locale%.Count%(%s*"([%u_]+)"') do
+					if ns.Locale.base[family .. "_OTHER"] == nil then
+						missing[#missing + 1] = path .. ": " .. family .. "_OTHER"
+					end
 				end
 			end
 		end
@@ -38,13 +45,13 @@ describe("locale table", function()
 
 	it("has a label for every tag, role and reputation label", function()
 		for _, tag in ipairs(ns.Ratings.TAGS) do
-			assert.is_not_nil(rawget(ns.L, "TAG_" .. tag.id))
+			assert.is_not_nil(ns.Locale.base["TAG_" .. tag.id])
 		end
 		for _, role in ipairs(ns.Ratings.ROLES) do
-			assert.is_not_nil(rawget(ns.L, "ROLE_" .. role))
+			assert.is_not_nil(ns.Locale.base["ROLE_" .. role])
 		end
 		for _, label in ipairs({ "new", "trusted", "mixed", "caution" }) do
-			assert.is_not_nil(rawget(ns.L, "LABEL_" .. label))
+			assert.is_not_nil(ns.Locale.base["LABEL_" .. label])
 		end
 	end)
 
