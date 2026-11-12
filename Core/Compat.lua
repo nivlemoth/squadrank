@@ -160,6 +160,7 @@ function Compat.InstanceState()
 		state.difficultyID = clean(difficultyID, "number")
 		state.maxPlayers = clean(maxPlayers, "number")
 		state.instanceID = clean(instanceID, "number")
+		state.zoneName = clean(GetZoneText(), "string")
 	end)
 	if not ok then
 		Debug.Error("InstanceState", err)

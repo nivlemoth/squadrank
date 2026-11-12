@@ -2,7 +2,7 @@
 ## Title: SquadRank
 ## Notes: Remember how past groupmates performed and get a heads-up when they join.
 ## Author: Nivlemoth
-## Version: 0.1.0
+## Version: 0.2.0
 ## Category: Group
 ## IconTexture: Interface\Icons\INV_Misc_GroupLooking
 ## SavedVariables: SquadRankDB, SquadRankDebug
@@ -25,8 +25,10 @@ Track\Roster.lua
 Track\RunTracker.lua
 Integrations\RecentAllies.lua
 UI\Widgets.lua
+UI\Anim.lua
 UI\Toast.lua
 UI\RateFrame.lua
+UI\SquadAlert.lua
 UI\UnitMenu.lua
 UI\MainWindow.lua
 UI\PlayerDetail.lua

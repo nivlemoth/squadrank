@@ -12,12 +12,6 @@ ns.PlayerDetail = PlayerDetail
 local frame, body, child
 local currentPid
 
-local function className(classFile)
-	local names = _G.LOCALIZED_CLASS_NAMES_MALE
-	local name = type(names) == "table" and names[classFile] or nil
-	return type(name) == "string" and name or classFile
-end
-
 local function buildText(rec)
 	local db = ns.db
 	local summary = ns.Ratings.Summary(rec, Compat.Now(), db.settings.minRatings)
@@ -25,7 +19,7 @@ local function buildText(rec)
 
 	if rec.classFile then
 		lines[#lines + 1] =
-			L.DETAIL_CLASS_LEVEL:format(tostring(rec.level or "?"), Util.Escape(className(rec.classFile)))
+			L.DETAIL_CLASS_LEVEL:format(tostring(rec.level or "?"), Util.Escape(UI.ClassName(rec.classFile)))
 	end
 	lines[#lines + 1] = L.DETAIL_SEEN:format(UI.Date(rec.firstSeen), UI.Date(rec.lastSeen))
 	local rulesets = {}

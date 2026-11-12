@@ -227,6 +227,36 @@ for _, path in ipairs({
 	end)
 end
 
+check("animation groups (motion only)", function()
+	local ok, detail = pcall(function()
+		local group = UIParent:CreateAnimationGroup()
+		local alpha = group:CreateAnimation("Alpha")
+		local scale = group:CreateAnimation("Scale")
+		local has = type(alpha.SetSmoothing) == "function" and type(scale.SetScaleFrom) == "function"
+		return has and "alpha+scale ok" or "methods missing"
+	end)
+	return (ok and detail == "alpha+scale ok") and PASS or FAIL, ok and detail or tostring(detail)
+end)
+
+check("role and checkmark atlases (art only)", function()
+	if not (C_Texture and C_Texture.GetAtlasInfo) then
+		return INFO, "C_Texture.GetAtlasInfo absent"
+	end
+	local missing = {}
+	for _, atlas in ipairs({
+		"groupfinder-icon-role-large-tank",
+		"groupfinder-icon-role-large-heal",
+		"groupfinder-icon-role-large-dps",
+		"checkmark-minimal",
+	}) do
+		local ok, info = pcall(C_Texture.GetAtlasInfo, atlas)
+		if not (ok and info) then
+			missing[#missing + 1] = atlas
+		end
+	end
+	return #missing == 0 and PASS or FAIL, #missing == 0 and "all found" or ("missing: " .. table.concat(missing, ", "))
+end)
+
 check("C_StringUtil.StripHyperlinks (not relied on)", function()
 	return INFO, "present=" .. yn(exists("C_StringUtil.StripHyperlinks"))
 end)

@@ -118,7 +118,7 @@ function Debug.BuildReport()
 		add("read-only: %s", tostring(ns.readOnly == true))
 		add("players: %d (rated: %d), ratings: %d", s.players, s.rated, s.ratings)
 		add("runs: %d (waiting for a rating: %d)", s.runs, s.pendingRuns)
-		add("current run: %s", db.currentRun and "yes" or "no")
+		add("current run: %s", db.currentRun and (db.currentRun.kind or "instance") or "no")
 		add(
 			"group session: %s, members seen: %d",
 			db.session and "yes" or "no",

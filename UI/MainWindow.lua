@@ -68,7 +68,7 @@ local function runItems()
 	local db = ns.db
 	local items = {}
 	for _, run in ipairs(ns.Runs.List(db)) do
-		local name = Util.Escape(run.instanceName or L.UNKNOWN_INSTANCE)
+		local name = UI.RunName(run)
 		if view.search == "" or name:lower():find(view.search, 1, true) then
 			items[#items + 1] = { kind = "run", run = run, name = name, rated = ns.Runs.RatedCount(db, run) }
 		end

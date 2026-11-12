@@ -1,12 +1,32 @@
+# SquadRank 0.2.0
+
+## New in 0.2.0: faster rating
+
+- **One click per player.** The rating window shows a card for every player. Click a score from 1 to 5 and it
+  is saved: no player to select first, no Save button. The card then opens with the tags that fit that score
+  and a note box, both optional and saved as you click. Click the role icon to change the role.
+- **"Rate your squad" waits for a good moment.** When a group you played in breaks up, a small card slides
+  down from the top of the screen and waits, with a soft pulse, until you click it or close it. It never shows
+  in combat or while you are still in a group, and it has no timeout.
+- **Open-world groups count.** Questing or world-boss groups of 5 minutes or more can be rated too, not only
+  dungeons and raids. A group that walks into a dungeon together becomes that dungeon run; a squad is never
+  offered twice for the same session.
+- **Several groups at once.** If more than one group ended since you last looked, they open together in one
+  window, one section each. "Skip all" stops asking about them.
+- **Motion.** Windows fade in and out, cards appear one after another and open and close smoothly, scores and
+  checkmarks pop, the progress bar fills, and the toast slides in and out. The rating window steps aside in
+  combat and comes back after.
+
+0.1.0 was tested in game by John: loading, the settings panel, the main window, player history and manual
+rating all worked. The 0.2.0 window and alert have **not** been run in the game client yet; they are covered by
+104 automated tests and every new Blizzard call was checked against the Forever UI source.
+
+---
+
 # SquadRank 0.1.0
 
 First build for **WoW Forever** (Interface 16001). A full rewrite of SquadRank 1.5.2; nothing from the old
 code is loaded.
-
-**Status: not yet run in the game client.** All logic is covered by 96 automated tests, including a scripted
-session against a fake client, and every Blizzard call was checked against the Forever UI source
-(build 1.60.1.70888). The windows have never been drawn by the real game. Expect the first in-game pass to
-find layout problems or errors, and use `/sr debug` to report them.
 
 ## What it does
 
@@ -14,11 +34,11 @@ find layout problems or errors, and use `/sr debug` to report them.
   a small toast shows their reputation, per-role scores, top tags and your last note. Once per player per
   group, never in combat.
 - **Ratings.** Score 1 to 5, the role they played, any of 14 tags (7 positive, 7 negative) and a note of
-  up to 140 characters.
+  up to 140 characters. (0.2.0: one click on a score saves it.)
 - **Reputation.** Trusted, Mixed or Caution from a recency-weighted average (a rating counts half as much
   after 90 days). Players with fewer than 3 ratings show as New. Per-role averages are tracked separately.
 - **Rate your squad.** After a dungeon or raid run ends, a prompt offers to rate everyone who was in it.
-  Skip it and reopen later with `/sr rate` or from the Runs tab.
+  Skip it and reopen later with `/sr rate` or from the Runs tab. (0.2.0: replaced by the alert above.)
 - **Rate anytime.** Right-click a player's unit frame and choose "Rate in SquadRank", or `/sr rate <name>`.
 - **Main window.** Searchable player list with filters by label, role and tag; history per player; list of runs.
 - **Settings** in the game's own Options panel: toast on/off and duration, ratings needed for a label,

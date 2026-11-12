@@ -10,24 +10,58 @@ ns.Runs = Runs
 Runs.OUTSIDE_GRACE = 300
 -- A saved run older than this is never resumed (logged out inside, came back next day).
 Runs.RESUME_LIMIT = 4 * 3600
+-- An open-world group shorter than this (a quick summon, a trade) is not worth a prompt.
+Runs.GROUP_MIN = 300
+-- The "Rate your squad" alert offers runs that ended within this window.
+Runs.ALERT_WINDOW = 3 * 86400
 
 local TRACKED = { party = true, raid = true }
 
-local function start(db, state, now, ruleset)
+local function setInstance(run, state)
+	run.kind = nil
+	run.instanceID = state.instanceID
+	run.instanceName = state.instanceName
+	run.instanceType = state.instanceType
+	run.maxPlayers = state.maxPlayers
+end
+
+-- kind is nil for a dungeon or raid run, "group" for an open-world group.
+local function start(db, state, now, ruleset, kind)
 	local run = {
 		id = ns.DB.NextId(db, "run"),
-		instanceID = state.instanceID,
-		instanceName = state.instanceName,
-		instanceType = state.instanceType,
-		maxPlayers = state.maxPlayers,
 		startedAt = now,
 		lastInside = now,
 		ruleset = ruleset,
 		bossKills = 0,
 		members = {},
 	}
+	if kind == "group" then
+		run.kind = "group"
+		run.instanceName = state.zoneName
+	else
+		setInstance(run, state)
+	end
 	db.currentRun = run
 	return run
+end
+
+-- True when the group run carried on straight from a dungeon run (run.after) and has nobody
+-- new: that squad is already up for rating, so the group run is not worth a second prompt.
+local function coveredByPrevious(db, run)
+	local previous = run.after and db.runs[run.after]
+	if not previous then
+		return false
+	end
+	local inPrevious = {}
+	for _, member in ipairs(previous.members or {}) do
+		inPrevious[member.pid] = true
+	end
+	for _, member in ipairs(run.members) do
+		if not inPrevious[member.pid] then
+			return false
+		end
+	end
+	return true
 end
 
 -- Closes the current run. Returns the stored run, or nil if it was discarded (nobody else in it).
@@ -40,7 +74,15 @@ function Runs.Finish(db, now)
 	if type(run.members) ~= "table" or #run.members == 0 then
 		return nil
 	end
-	run.endedAt = run.outsideSince or run.lastInside or now
+	if run.kind == "group" then
+		local last = run.lastInside or now
+		run.endedAt = (now - last > Runs.RESUME_LIMIT) and last or now
+		if run.endedAt - (run.startedAt or now) < Runs.GROUP_MIN or coveredByPrevious(db, run) then
+			return nil
+		end
+	else
+		run.endedAt = run.outsideSince or run.lastInside or now
+	end
 	run.outsideSince = nil
 	run.lastInside = nil
 	run.groupSize = #run.members + 1
@@ -49,9 +91,10 @@ function Runs.Finish(db, now)
 	return run
 end
 
--- state = { inInstance, instanceType, instanceID, instanceName, maxPlayers, inGroup }
+-- state = { inInstance, instanceType, instanceID, instanceName, maxPlayers, inGroup, zoneName }
 -- Returns an action and, when a run was closed and stored, that run:
 --   "idle"      nothing is being tracked
+--   "grouped"   in a group outside any dungeon: an open-world group run is open
 --   "started"   a new run began (a previous one may have been finished and is returned)
 --   "resumed"   still (or again) inside the current run's instance
 --   "pending"   outside the instance, waiting for the grace period or the group to end
@@ -60,10 +103,28 @@ function Runs.Evaluate(db, state, now, ruleset)
 	local run = db.currentRun
 	local inside = state.inInstance and TRACKED[state.instanceType] and state.instanceID ~= nil
 
+	if run and run.kind == "group" then
+		if inside then
+			-- The group walked into a dungeon together: same squad, now a dungeon run.
+			setInstance(run, state)
+			run.lastInside = now
+			return "started"
+		end
+		if state.inGroup then
+			run.lastInside = now
+			return "grouped"
+		end
+		return "finished", Runs.Finish(db, now)
+	end
+
 	if not run then
 		if inside then
 			start(db, state, now, ruleset)
 			return "started"
+		end
+		if state.inGroup and not state.inInstance then
+			start(db, state, now, ruleset, "group")
+			return "grouped"
 		end
 		return "idle"
 	end
@@ -82,7 +143,13 @@ function Runs.Evaluate(db, state, now, ruleset)
 
 	run.outsideSince = run.outsideSince or now
 	if not state.inGroup or now - run.outsideSince >= Runs.OUTSIDE_GRACE then
-		return "finished", Runs.Finish(db, now)
+		local finished = Runs.Finish(db, now)
+		if state.inGroup and not state.inInstance then
+			-- Still together after the dungeon: carry on as an open-world group run.
+			local group = start(db, state, now, ruleset, "group")
+			group.after = finished and finished.id
+		end
+		return "finished", finished
 	end
 	return "pending"
 end
@@ -139,6 +206,19 @@ function Runs.LatestPending(db)
 		end
 	end
 	return nil
+end
+
+-- Runs for the "Rate your squad" alert: still pending, recent, and newer than the last time
+-- the user closed the alert. Newest first.
+function Runs.AlertList(db, now)
+	local list = {}
+	local since = math.max(now - Runs.ALERT_WINDOW, db.alertDismissedAt or 0)
+	for _, run in ipairs(Runs.List(db)) do
+		if run.prompt == "pending" and (run.endedAt or 0) > since then
+			list[#list + 1] = run
+		end
+	end
+	return list
 end
 
 function Runs.SetPrompt(db, runId, value)

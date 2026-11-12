@@ -1,11 +1,11 @@
--- One compact toast frame with a queue. Used for "a player you rated joined" and for the
--- "Rate your squad" prompt. Never shown in combat: a visible toast is put back in the queue
--- when combat starts and returns when it ends.
+-- One compact toast frame with a queue, for "a player you rated joined". It slides in and out.
+-- Never shown in combat: a visible toast is put back in the queue when combat starts and
+-- returns when it ends.
 local _, ns = ...
 
 local L = ns.L
 local UI = ns.UI
-local Util = ns.Util
+local Anim = ns.Anim
 local Compat = ns.Compat
 local Events = ns.Events
 local Debug = ns.Debug
@@ -15,26 +15,19 @@ ns.Toast = Toast
 
 local WIDTH, PADDING = 300, 12
 local MAX_ROWS = 5
-local PROMPT_SECONDS = 45
+local TOP, SLIDE = -150, 24
 
 local frame
 
+local function place(offset)
+	frame:ClearAllPoints()
+	frame:SetPoint("TOP", UIParent, "TOP", 0, TOP + offset)
+end
+
 local function build()
-	local ok = pcall(function()
-		frame = CreateFrame("Button", nil, UIParent, "TooltipBackdropTemplate")
-	end)
-	if not ok or not frame then
-		frame = CreateFrame("Button", nil, UIParent, "BackdropTemplate")
-		pcall(frame.SetBackdrop, frame, {
-			bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-			edgeSize = 14,
-			insets = { left = 3, right = 3, top = 3, bottom = 3 },
-		})
-		pcall(frame.SetBackdropColor, frame, 0, 0, 0, 0.9)
-	end
+	frame = UI.Panel("Button", UIParent)
 	frame:SetWidth(WIDTH)
-	frame:SetPoint("TOP", UIParent, "TOP", 0, -150)
+	place(0)
 	frame:SetFrameStrata("DIALOG")
 	frame:SetClampedToScreen(true)
 	frame:Hide()
@@ -58,21 +51,6 @@ local function build()
 		end)
 	)
 
-	frame.buttons = {}
-	for i = 1, 2 do
-		local button = UI.Button(frame, "", 90, 22, function()
-			local toast = Toast.current
-			local action = toast and toast.buttons and toast.buttons[i]
-			Toast.Dismiss()
-			if action and action.onClick then
-				action.onClick()
-			end
-		end)
-		frame.buttons[i] = button
-	end
-	frame.buttons[1]:SetPoint("BOTTOMRIGHT", frame, "BOTTOM", -4, PADDING)
-	frame.buttons[2]:SetPoint("BOTTOMLEFT", frame, "BOTTOM", 4, PADDING)
-
 	frame:SetScript(
 		"OnClick",
 		ns.Safe("toast click", function()
@@ -91,22 +69,15 @@ local function display(toast)
 	end
 	frame.title:SetText(toast.title)
 	frame.body:SetText(table.concat(toast.lines, "\n"))
+	frame:SetHeight(PADDING + frame.title:GetStringHeight() + 6 + frame.body:GetStringHeight() + PADDING)
 
-	local hasButtons = toast.buttons ~= nil
-	for i = 1, 2 do
-		local action = hasButtons and toast.buttons[i]
-		frame.buttons[i]:SetShown(action and true or false)
-		if action then
-			frame.buttons[i]:SetText(action.text)
-		end
-	end
-
-	local height = PADDING + frame.title:GetStringHeight() + 6 + frame.body:GetStringHeight() + PADDING
-	if hasButtons then
-		height = height + 28
-	end
-	frame:SetHeight(height)
+	place(SLIDE)
+	frame:SetAlpha(0)
 	frame:Show()
+	Anim.Tween("toast", 0.28, function(p)
+		place(SLIDE * (1 - p))
+		frame:SetAlpha(p)
+	end)
 
 	Toast.current = toast
 	Toast.token = Toast.token + 1
@@ -125,15 +96,20 @@ local function pump()
 	display(table.remove(Toast.queue, 1))
 end
 
--- toast = { title, lines = {...}, duration, onClick, buttons = { { text, onClick }, ... } }
+-- toast = { title, lines = {...}, duration, onClick }
 function Toast.Push(toast)
 	Toast.queue[#Toast.queue + 1] = toast
 	Events.RunOutOfCombat("toast", pump)
 end
 
 function Toast.Dismiss()
-	if frame then
-		frame:Hide()
+	if frame and frame:IsShown() then
+		Anim.Tween("toast", 0.2, function(p)
+			place(SLIDE * 0.5 * p)
+			frame:SetAlpha(1 - p)
+		end, function()
+			frame:Hide()
+		end)
 	end
 	Toast.current = nil
 	Events.RunOutOfCombat("toast", pump)
@@ -144,6 +120,7 @@ Events.On("PLAYER_REGEN_DISABLED", "Toast", function()
 		table.insert(Toast.queue, 1, Toast.current)
 		Toast.current = nil
 		Toast.token = Toast.token + 1
+		Anim.Cancel("toast")
 		frame:Hide()
 		Events.RunOutOfCombat("toast", pump)
 	end
@@ -196,26 +173,5 @@ function Toast.ShowJoin(pids)
 				ns.MainWindow.Show()
 			end
 		end,
-	})
-end
-
--- Offers to rate the members of a finished run. "Later" (or ignoring it) leaves the run pending.
-function Toast.ShowRunPrompt(run)
-	local name = Util.Escape(run.instanceName or L.UNKNOWN_INSTANCE)
-	Toast.Push({
-		title = L.PROMPT_TITLE,
-		lines = { L.PROMPT_BODY:format(name, #run.members) },
-		duration = PROMPT_SECONDS,
-		buttons = {
-			{
-				text = L.BTN_RATE,
-				onClick = function()
-					if ns.RateFrame and ns.db.runs[run.id] then
-						ns.RateFrame.OpenRun(ns.db.runs[run.id])
-					end
-				end,
-			},
-			{ text = L.BTN_LATER },
-		},
 	})
 end

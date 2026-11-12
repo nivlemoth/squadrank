@@ -13,7 +13,7 @@ local function inside(id, inGroup)
 end
 
 local function outside(inGroup)
-	return { inInstance = false, instanceType = "none", inGroup = inGroup ~= false }
+	return { inInstance = false, instanceType = "none", inGroup = inGroup ~= false, zoneName = "Elwynn Forest" }
 end
 
 describe("Runs.Evaluate", function()
@@ -25,8 +25,8 @@ describe("Runs.Evaluate", function()
 		Runs = ns.Runs
 	end)
 
-	it("is idle in the open world", function()
-		assert.equals("idle", Runs.Evaluate(db, outside(), NOW))
+	it("is idle in the open world when not grouped", function()
+		assert.equals("idle", Runs.Evaluate(db, outside(false), NOW))
 		assert.is_nil(db.currentRun)
 	end)
 
@@ -71,8 +71,10 @@ describe("Runs.Evaluate", function()
 		assert.equals(NOW + 100, run.endedAt)
 		assert.equals("pending", run.prompt)
 		assert.equals(2, run.groupSize)
-		assert.is_nil(db.currentRun)
 		assert.equals(run, db.runs[run.id])
+		-- Still grouped: the squad carries on as an open-world group run.
+		assert.equals("group", db.currentRun.kind)
+		assert.equals(run.id, db.currentRun.after)
 	end)
 
 	it("finishes at once when the group is left", function()
@@ -121,6 +123,83 @@ describe("Runs.Evaluate", function()
 	end)
 end)
 
+describe("Runs.Evaluate for open-world groups", function()
+	local ns, db, Runs
+
+	before_each(function()
+		ns = helper.load()
+		db = ns.DB.Open(nil, NOW)
+		Runs = ns.Runs
+	end)
+
+	it("opens a group run named after the zone", function()
+		assert.equals("grouped", Runs.Evaluate(db, outside(), NOW))
+		assert.equals("group", db.currentRun.kind)
+		assert.equals("Elwynn Forest", db.currentRun.instanceName)
+		assert.is_true(Runs.IsInside(db))
+		assert.equals("grouped", Runs.Evaluate(db, outside(), NOW + 60))
+	end)
+
+	it("stores a group of 5 minutes or more when it breaks up, with the end time", function()
+		Runs.Evaluate(db, outside(), NOW)
+		Runs.AddMember(db, "n:a")
+		local action, run = Runs.Evaluate(db, outside(false), NOW + Runs.GROUP_MIN + 30)
+		assert.equals("finished", action)
+		assert.equals("pending", run.prompt)
+		assert.equals(NOW + Runs.GROUP_MIN + 30, run.endedAt)
+		assert.equals(run, db.runs[run.id])
+	end)
+
+	it("drops a short group (a summon, a trade)", function()
+		Runs.Evaluate(db, outside(), NOW)
+		Runs.AddMember(db, "n:a")
+		local action, run = Runs.Evaluate(db, outside(false), NOW + Runs.GROUP_MIN - 1)
+		assert.equals("finished", action)
+		assert.is_nil(run)
+		assert.is_nil(next(db.runs))
+	end)
+
+	it("becomes a dungeon run when the group walks into a dungeon", function()
+		Runs.Evaluate(db, outside(), NOW)
+		Runs.AddMember(db, "n:a")
+		local id = db.currentRun.id
+		assert.equals("started", Runs.Evaluate(db, inside(), NOW + 900))
+		assert.equals(id, db.currentRun.id)
+		assert.is_nil(db.currentRun.kind)
+		assert.equals(36, db.currentRun.instanceID)
+		assert.equals("Deadmines", db.currentRun.instanceName)
+		assert.equals(1, #db.currentRun.members)
+	end)
+
+	it("does not ask twice about a group that stayed together after its dungeon", function()
+		Runs.Evaluate(db, inside(), NOW)
+		Runs.AddMember(db, "n:a")
+		Runs.Evaluate(db, outside(), NOW + 100)
+		local action, dungeon = Runs.Evaluate(db, outside(), NOW + 100 + Runs.OUTSIDE_GRACE)
+		assert.equals("finished", action)
+		assert.is_not_nil(dungeon)
+		assert.equals("group", db.currentRun.kind)
+		assert.equals(dungeon.id, db.currentRun.after)
+		assert.equals("grouped", Runs.Evaluate(db, outside(), NOW + 900))
+		Runs.AddMember(db, "n:a")
+		local _, group = Runs.Evaluate(db, outside(false), NOW + 900 + Runs.GROUP_MIN)
+		assert.is_nil(group)
+		assert.equals(1, ns.Util.Count(db.runs))
+	end)
+
+	it("keeps that group when someone new joined after the dungeon", function()
+		Runs.Evaluate(db, inside(), NOW)
+		Runs.AddMember(db, "n:a")
+		Runs.Evaluate(db, outside(), NOW + 100)
+		Runs.Evaluate(db, outside(), NOW + 100 + Runs.OUTSIDE_GRACE)
+		Runs.AddMember(db, "n:a")
+		Runs.AddMember(db, "n:b")
+		local _, group = Runs.Evaluate(db, outside(false), NOW + 900 + Runs.GROUP_MIN)
+		assert.is_not_nil(group)
+		assert.equals(2, ns.Util.Count(db.runs))
+	end)
+end)
+
 describe("Runs helpers", function()
 	local ns, db, Runs
 
@@ -146,6 +225,20 @@ describe("Runs helpers", function()
 		assert.equals("run2", Runs.LatestPending(db).id)
 		Runs.SetPrompt(db, "run2", "done")
 		assert.is_nil(Runs.LatestPending(db))
+	end)
+
+	it("offers recent pending runs to the alert, newer than the last dismissal", function()
+		db.runs.old = { id = "old", endedAt = NOW - Runs.ALERT_WINDOW - 1, prompt = "pending", members = {} }
+		db.runs.a = { id = "a", endedAt = NOW - 100, prompt = "pending", members = {} }
+		db.runs.b = { id = "b", endedAt = NOW - 10, prompt = "pending", members = {} }
+		db.runs.c = { id = "c", endedAt = NOW - 5, prompt = "done", members = {} }
+		local list = Runs.AlertList(db, NOW)
+		assert.equals(2, #list)
+		assert.equals("b", list[1].id)
+		db.alertDismissedAt = NOW - 50
+		list = Runs.AlertList(db, NOW)
+		assert.equals(1, #list)
+		assert.equals("b", list[1].id)
 	end)
 
 	it("counts rated members of a run", function()

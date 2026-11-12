@@ -97,7 +97,6 @@ describe("whole addon against a fake client", function()
 		SlashCmdList.SQUADRANK("rate bob")
 		assert.is_true(mock.click("4"))
 		assert.is_true(mock.click("Great at role"))
-		assert.is_true(mock.click("Save"))
 		noErrors()
 		local rec = ns.db.players["n:bob"]
 		assert.equals(1, #rec.ratings)
@@ -159,7 +158,7 @@ describe("whole addon against a fake client", function()
 		assert.is_nil(rec.guid)
 	end)
 
-	it("tracks a dungeon run across a reload, prompts afterwards and ties ratings to the run", function()
+	it("tracks a dungeon run across a reload, alerts afterwards and ties ratings to the run", function()
 		world.units.party1 = BOB
 		world.units.party2 = EVE
 		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
@@ -190,7 +189,7 @@ describe("whole addon against a fake client", function()
 		mock.flush(1)
 		assert.is_not_nil(SquadRankDB.currentRun)
 
-		-- The group breaks up: the run ends and the prompt appears.
+		-- The group breaks up: the run ends and the alert slides in.
 		world.units.party1, world.units.party2 = nil, nil
 		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
 		mock.flush()
@@ -198,32 +197,82 @@ describe("whole addon against a fake client", function()
 		assert.is_nil(SquadRankDB.currentRun)
 		assert.equals("pending", SquadRankDB.runs[runId].prompt)
 		assert.equals(3, SquadRankDB.runs[runId].groupSize)
-		assert.equals("Rate your squad", ns.Toast.current.title)
+		assert.is_true(ns.SquadAlert.IsShown())
 
-		-- Rate both members from the prompt.
-		assert.is_true(mock.click("Rate"))
-		assert.is_true(mock.click("5"))
-		assert.is_true(mock.click("Save"))
+		-- Click the alert: one card per member. One click on a score saves it.
+		ns.SquadAlert.Open()
+		mock.tick()
+		assert.is_true(ns.RateFrame.IsShown())
+		assert.is_false(ns.SquadAlert.IsShown())
+		local bobPid, evePid = "g:" .. BOB.guid, "g:" .. EVE.guid
+		mock.press(ns.RateFrame.FindCard(bobPid).pips[5])
+		assert.equals(1, #SquadRankDB.players[bobPid].ratings)
 		assert.equals("pending", SquadRankDB.runs[runId].prompt)
-		assert.is_true(mock.click("2"))
+		mock.press(ns.RateFrame.FindCard(evePid).pips[2])
 		assert.is_true(mock.click("Toxic"))
-		assert.is_true(mock.click("Save"))
+		mock.flush()
 		noErrors()
 		assert.equals("done", SquadRankDB.runs[runId].prompt)
-		local bob = SquadRankDB.players["g:" .. BOB.guid]
+		local bob = SquadRankDB.players[bobPid]
 		assert.equals(runId, bob.ratings[1].runId)
 		assert.equals("healer", bob.ratings[1].role)
-		assert.equals(2, SquadRankDB.players["g:" .. EVE.guid].ratings[1].score)
+		local eve = SquadRankDB.players[evePid].ratings[1]
+		assert.equals(2, eve.score)
+		assert.same({ "toxic" }, eve.tags)
+		assert.is_false(ns.SquadAlert.IsShown())
 
 		-- Reopening the run edits the rating instead of adding one.
 		SlashCmdList.SQUADRANK("")
 		assert.is_true(mock.click("Runs"))
 		ns.RateFrame.OpenRun(SquadRankDB.runs[runId])
-		assert.is_true(mock.click("3"))
-		assert.is_true(mock.click("Save"))
+		mock.press(ns.RateFrame.FindCard(bobPid).pips[3])
 		noErrors()
 		assert.equals(1, #bob.ratings)
 		assert.equals(3, bob.ratings[1].score)
+	end)
+
+	it("asks about an open-world group after it breaks up, and steps aside in combat", function()
+		world.units.party1 = BOB
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		roster()
+		assert.equals("group", SquadRankDB.currentRun.kind)
+		assert.equals("Elwynn Forest", SquadRankDB.currentRun.instanceName)
+		assert.equals(1, #SquadRankDB.currentRun.members)
+		assert.is_false(ns.SquadAlert.IsShown())
+
+		world.now = world.now + 900
+		world.units.party1 = nil
+		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
+		mock.flush()
+		noErrors()
+		assert.is_true(ns.SquadAlert.IsShown())
+
+		-- Combat hides the alert; it comes back when the fight is over.
+		world.combat = true
+		mock.fire(ns, "PLAYER_REGEN_DISABLED")
+		assert.is_false(ns.SquadAlert.IsShown())
+		world.combat = false
+		mock.fire(ns, "PLAYER_REGEN_ENABLED")
+		mock.flush()
+		assert.is_true(ns.SquadAlert.IsShown())
+
+		-- The rating window steps aside in combat too.
+		ns.SquadAlert.Open()
+		assert.is_not_nil(ns.RateFrame.FindCard("g:" .. BOB.guid))
+		world.combat = true
+		mock.fire(ns, "PLAYER_REGEN_DISABLED")
+		assert.is_false(ns.RateFrame.IsShown())
+		world.combat = false
+		mock.fire(ns, "PLAYER_REGEN_ENABLED")
+		assert.is_true(ns.RateFrame.IsShown())
+
+		-- Skip all: the run is marked skipped, the window closes and the alert stays away.
+		assert.is_true(mock.click("Skip all"))
+		mock.flush()
+		noErrors()
+		assert.equals("skipped", ns.Runs.List(SquadRankDB)[1].prompt)
+		assert.is_false(ns.RateFrame.IsShown())
+		assert.is_false(ns.SquadAlert.IsShown())
 	end)
 
 	it("adds a working entry to unit menus for other players only", function()
@@ -233,7 +282,6 @@ describe("whole addon against a fake client", function()
 		assert.is_not_nil(root.entries["Rate in SquadRank"])
 		root.entries["Rate in SquadRank"]()
 		assert.is_true(mock.click("3"))
-		assert.is_true(mock.click("Save"))
 		noErrors()
 		local rec = ns.db.players["g:" .. BOB.guid]
 		assert.equals(3, rec.ratings[1].score)
@@ -249,11 +297,9 @@ describe("whole addon against a fake client", function()
 
 	it("shows history and purges one player, then everything", function()
 		SlashCmdList.SQUADRANK("rate Bob")
-		mock.click("1")
-		mock.click("Save")
+		assert.is_true(mock.click("1"))
 		SlashCmdList.SQUADRANK("rate Eve-Vale")
-		mock.click("5")
-		mock.click("Save")
+		assert.is_true(mock.click("5"))
 		ns.PlayerDetail.Open("n:bob")
 		noErrors()
 
@@ -269,11 +315,23 @@ describe("whole addon against a fake client", function()
 		assert.equals(true, ns.db.settings.toastEnabled)
 	end)
 
-	it("refuses to save without a score and blocks commands in combat", function()
+	it("saves on the first score click, keeps later edits on that rating, and blocks commands in combat", function()
 		SlashCmdList.SQUADRANK("rate Bob")
-		mock.click("Save")
+		local card = ns.RateFrame.FindCard("n:bob")
+		mock.press(card.role)
+		mock.press(card)
+		assert.is_true(mock.click("Great at role"))
 		assert.equals(0, #ns.db.players["n:bob"].ratings)
-		assert.is_true(printed("Pick a score"))
+
+		assert.is_true(mock.click("3"))
+		local ratings = ns.db.players["n:bob"].ratings
+		assert.equals(1, #ratings)
+		assert.equals("tank", ratings[1].role)
+		assert.same({ "role_good" }, ratings[1].tags)
+		assert.is_true(mock.click("5"))
+		assert.equals(1, #ratings)
+		assert.equals(5, ratings[1].score)
+		noErrors()
 
 		world.combat = true
 		SlashCmdList.SQUADRANK("rate Someone")
@@ -298,8 +356,7 @@ describe("whole addon against a fake client", function()
 		world.units.party1 = BOB
 		roster()
 		SlashCmdList.SQUADRANK("rate Bob")
-		mock.click("4")
-		mock.click("Save")
+		assert.is_true(mock.click("4"))
 		mock.fire(ns, "PLAYER_LOGOUT")
 		local text = table.concat(SquadRankDebug.report, "\n")
 		assert.is_nil(text:find("Bob", 1, true))

@@ -89,3 +89,18 @@ Each is called through a guard (pcall or a nil check), and `/sr selftest` report
 | `C_RecentAllies.GetRecentAllyByFullName`, `IsSystemEnabled` | RecentAlliesDocumentation.lua | verified-src; **enabled state unknown** | off by default; nil check + pcall |
 | `LOCALIZED_CLASS_NAMES_MALE` | not checked | **unverified** | read through `_G`; falls back to the class token |
 | TOC `IconTexture: Interface\Icons\INV_Misc_GroupLooking` | not checked | **unverified** | cosmetic only |
+
+## Added for 0.2.0 (2026-11-11)
+
+Checked in the Forever source (`forever` @ 4cd0ab7). None has run in the client yet. All are cosmetic: if one
+fails, the window still works without that motion or art.
+
+| API | Source in Forever | Status | Guard / fallback |
+|---|---|---|---|
+| `Region:CreateAnimationGroup`, `AnimationGroup:CreateAnimation/Play/Stop/SetLooping`, `Animation:SetDuration/SetSmoothing`, `Alpha:SetFromAlpha/SetToAlpha`, `Scale:SetScaleFrom/SetScaleTo/SetOrigin` | SimpleAnimatableObjectAPI, SimpleAnimGroupAPI, SimpleAnimAPI, SimpleAnimAlphaAPI, SimpleAnimScaleAPI documentation | verified-src | pcall; self-test row "animation groups" |
+| `Frame:SetScript("OnUpdate")`, `Frame:SetClipsChildren` | SimpleFrameAPIDocumentation.lua | verified-src | SetClipsChildren in pcall |
+| `Texture:SetAtlas`, `Texture:SetBlendMode`, `Texture:SetColorTexture` | SimpleTextureBaseAPIDocumentation.lua | verified-src | SetAtlas and SetBlendMode in pcall |
+| Atlases `groupfinder-icon-role-large-tank/-heal/-dps`, `checkmark-minimal` | used by Forever's own LFG UI (Blizzard_LFGUtil/Shared/LFGRole.xml and others) | verified-src | self-test row "role and checkmark atlases" (via `C_Texture.GetAtlasInfo`, TextureUtilsDocumentation.lua) |
+| `Button:SetFontString` | SimpleButtonAPIDocumentation.lua | verified-src | |
+| `GetZoneText()` | listed above | verified-src | open-world group runs are named after the zone; nil shows "Group in the world" |
+| `GameTooltip:SetOwner/SetText/Show/Hide` | Blizzard FrameXML global | not in generated docs | nil check before use |

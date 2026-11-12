@@ -80,6 +80,25 @@ end
 function methods:GetHeight()
 	return 20
 end
+function methods:SetAlpha(alpha)
+	rawset(self, "mockAlpha", alpha)
+end
+function methods:GetAlpha()
+	return rawget(self, "mockAlpha") or 1
+end
+-- Animation groups finish at once: Play() runs the OnFinished script straight away.
+function methods:CreateAnimationGroup()
+	return newObject("AnimationGroup", self)
+end
+function methods:CreateAnimation(kind)
+	return newObject(kind or "Animation", self)
+end
+function methods:Play()
+	local handler = rawget(self, "mockScripts").OnFinished
+	if handler then
+		handler(self)
+	end
+end
 function methods:RegisterEvent(event)
 	mock.registered[event] = true
 end
@@ -227,6 +246,9 @@ function mock.install()
 		end
 		return false, "none"
 	end
+	_G.GetZoneText = function()
+		return world.zone or "Elwynn Forest"
+	end
 	_G.GetInstanceInfo = function()
 		local i = world.instance
 		if i then
@@ -322,12 +344,23 @@ function mock.fire(ns, event, ...)
 	handler(ns.Events.frame, event, ...)
 end
 
+-- Calls every OnUpdate script once with a long elapsed time, so running tweens finish.
+function mock.tick()
+	for _, frame in ipairs(mock.world.frames) do
+		local handler = rawget(frame, "mockScripts").OnUpdate
+		if handler then
+			handler(frame, 10)
+		end
+	end
+end
+
 -- Runs queued short C_Timer callbacks (debounces and retries, up to 5 seconds), including
--- ones they schedule, for a few rounds. Longer timers (toast timeouts, the 30-second run
--- re-check) stay queued, as they would in a real session that moves on quickly.
+-- ones they schedule, for a few rounds, and lets animations finish. Longer timers (toast
+-- timeouts, the 30-second run re-check) stay queued, as they would in a session that moves on.
 function mock.flush(rounds)
 	local world = mock.world
 	for _ = 1, rounds or 4 do
+		mock.tick()
 		local timers = world.timers
 		world.timers = {}
 		for _, timer in ipairs(timers) do
@@ -348,6 +381,13 @@ function mock.flushLong()
 	for _, timer in ipairs(timers) do
 		timer.fn()
 	end
+end
+
+-- Presses a given button.
+function mock.press(button)
+	local handler = button:GetScript("OnClick")
+	assert(handler, "button has no OnClick")
+	handler(button, "LeftButton")
 end
 
 -- Presses the most recently created, visible button with this exact text.

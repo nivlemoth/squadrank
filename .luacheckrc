@@ -54,6 +54,8 @@ read_globals = {
 	-- instance and system
 	"IsInInstance",
 	"GetInstanceInfo",
+	"GetZoneText",
+	"C_Texture",
 	"GetRealmName",
 	"GetServerTime",
 	"GetBuildInfo",

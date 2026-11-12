@@ -1,308 +1,735 @@
--- The rating form: a member list on the left, and for the selected player a 1-5 score,
--- role, one-click tag buttons and an optional note. Used for a whole run ("Rate your squad")
+-- The rating window: one card per player, grouped by run. One click on a score (1-5) saves
+-- the rating. The card then opens to show the tags that fit that score and a note box;
+-- those are optional and saved as you click. Used for "Rate your squad" (one or several runs)
 -- and for single players (unit menu, /sr rate <name>, main window).
 local _, ns = ...
 
 local L = ns.L
 local UI = ns.UI
+local Anim = ns.Anim
 local Util = ns.Util
 local Compat = ns.Compat
+local Events = ns.Events
 local Debug = ns.Debug
 
 local RateFrame = {}
 ns.RateFrame = RateFrame
 
-local frame, list
-local w = {}
-local state = { entries = {}, index = 0, run = nil }
-local form = { tags = {} }
+local WIDTH, HEIGHT = 600, 520
+local CARD_W, CARD_H, DETAIL_H, HEADER_H, GAP = 548, 52, 86, 28, 6
+local PIP, PIP_GAP = 28, 4
+local CHIP_W, CHIP_H, CHIP_GAP, CHIPS_PER_ROW = 126, 22, 6, 4
+local STAGGER, ENTER = 0.035, 0.24
 
-local function isRated(entry)
-	if entry.runId then
-		return ns.Ratings.ForRun(ns.db.players[entry.pid], entry.runId) ~= nil
-	end
-	return entry.rated == true
+local SCORE_COLORS = {
+	{ 0.86, 0.24, 0.20 },
+	{ 0.93, 0.52, 0.18 },
+	{ 0.92, 0.78, 0.22 },
+	{ 0.55, 0.80, 0.30 },
+	{ 0.25, 0.76, 0.36 },
+}
+local ROLE_ATLAS = {
+	tank = "groupfinder-icon-role-large-tank",
+	healer = "groupfinder-icon-role-large-heal",
+	dps = "groupfinder-icon-role-large-dps",
+}
+
+local frame, scroll, child
+local w = {}
+local cardPool, headerPool = {}, {}
+local layoutItems = {}
+local sections = {}
+local expanded
+
+local function setColor(texture, color, alpha)
+	texture:SetColorTexture(color[1], color[2], color[3], alpha or 1)
 end
 
-local function loadForm()
-	local entry = state.entries[state.index]
-	form.id, form.score, form.role, form.note = nil, nil, nil, ""
-	form.tags = {}
-	if not entry then
-		return
-	end
-	local rec = ns.db.players[entry.pid]
-	local existing = entry.runId and ns.Ratings.ForRun(rec, entry.runId) or nil
-	if existing then
-		form.id = existing.id
-		form.score = existing.score
-		form.role = existing.role
-		form.note = existing.note or ""
-		for _, id in ipairs(existing.tags or {}) do
-			form.tags[id] = true
+-- Layout ------------------------------------------------------------------------------------
+
+local function layout()
+	local y = 0
+	for _, item in ipairs(layoutItems) do
+		local f = item.frame
+		f:ClearAllPoints()
+		if item.kind == "header" then
+			f:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -y)
+			y = y + HEADER_H
+		else
+			f:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -(y + (f.enterOffset or 0)))
+			f:SetHeight(f.h)
+			y = y + f.h + GAP
 		end
 	end
-	if not form.role then
-		local summary = ns.Ratings.Summary(rec, Compat.Now(), ns.db.settings.minRatings)
-		form.role = entry.role or summary.lastRole or "dps"
-	end
+	child:SetHeight(math.max(1, y))
 end
 
-local function refresh()
-	local db = ns.db
-	local entry = state.entries[state.index]
-	local rec = entry and db.players[entry.pid]
-
-	w.name:SetText(rec and UI.ColoredName(rec) or L.RATE_EMPTY)
-	if state.run then
-		local name = Util.Escape(state.run.instanceName or L.UNKNOWN_INSTANCE)
-		w.context:SetText(L.RATE_RUN_FMT:format(name, UI.Date(state.run.endedAt or state.run.startedAt)))
-	else
-		w.context:SetText(L.RATE_NO_RUN)
-	end
-	for score, button in ipairs(w.scores) do
-		UI.SetChosen(button, form.score == score)
-	end
-	for role, button in pairs(w.roles) do
-		UI.SetChosen(button, form.role == role)
-	end
-	for id, button in pairs(w.tags) do
-		UI.SetChosen(button, form.tags[id] == true)
-	end
-	w.note:SetText(form.note or "")
-	w.dismiss:SetShown(state.run ~= nil and state.run.prompt == "pending")
-
-	local items = {}
-	for i, item in ipairs(state.entries) do
-		items[i] = { index = i, pid = item.pid, rated = isRated(item), selected = i == state.index }
-	end
-	list:SetData(items)
+local function cardTarget(card)
+	return card == expanded and CARD_H + DETAIL_H or CARD_H
 end
 
-local function selectEntry(index)
-	state.index = index
-	loadForm()
-	refresh()
+-- Eases every card toward its target height (one card opens while another closes).
+local function animateHeights()
+	local from = {}
+	for _, item in ipairs(layoutItems) do
+		if item.kind == "card" then
+			from[item.frame] = item.frame.h
+		end
+	end
+	Anim.Tween("rate heights", 0.2, function(p)
+		for card, start in pairs(from) do
+			card.h = Anim.Lerp(start, cardTarget(card), p)
+		end
+		layout()
+	end, function()
+		for card in pairs(from) do
+			if card ~= expanded then
+				card.details:Hide()
+			end
+		end
+	end)
 end
 
-local function save()
-	local db = ns.db
-	local entry = state.entries[state.index]
-	if not entry or not db.players[entry.pid] then
+-- Cards fade in one after another, rising a few pixels into place.
+local function animateEntrance()
+	local cards = {}
+	for _, item in ipairs(layoutItems) do
+		if item.kind == "card" then
+			cards[#cards + 1] = item.frame
+		end
+	end
+	local total = ENTER + STAGGER * math.min(#cards, 12)
+	for _, card in ipairs(cards) do
+		card:SetAlpha(0)
+		card.enterOffset = 12
+	end
+	layout()
+	Anim.Tween("rate enter", total, function(p)
+		local t = p * total
+		for i, card in ipairs(cards) do
+			local start = STAGGER * math.min(i - 1, 12)
+			local e = Anim.EaseOut(Util.Clamp((t - start) / ENTER, 0, 1))
+			card:SetAlpha(e)
+			card.enterOffset = 12 * (1 - e)
+		end
+		layout()
+	end, function()
+		for _, card in ipairs(cards) do
+			card:SetAlpha(1)
+			card.enterOffset = 0
+		end
+		layout()
+	end)
+end
+
+-- Progress ----------------------------------------------------------------------------------
+
+local function countRated()
+	local rated, total = 0, 0
+	for _, section in ipairs(sections) do
+		for _, card in ipairs(section.cards) do
+			total = total + 1
+			if card.entry.score and card.entry.ratingId then
+				rated = rated + 1
+			end
+		end
+	end
+	return rated, total
+end
+
+local function paintHeader(section)
+	local header = section.header
+	if not header then
 		return
+	end
+	local rated = 0
+	for _, card in ipairs(section.cards) do
+		if card.entry.ratingId then
+			rated = rated + 1
+		end
+	end
+	header.count:SetText(L.RUN_RATED_FMT:format(rated, #section.cards))
+end
+
+local function updateProgress(animated)
+	local rated, total = countRated()
+	local done = total > 0 and rated >= total
+	w.progressText:SetText(done and L.RATE_ALL_DONE or L.RATE_PROGRESS:format(rated, total))
+	local barWidth = w.bar:GetWidth()
+	if not barWidth or barWidth <= 0 then
+		barWidth = CARD_W
+	end
+	local target = total > 0 and math.max(1, barWidth * rated / total) or 1
+	local from = w.fill.current or 1
+	setColor(w.fill, done and SCORE_COLORS[5] or { 1, 0.78, 0.1 })
+	if animated then
+		Anim.Tween("rate progress", 0.35, function(p)
+			w.fill.current = Anim.Lerp(from, target, p)
+			w.fill:SetWidth(w.fill.current)
+		end)
+	else
+		w.fill.current = target
+		w.fill:SetWidth(target)
+	end
+	if done and animated then
+		Anim.Pop(w.done, 1.15)
+	end
+	for _, section in ipairs(sections) do
+		paintHeader(section)
+	end
+end
+
+-- Cards -------------------------------------------------------------------------------------
+
+local function tagSetFor(card)
+	if card.tagSet then
+		return card.tagSet
+	end
+	local score = card.entry.score
+	return (score and score <= 2) and "negative" or "positive"
+end
+
+local function paintChips(card)
+	local entry = card.entry
+	local set = tagSetFor(card)
+	local slot = 0
+	for _, chip in ipairs(card.chips) do
+		local visible = (set == "positive") == chip.tag.positive
+		chip:SetShown(visible)
+		if visible then
+			chip:ClearAllPoints()
+			chip:SetPoint(
+				"TOPLEFT",
+				(slot % CHIPS_PER_ROW) * (CHIP_W + CHIP_GAP),
+				-math.floor(slot / CHIPS_PER_ROW) * (CHIP_H + 4)
+			)
+			slot = slot + 1
+			local on = entry.tags[chip.tag.id] == true
+			if on then
+				chip.bg:SetColorTexture(chip.tag.positive and 0.2 or 0.75, chip.tag.positive and 0.65 or 0.2, 0.2, 0.55)
+				chip.label:SetTextColor(1, 1, 1)
+			else
+				chip.bg:SetColorTexture(1, 1, 1, 0.06)
+				chip.label:SetTextColor(0.8, 0.8, 0.8)
+			end
+		end
+	end
+	local swap = card.swap
+	swap:ClearAllPoints()
+	swap:SetPoint(
+		"TOPLEFT",
+		(slot % CHIPS_PER_ROW) * (CHIP_W + CHIP_GAP),
+		-math.floor(slot / CHIPS_PER_ROW) * (CHIP_H + 4)
+	)
+	swap:SetText(set == "positive" and L.RATE_SHOW_NEGATIVE or L.RATE_SHOW_POSITIVE)
+end
+
+local function paintCard(card)
+	local entry = card.entry
+	local db = ns.db
+	local rec = db.players[entry.pid]
+	if not rec then
+		return
+	end
+	card.name:SetText(UI.ColoredName(rec))
+
+	local summary = ns.Ratings.Summary(rec, Compat.Now(), db.settings.minRatings)
+	local parts = { L["ROLE_" .. entry.role] }
+	if rec.classFile then
+		parts[#parts + 1] =
+			L.DETAIL_CLASS_LEVEL:format(tostring(rec.level or "?"), Util.Escape(UI.ClassName(rec.classFile)))
+	end
+	parts[#parts + 1] = UI.LabelText(summary.label)
+	card.sub:SetText(table.concat(parts, "   "))
+	pcall(card.roleIcon.SetAtlas, card.roleIcon, ROLE_ATLAS[entry.role])
+
+	for score, pip in ipairs(card.pips) do
+		local color = SCORE_COLORS[score]
+		if entry.score == score then
+			setColor(pip.bg, color, 0.95)
+			pip.label:SetTextColor(1, 1, 1)
+		else
+			pip.bg:SetColorTexture(0.1, 0.1, 0.1, 0.85)
+			pip.label:SetTextColor(color[1], color[2], color[3])
+		end
+	end
+	if entry.score then
+		setColor(card.accent, SCORE_COLORS[entry.score])
+	else
+		card.accent:SetColorTexture(0.4, 0.4, 0.4, 0.6)
+	end
+	card.check:SetShown(entry.ratingId ~= nil)
+	card.bg:SetColorTexture(1, 1, 1, card == expanded and 0.07 or 0.035)
+	if card == expanded then
+		paintChips(card)
+		if not card.note:HasFocus() then
+			card.note:SetText(entry.note or "")
+		end
+		card.placeholder:SetShown((card.note:GetText() or "") == "" and not card.note:HasFocus())
+	end
+end
+
+local function persist(card)
+	local db = ns.db
+	local entry = card.entry
+	if not entry.score or not db.players[entry.pid] then
+		return false
 	end
 	if ns.readOnly then
 		ns.Print(L.MSG_READONLY:format(tostring(ns.readOnlyReason)))
-		return
+		return false
 	end
 	if Compat.InCombat() then
 		ns.Print(L.MSG_COMBAT)
-		return
+		return false
 	end
-	if not form.score then
-		ns.Print(L.RATE_NEED_SCORE)
-		return
-	end
-
 	local tags = {}
-	for id, on in pairs(form.tags) do
-		if on then
-			tags[#tags + 1] = id
+	for _, tag in ipairs(ns.Ratings.TAGS) do
+		if entry.tags[tag.id] then
+			tags[#tags + 1] = tag.id
 		end
 	end
 	local rating, err = ns.Ratings.Save(db, entry.pid, {
-		id = form.id,
-		score = form.score,
-		role = form.role,
+		id = entry.ratingId,
+		score = entry.score,
+		role = entry.role,
 		tags = tags,
-		note = w.note:GetText(),
+		note = entry.note,
 		runId = entry.runId,
 	}, Compat.Now())
 	if not rating then
 		ns.Print(L.RATE_FAILED:format(tostring(err)))
-		return
+		return false
 	end
+	if not entry.ratingId then
+		Debug.Log("RATE", "saved: hash %d, score %d", Util.Hash(entry.pid), rating.score)
+	end
+	entry.ratingId = rating.id
 
-	entry.rated = true
-	Debug.Log("RATE", "saved: hash %d, score %d, %d tags", Util.Hash(entry.pid), rating.score, #rating.tags)
-	ns.Print(L.RATE_SAVED:format(ns.Players.DisplayName(db.players[entry.pid])))
-
-	local run = state.run
-	if run and db.runs[run.id] and ns.Runs.RatedCount(db, run) >= #run.members then
+	local run = entry.runId and db.runs[entry.runId]
+	if run and run.prompt ~= "done" and ns.Runs.RatedCount(db, run) >= #run.members then
 		ns.Runs.SetPrompt(db, run.id, "done")
 	end
-	ns.Slash.RefreshWindows()
-
-	-- Move on to the next player who has no rating yet; close when everyone is done.
-	local count = #state.entries
-	for step = 1, count do
-		local index = (state.index + step - 1) % count + 1
-		if not isRated(state.entries[index]) then
-			selectEntry(index)
-			return
-		end
-	end
-	frame:Hide()
+	Events.Debounce("rate refresh", 0.4, function()
+		ns.Slash.RefreshWindows()
+	end)
+	return true
 end
 
-local function buildRow(row)
-	row.text = UI.Text(row, "GameFontHighlightSmall")
-	row.text:SetPoint("LEFT", 4, 0)
-	row.text:SetPoint("RIGHT", -4, 0)
-	row.text:SetWordWrap(false)
-	row:SetScript(
+local function expand(card)
+	if expanded == card then
+		return
+	end
+	local old = expanded
+	expanded = card
+	if card then
+		card.tagSet = nil
+		card.details:Show()
+		paintCard(card)
+	end
+	if old then
+		old.note:ClearFocus()
+		paintCard(old)
+	end
+	animateHeights()
+end
+
+local function setScore(card, score)
+	local entry = card.entry
+	local previous, wasSaved = entry.score, entry.ratingId ~= nil
+	entry.score = score
+	if not persist(card) then
+		entry.score = previous
+		return
+	end
+	card.tagSet = nil
+	paintCard(card)
+	Anim.Pop(card.pips[score])
+	if not wasSaved then
+		Anim.Pop(card.check, 1.8)
+	end
+	if expanded ~= card then
+		expand(card)
+	else
+		paintChips(card)
+	end
+	updateProgress(true)
+end
+
+local function makeButton(parent, width, height, font)
+	local button = CreateFrame("Button", nil, parent)
+	button:SetSize(width, height)
+	button.bg = button:CreateTexture(nil, "BACKGROUND")
+	button.bg:SetAllPoints()
+	local hover = button:CreateTexture(nil, "HIGHLIGHT")
+	hover:SetAllPoints()
+	hover:SetColorTexture(1, 1, 1, 0.12)
+	button.label = button:CreateFontString(nil, "OVERLAY", font or "GameFontHighlightSmall")
+	button.label:SetPoint("CENTER")
+	button:SetFontString(button.label)
+	return button
+end
+
+local function buildCard()
+	local card = CreateFrame("Button", nil, child)
+	card:SetSize(CARD_W, CARD_H)
+	card.h = CARD_H
+	pcall(card.SetClipsChildren, card, true)
+	card:RegisterForClicks("LeftButtonUp")
+
+	card.bg = card:CreateTexture(nil, "BACKGROUND")
+	card.bg:SetAllPoints()
+	local hover = card:CreateTexture(nil, "HIGHLIGHT")
+	hover:SetPoint("TOPLEFT")
+	hover:SetPoint("TOPRIGHT")
+	hover:SetHeight(CARD_H)
+	hover:SetColorTexture(1, 1, 1, 0.04)
+	card.accent = card:CreateTexture(nil, "ARTWORK")
+	card.accent:SetPoint("TOPLEFT")
+	card.accent:SetPoint("BOTTOMLEFT")
+	card.accent:SetWidth(3)
+
+	card.role = CreateFrame("Button", nil, card)
+	card.role:SetSize(30, 30)
+	card.role:SetPoint("TOPLEFT", 10, -11)
+	card.roleIcon = card.role:CreateTexture(nil, "ARTWORK")
+	card.roleIcon:SetAllPoints()
+	local roleHover = card.role:CreateTexture(nil, "HIGHLIGHT")
+	roleHover:SetAllPoints()
+	roleHover:SetColorTexture(1, 1, 1, 0.15)
+	card.role:SetScript(
 		"OnClick",
-		ns.Safe("rate row", function(self)
-			if self.srItem then
-				selectEntry(self.srItem.index)
+		ns.Safe("rate role", function()
+			local entry = card.entry
+			local roles = ns.Ratings.ROLES
+			for i, role in ipairs(roles) do
+				if role == entry.role then
+					entry.role = roles[i % #roles + 1]
+					break
+				end
 			end
+			persist(card)
+			paintCard(card)
+			Anim.Pop(card.role, 1.25)
 		end)
 	)
+	UI.SetTooltip(card.role, function()
+		return L.RATE_ROLE_TIP:format(L["ROLE_" .. card.entry.role])
+	end)
+
+	card.name = UI.Text(card, "GameFontNormalLarge")
+	card.name:SetPoint("TOPLEFT", 50, -10)
+	card.name:SetWidth(200)
+	card.name:SetWordWrap(false)
+	card.sub = UI.Text(card, "GameFontDisableSmall")
+	card.sub:SetPoint("TOPLEFT", 50, -31)
+	card.sub:SetWidth(250)
+	card.sub:SetWordWrap(false)
+
+	card.pips = {}
+	for score = 5, 1, -1 do
+		local pip = makeButton(card, PIP, PIP, "GameFontNormalLarge")
+		pip:SetPoint("TOPRIGHT", -10 - (5 - score) * (PIP + PIP_GAP), -12)
+		pip:SetText(tostring(score))
+		pip:SetScript(
+			"OnClick",
+			ns.Safe("rate score", function()
+				setScore(card, score)
+			end)
+		)
+		UI.SetTooltip(pip, L["SCORE_" .. score])
+		card.pips[score] = pip
+	end
+
+	card.check = card:CreateTexture(nil, "OVERLAY")
+	card.check:SetSize(18, 18)
+	card.check:SetPoint("RIGHT", card.pips[1], "LEFT", -8, 0)
+	pcall(card.check.SetAtlas, card.check, "checkmark-minimal")
+
+	card.details = CreateFrame("Frame", nil, card)
+	card.details:SetPoint("TOPLEFT", 50, -CARD_H)
+	card.details:SetSize(CARD_W - 60, DETAIL_H)
+	card.details:Hide()
+
+	card.chips = {}
+	for _, tag in ipairs(ns.Ratings.TAGS) do
+		local chip = makeButton(card.details, CHIP_W, CHIP_H)
+		chip.tag = tag
+		chip:SetText(L["TAG_" .. tag.id])
+		chip:SetScript(
+			"OnClick",
+			ns.Safe("rate tag", function()
+				local tags = card.entry.tags
+				tags[tag.id] = not tags[tag.id] or nil
+				persist(card)
+				paintChips(card)
+				Anim.Pop(chip, 1.12)
+			end)
+		)
+		card.chips[#card.chips + 1] = chip
+	end
+	card.swap = makeButton(card.details, CHIP_W, CHIP_H)
+	card.swap.bg:SetColorTexture(0, 0, 0, 0)
+	card.swap.label:SetTextColor(0.6, 0.75, 1)
+	card.swap:SetScript(
+		"OnClick",
+		ns.Safe("rate swap", function()
+			card.tagSet = tagSetFor(card) == "positive" and "negative" or "positive"
+			paintChips(card)
+		end)
+	)
+
+	card.note = CreateFrame("EditBox", nil, card.details, "InputBoxTemplate")
+	card.note:SetSize(CARD_W - 76, 20)
+	card.note:SetPoint("TOPLEFT", 6, -2 * (CHIP_H + 4) - 8)
+	card.note:SetAutoFocus(false)
+	card.note:SetMaxLetters(ns.Ratings.NOTE_MAX)
+	card.placeholder = UI.Text(card.note, "GameFontDisableSmall")
+	card.placeholder:SetPoint("LEFT", 2, 0)
+	card.placeholder:SetText(L.RATE_NOTE_HINT)
+	local function commitNote()
+		local text = card.note:GetText() or ""
+		if text ~= (card.entry.note or "") then
+			card.entry.note = text
+			persist(card)
+		end
+	end
+	card.note:SetScript("OnEnterPressed", function(self)
+		self:ClearFocus()
+	end)
+	card.note:SetScript("OnEscapePressed", function(self)
+		self:SetText(card.entry.note or "")
+		self:ClearFocus()
+	end)
+	card.note:HookScript("OnEditFocusGained", function()
+		card.placeholder:Hide()
+	end)
+	card.note:HookScript(
+		"OnEditFocusLost",
+		ns.Safe("rate note", function()
+			commitNote()
+			card.placeholder:SetShown((card.note:GetText() or "") == "")
+		end)
+	)
+
+	card:SetScript(
+		"OnClick",
+		ns.Safe("rate card", function()
+			expand(expanded ~= card and card or nil)
+		end)
+	)
+	return card
 end
 
-local function fillRow(row, item)
-	row.srItem = item
-	local text = UI.ColoredName(ns.db.players[item.pid])
-	if item.selected then
-		text = "|cffffd100>|r " .. text
+local function buildHeader()
+	local header = CreateFrame("Frame", nil, child)
+	header:SetSize(CARD_W, HEADER_H)
+	header.title = UI.Text(header, "GameFontNormal")
+	header.title:SetPoint("BOTTOMLEFT", 2, 7)
+	header.count = UI.Text(header, "GameFontDisableSmall", "RIGHT")
+	header.count:SetPoint("BOTTOMRIGHT", -4, 8)
+	local line = header:CreateTexture(nil, "ARTWORK")
+	line:SetPoint("BOTTOMLEFT", 0, 2)
+	line:SetPoint("BOTTOMRIGHT", 0, 2)
+	line:SetHeight(1)
+	line:SetColorTexture(1, 0.82, 0, 0.25)
+	return header
+end
+
+-- Window ------------------------------------------------------------------------------------
+
+local function close()
+	if expanded then
+		expanded.note:ClearFocus()
 	end
-	if item.rated then
-		text = text .. " |cff808080" .. L.RATE_DONE_MARK .. "|r"
+	Anim.FadeOut(frame, 0.14, nil, "rate window")
+end
+
+local function skipAll()
+	local db = ns.db
+	if not ns.readOnly then
+		for _, section in ipairs(sections) do
+			local run = section.run and db.runs[section.run.id]
+			if run and run.prompt == "pending" then
+				ns.Runs.SetPrompt(db, run.id, "skipped")
+			end
+		end
+		ns.Slash.RefreshWindows()
 	end
-	row.text:SetText(text)
+	close()
 end
 
 local function build()
-	frame = UI.CreateWindow(620, 440, L.RATE_TITLE)
+	frame = UI.CreateWindow(WIDTH, HEIGHT, L.RATE_TITLE)
 	local content = frame.content
 
-	local left = CreateFrame("Frame", nil, content)
-	left:SetPoint("TOPLEFT")
-	left:SetPoint("BOTTOMLEFT")
-	left:SetWidth(180)
-	list = UI.CreateList(left, 22, buildRow, fillRow)
+	w.title = UI.Text(content, "GameFontHighlightLarge")
+	w.title:SetPoint("TOPLEFT", 2, -4)
+	w.progressText = UI.Text(content, "GameFontNormalSmall", "RIGHT")
+	w.progressText:SetPoint("TOPRIGHT", -28, -8)
 
-	local right = CreateFrame("Frame", nil, content)
-	right:SetPoint("TOPLEFT", left, "TOPRIGHT", 12, 0)
-	right:SetPoint("BOTTOMRIGHT")
+	w.bar = CreateFrame("Frame", nil, content)
+	w.bar:SetPoint("TOPLEFT", 0, -28)
+	w.bar:SetSize(CARD_W, 6)
+	local track = w.bar:CreateTexture(nil, "BACKGROUND")
+	track:SetAllPoints()
+	track:SetColorTexture(1, 1, 1, 0.08)
+	w.fill = w.bar:CreateTexture(nil, "ARTWORK")
+	w.fill:SetPoint("TOPLEFT")
+	w.fill:SetPoint("BOTTOMLEFT")
+	w.fill:SetWidth(1)
 
-	local function label(text, y)
-		local fs = UI.Text(right, "GameFontNormalSmall")
-		fs:SetPoint("TOPLEFT", 0, y)
-		fs:SetText(text)
-		return fs
-	end
+	scroll = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
+	scroll:SetPoint("TOPLEFT", 0, -42)
+	scroll:SetPoint("BOTTOMRIGHT", -26, 34)
+	child = CreateFrame("Frame", nil, scroll)
+	child:SetSize(CARD_W, 1)
+	scroll:SetScrollChild(child)
 
-	w.name = UI.Text(right, "GameFontNormalLarge")
-	w.name:SetPoint("TOPLEFT", 0, 0)
-	w.context = UI.Text(right, "GameFontHighlightSmall")
-	w.context:SetPoint("TOPLEFT", 0, -22)
+	w.hint = UI.Text(content, "GameFontDisableSmall")
+	w.hint:SetPoint("BOTTOMLEFT", 2, 10)
+	w.hint:SetText(L.RATE_HINT)
 
-	label(L.RATE_SCORE, -46)
-	w.scores = {}
-	for score = 1, 5 do
-		local button = UI.Button(right, tostring(score), 36, 22, function()
-			form.score = score
-			form.note = w.note:GetText()
-			refresh()
-		end)
-		button:SetPoint("TOPLEFT", (score - 1) * 40, -60)
-		w.scores[score] = button
-	end
+	w.done = UI.Button(content, L.BTN_DONE, 96, 24, close)
+	w.done:SetPoint("BOTTOMRIGHT", -2, 2)
+	w.skip = UI.Button(content, L.BTN_SKIP, 96, 24, skipAll)
+	w.skip:SetPoint("RIGHT", w.done, "LEFT", -6, 0)
+	UI.SetTooltip(w.skip, L.BTN_SKIP_TIP)
 
-	label(L.RATE_ROLE, -92)
-	w.roles = {}
-	for i, role in ipairs(ns.Ratings.ROLES) do
-		local button = UI.Button(right, L["ROLE_" .. role], 80, 22, function()
-			form.role = role
-			form.note = w.note:GetText()
-			refresh()
-		end)
-		button:SetPoint("TOPLEFT", (i - 1) * 84, -106)
-		w.roles[role] = button
-	end
-
-	label(L.RATE_TAGS, -138)
-	w.tags = {}
-	local positiveRow, negativeRow = 0, 0
-	for _, tag in ipairs(ns.Ratings.TAGS) do
-		local button = UI.Button(right, L["TAG_" .. tag.id], 196, 20, function()
-			form.tags[tag.id] = not form.tags[tag.id] or nil
-			form.note = w.note:GetText()
-			refresh()
-		end)
-		if tag.positive then
-			button:SetPoint("TOPLEFT", 0, -154 - positiveRow * 22)
-			positiveRow = positiveRow + 1
-		else
-			button:SetPoint("TOPLEFT", 202, -154 - negativeRow * 22)
-			negativeRow = negativeRow + 1
+	frame:HookScript("OnHide", function()
+		if GameTooltip then
+			GameTooltip:Hide()
 		end
-		w.tags[tag.id] = button
-	end
-
-	label(L.RATE_NOTE, -314)
-	w.note = CreateFrame("EditBox", nil, right, "InputBoxTemplate")
-	w.note:SetSize(390, 22)
-	w.note:SetPoint("TOPLEFT", 6, -330)
-	w.note:SetAutoFocus(false)
-	w.note:SetMaxLetters(ns.Ratings.NOTE_MAX)
-	w.note:SetScript("OnEnterPressed", w.note.ClearFocus)
-	w.note:SetScript("OnEscapePressed", w.note.ClearFocus)
-
-	local saveButton = UI.Button(right, L.BTN_SAVE, 110, 24, save)
-	saveButton:SetPoint("BOTTOMLEFT", 0, 2)
-
-	w.dismiss = UI.Button(right, L.BTN_DISMISS_RUN, 120, 24, function()
-		if state.run and ns.db.runs[state.run.id] and not ns.readOnly then
-			ns.Runs.SetPrompt(ns.db, state.run.id, "skipped")
-			ns.Slash.RefreshWindows()
+		if ns.SquadAlert and not frame.srCombatHidden then
+			ns.SquadAlert.Schedule()
 		end
-		frame:Hide()
 	end)
-	w.dismiss:SetPoint("BOTTOMRIGHT", 0, 2)
 end
 
-local function open(entries, run)
-	if #entries == 0 then
-		ns.Print(L.RATE_EMPTY)
-		return
+local function newEntry(pid, runId, role)
+	local rec = ns.db.players[pid]
+	local entry = { pid = pid, runId = runId, tags = {}, note = "" }
+	local existing = runId and ns.Ratings.ForRun(rec, runId) or nil
+	if existing then
+		entry.ratingId = existing.id
+		entry.score = existing.score
+		entry.role = existing.role
+		entry.note = existing.note or ""
+		for _, id in ipairs(existing.tags or {}) do
+			entry.tags[id] = true
+		end
 	end
+	if not entry.role then
+		local summary = ns.Ratings.Summary(rec, Compat.Now(), ns.db.settings.minRatings)
+		entry.role = role or summary.lastRole or "dps"
+	end
+	return entry
+end
+
+-- groups = { { run = run or nil, members = { { pid, role }, ... } }, ... }
+local function open(groups, title)
+	local db = ns.db
 	if not frame then
 		build()
 	end
-	state.entries, state.run = entries, run
-	local first = 1
-	for i, entry in ipairs(entries) do
-		if not isRated(entry) then
-			first = i
-			break
+	if expanded then
+		expanded.note:ClearFocus()
+	end
+	expanded = nil
+	sections, layoutItems = {}, {}
+	local cardIndex, headerIndex = 0, 0
+	local showHeaders = #groups > 1 or (groups[1] and groups[1].run ~= nil)
+
+	for _, group in ipairs(groups) do
+		local section = { run = group.run, cards = {} }
+		if showHeaders then
+			headerIndex = headerIndex + 1
+			local header = headerPool[headerIndex] or buildHeader()
+			headerPool[headerIndex] = header
+			if group.run then
+				local run = group.run
+				header.title:SetText(L.RATE_RUN_FMT:format(UI.RunName(run), UI.Date(run.endedAt or run.startedAt)))
+			else
+				header.title:SetText(L.RATE_NO_RUN)
+			end
+			header:Show()
+			section.header = header
+			layoutItems[#layoutItems + 1] = { kind = "header", frame = header }
+		end
+		for _, member in ipairs(group.members) do
+			if db.players[member.pid] then
+				cardIndex = cardIndex + 1
+				local card = cardPool[cardIndex] or buildCard()
+				cardPool[cardIndex] = card
+				card.entry = newEntry(member.pid, group.run and group.run.id, member.role)
+				card.tagSet = nil
+				card.h = CARD_H
+				card.details:Hide()
+				card:Show()
+				section.cards[#section.cards + 1] = card
+				layoutItems[#layoutItems + 1] = { kind = "card", frame = card }
+			end
+		end
+		sections[#sections + 1] = section
+	end
+	for i = cardIndex + 1, #cardPool do
+		cardPool[i]:Hide()
+	end
+	for i = headerIndex + 1, #headerPool do
+		headerPool[i]:Hide()
+	end
+
+	if cardIndex == 0 then
+		ns.Print(L.RATE_EMPTY)
+		return
+	end
+
+	frame:SetWindowTitle(title)
+	local runs = 0
+	for _, section in ipairs(sections) do
+		if section.run then
+			runs = runs + 1
 		end
 	end
-	frame:Show()
-	selectEntry(first)
+	w.title:SetText(runs > 1 and L.RATE_HEADLINE_MANY:format(runs, cardIndex) or title)
+	w.skip:SetShown(runs > 0)
+	for _, section in ipairs(sections) do
+		for _, card in ipairs(section.cards) do
+			paintCard(card)
+		end
+	end
+	updateProgress(false)
+	scroll:SetVerticalScroll(0)
+	frame.srCombatHidden = nil
+	Anim.FadeIn(frame, 0.18, "rate window")
+	animateEntrance()
 end
 
--- Rate the members of a stored run. Ratings are tied to the run, so reopening edits them.
+-- Rate the members of several stored runs in one window, newest first.
+function RateFrame.OpenRuns(runs)
+	local groups = {}
+	for _, run in ipairs(runs) do
+		local members = {}
+		for _, member in ipairs(run.members or {}) do
+			members[#members + 1] = { pid = member.pid, role = member.role }
+		end
+		groups[#groups + 1] = { run = run, members = members }
+	end
+	open(groups, L.RATE_TITLE)
+end
+
+-- Rate the members of one stored run. Ratings are tied to the run, so reopening edits them.
 function RateFrame.OpenRun(run)
-	local entries = {}
-	for _, member in ipairs(run.members or {}) do
-		if ns.db.players[member.pid] then
-			entries[#entries + 1] = { pid = member.pid, runId = run.id, role = member.role }
-		end
-	end
-	open(entries, run)
+	RateFrame.OpenRuns({ run })
 end
 
--- Rate players outside a run. Each save adds a new rating.
+-- Rate players outside a run. Each opening starts a new rating; changes in the window edit it.
 function RateFrame.OpenPlayers(pids, role)
-	local entries = {}
+	local members = {}
 	for _, pid in ipairs(pids) do
-		if ns.db.players[pid] then
-			entries[#entries + 1] = { pid = pid, role = role }
-		end
+		members[#members + 1] = { pid = pid, role = role }
 	end
-	open(entries, nil)
+	open({ { members = members } }, L.RATE_TITLE_PLAYER)
 end
 
 -- Rate the player behind a unit token (from the unit right-click menu).
@@ -319,3 +746,36 @@ function RateFrame.OpenUnit(unit)
 	local pid = ns.Players.Resolve(ns.db, ident, Compat.Now(), Compat.Ruleset())
 	RateFrame.OpenPlayers({ pid }, ident.role)
 end
+
+-- The visible card for a player (used by the tests and the debug report).
+function RateFrame.FindCard(pid)
+	for _, card in ipairs(cardPool) do
+		if card:IsShown() and card.entry and card.entry.pid == pid then
+			return card
+		end
+	end
+	return nil
+end
+
+function RateFrame.IsShown()
+	return frame ~= nil and frame:IsShown() and true or false
+end
+
+-- In combat the window steps aside and comes back when the fight is over.
+Events.On("PLAYER_REGEN_DISABLED", "RateFrame", function()
+	if frame and frame:IsShown() then
+		if expanded then
+			expanded.note:ClearFocus()
+		end
+		frame.srCombatHidden = true
+		Anim.Cancel("rate window")
+		frame:Hide()
+	end
+end)
+
+Events.On("PLAYER_REGEN_ENABLED", "RateFrame", function()
+	if frame and frame.srCombatHidden then
+		frame.srCombatHidden = nil
+		Anim.FadeIn(frame, 0.25, "rate window")
+	end
+end)

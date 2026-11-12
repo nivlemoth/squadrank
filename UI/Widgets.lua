@@ -78,6 +78,56 @@ function UI.ColoredName(rec)
 	return Compat.ClassColored(ns.Players.DisplayName(rec), rec and rec.classFile)
 end
 
+function UI.ClassName(classFile)
+	local names = _G.LOCALIZED_CLASS_NAMES_MALE
+	local name = type(names) == "table" and names[classFile] or nil
+	return type(name) == "string" and name or classFile
+end
+
+-- Display name of a run: the dungeon, or "Group in <zone>" for an open-world group.
+function UI.RunName(run)
+	if run.kind == "group" then
+		return L.RUN_GROUP_FMT:format(Util.Escape(run.instanceName or L.UNKNOWN_ZONE))
+	end
+	return Util.Escape(run.instanceName or L.UNKNOWN_INSTANCE)
+end
+
+-- Shows a one-line tooltip while the mouse is over `owner`.
+function UI.SetTooltip(owner, textOrFn)
+	owner:SetScript("OnEnter", function(self)
+		local text = type(textOrFn) == "function" and textOrFn(self) or textOrFn
+		if text and GameTooltip then
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			GameTooltip:SetText(text, 1, 1, 1, 1, true)
+			GameTooltip:Show()
+		end
+	end)
+	owner:SetScript("OnLeave", function()
+		if GameTooltip then
+			GameTooltip:Hide()
+		end
+	end)
+end
+
+-- A frame with the tooltip-style border and dark background (falls back to a plain backdrop).
+function UI.Panel(frameType, parent)
+	local frame
+	local ok = pcall(function()
+		frame = CreateFrame(frameType, nil, parent, "TooltipBackdropTemplate")
+	end)
+	if not ok or not frame then
+		frame = CreateFrame(frameType, nil, parent, "BackdropTemplate")
+		pcall(frame.SetBackdrop, frame, {
+			bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+			edgeSize = 14,
+			insets = { left = 3, right = 3, top = 3, bottom = 3 },
+		})
+		pcall(frame.SetBackdropColor, frame, 0, 0, 0, 0.9)
+	end
+	return frame
+end
+
 function UI.Text(parent, font, justify)
 	local text = parent:CreateFontString(nil, "OVERLAY", font or "GameFontHighlight")
 	text:SetJustifyH(justify or "LEFT")

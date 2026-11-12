@@ -1,4 +1,4 @@
--- Decides when a dungeon or raid run starts and ends, using only events verified in the
+-- Decides when a dungeon, raid or open-world group run starts and ends, using only events verified in the
 -- Forever client. The rules themselves live in Data/Runs.lua (and are unit-tested there).
 local _, ns = ...
 
@@ -15,8 +15,8 @@ local function onFinished(run)
 	local db = ns.db
 	Debug.Log("RUN", "finished: %d members, %d boss kills", #run.members, run.bossKills or 0)
 	ns.DB.Prune(db, Compat.Now())
-	if db.runs[run.id] and db.settings.promptAfterRun and ns.Toast then
-		ns.Toast.ShowRunPrompt(run)
+	if ns.SquadAlert then
+		ns.SquadAlert.Schedule()
 	end
 	if ns.MainWindow then
 		ns.MainWindow.Refresh()
@@ -51,9 +51,10 @@ local function check()
 	if finished then
 		onFinished(finished)
 	end
-	if action == "started" or action == "resumed" then
+	if ns.Runs.IsInside(db) then
 		ns.Roster.Schedule()
-	elseif action == "pending" and not RunTracker.ticking then
+	end
+	if action == "pending" and not RunTracker.ticking then
 		-- Outside the instance: look again until the grace period or the group ends.
 		RunTracker.ticking = true
 		C_Timer.After(RECHECK_SECONDS, function()
