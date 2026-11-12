@@ -2,6 +2,18 @@
 
 Everything from 0.1.0 to 0.3.0 below, plus:
 
+## New: what your group did
+
+- **Group types.** Every group is labelled Questing, Open world, Dungeon, Raid, World raid, PvP or World PvP,
+  with a coloured label and a **Type** filter on the Runs page. Groups you recorded before get a type too.
+- **Bosses and quests.** Dungeons and raids remember each boss defeated; groups remember the quests completed
+  and progressed together. Hover a group on the Runs page (or a section header on the Rate page) to see them,
+  with how long the group lasted.
+- **Battlegrounds and arenas** are recorded. Battlegrounds don't pop the "Rate your squad" alert (too many
+  strangers); rate them from the Runs page if you want.
+- **New tags:** "Needed off-spec loot" (negative) and "Led the group well" (positive).
+- **Support SquadRank:** the About page has a link to copy: buymeacoffee.com/nivlemoth.
+
 ## New: SquadRank in your language
 
 - **Follows your game language.** German, French, Spanish (Spain and Latin America), Brazilian Portuguese,

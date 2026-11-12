@@ -30,10 +30,78 @@ describe("Runs.Evaluate", function()
 		assert.is_nil(db.currentRun)
 	end)
 
-	it("ignores battlegrounds and other instance types", function()
+	it("tracks battlegrounds and arenas, ignores other instance types", function()
 		local state = inside()
-		state.instanceType = "pvp"
+		state.instanceType = "scenario"
 		assert.equals("idle", Runs.Evaluate(db, state, NOW))
+		state.instanceType = "pvp"
+		assert.equals("started", Runs.Evaluate(db, state, NOW))
+		assert.equals("pvp", Runs.Category(db.currentRun))
+		ns.Runs.AddMember(db, "g:x", "dps")
+		local finished = Runs.Finish(db, NOW + 600)
+		assert.equals("skipped", finished.prompt)
+	end)
+
+	describe("group types, bosses and quests", function()
+		local function run(fields)
+			local r = { members = {} }
+			for k, v in pairs(fields) do
+				r[k] = v
+			end
+			return r
+		end
+
+		it("names the type of every run, old runs included", function()
+			assert.equals("dungeon", Runs.Category(run({ instanceType = "party" })))
+			assert.equals("raid", Runs.Category(run({ instanceType = "raid" })))
+			assert.equals("pvp", Runs.Category(run({ instanceType = "arena" })))
+			assert.equals("dungeon", Runs.Category(run({})))
+			assert.equals("world", Runs.Category(run({ kind = "group" })))
+			assert.equals("quest", Runs.Category(run({ kind = "group", quests = { { id = 1 } } })))
+			assert.equals("worldraid", Runs.Category(run({ kind = "group", raid = true, quests = { { id = 1 } } })))
+			assert.equals("wpvp", Runs.Category(run({ kind = "group", raid = true, wpvp = true })))
+		end)
+
+		it("marks an open-world group as a raid or world PvP from what it saw", function()
+			local state = outside(true)
+			Runs.Evaluate(db, state, NOW)
+			assert.equals("world", Runs.Category(db.currentRun))
+			state.inRaid = true
+			Runs.Evaluate(db, state, NOW + 60)
+			assert.equals("worldraid", Runs.Category(db.currentRun))
+			state.zonePvP = "combat"
+			Runs.Evaluate(db, state, NOW + 120)
+			assert.equals("wpvp", Runs.Category(db.currentRun))
+		end)
+
+		it("keeps each boss once, with its name, and counts unnamed kills", function()
+			Runs.Evaluate(db, inside(), NOW)
+			assert.is_true(Runs.AddBoss(db, 101, "Boss A", NOW))
+			assert.is_false(Runs.AddBoss(db, 101, "Boss A", NOW + 1))
+			assert.is_true(Runs.AddBoss(db, 102, "Boss B", NOW + 2))
+			Runs.AddBossKill(db)
+			assert.equals(3, db.currentRun.bossKills)
+			assert.equals("Boss B", db.currentRun.bosses[2].name)
+		end)
+
+		it("records quests progressed and completed, once each, capped", function()
+			assert.is_false(Runs.AddQuest(db, 7, "Nope", true))
+			Runs.Evaluate(db, outside(true), NOW)
+			Runs.AddQuest(db, 7, "Kill ten rats", false)
+			Runs.AddQuest(db, 8, nil, false)
+			Runs.AddQuest(db, 7, nil, true)
+			Runs.AddQuest(db, 8, "Deliver", false)
+			local done, progressed = Runs.QuestCounts(db.currentRun)
+			assert.equals(1, done)
+			assert.equals(1, progressed)
+			assert.equals("Kill ten rats", db.currentRun.quests[1].title)
+			assert.equals("Deliver", db.currentRun.quests[2].title)
+			for id = 100, 200 do
+				Runs.AddQuest(db, id, nil, true)
+			end
+			assert.equals(Runs.MAX_QUESTS, #db.currentRun.quests)
+			assert.equals("quest", Runs.Category(db.currentRun))
+		end)
 	end)
 
 	it("starts a run on entering a dungeon and saves it in the database", function()

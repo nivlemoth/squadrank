@@ -15,9 +15,10 @@ ns.MainWindow = MainWindow
 local C = UI.C
 local ROW_H = 30
 local PLAYER_COLS = { 196, 104, 64, 130, 90 }
-local RUN_COLS = { 230, 96, 70, 120, 80 }
+local RUN_COLS = { 88, 166, 80, 62, 106, 78 }
+local TYPE_PILL_MAX = 84
 
-local view = { search = "", label = nil, role = nil, tag = nil }
+local view = { search = "", label = nil, role = nil, tag = nil, runType = nil }
 local pages = {}
 
 local function hasTag(summary, tagId)
@@ -79,12 +80,14 @@ local function playerItems()
 	return items, stats
 end
 
-local function runItems(search)
+local function runItems(search, category)
 	local db = ns.db
 	local items = {}
 	for _, run in ipairs(ns.Runs.List(db)) do
 		local name = UI.RunName(run)
-		if search == "" or name:lower():find(search, 1, true) then
+		local pass = (search == "" or name:lower():find(search, 1, true))
+			and (not category or ns.Runs.Category(run) == category)
+		if pass then
 			items[#items + 1] = { kind = "run", run = run, name = name, rated = ns.Runs.RatedCount(db, run) }
 		end
 	end
@@ -219,38 +222,53 @@ local STATUS = {
 
 local function buildRunRow(row)
 	baseRow(row)
-	row.icon = row:CreateTexture(nil, "ARTWORK")
-	row.icon:SetSize(18, 18)
-	row.icon:SetPoint("LEFT", 12, 0)
-	row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-	row.cols = columns(row, RUN_COLS, "GameFontHighlight", 38)
-	row.cols[2]:SetFontObject("GameFontDisableSmall")
-	row.cols[3]:SetFontObject("GameFontHighlightSmall")
-	row.track, row.fill = miniBar(row, row.cols[4].x, 60)
-	row.cols[4]:ClearAllPoints()
-	row.cols[4]:SetPoint("LEFT", row.cols[4].x + 66, 0)
-	row.cols[4]:SetWidth(50)
+	row.cols = columns(row, RUN_COLS, "GameFontHighlight")
+	row.typePill = UI.Pill(row)
+	row.typePill:SetPoint("LEFT", row.cols[1].x, 0)
+	row.typePill.text:SetWordWrap(false)
+	row.cols[1]:Hide()
+	row.cols[3]:SetFontObject("GameFontDisableSmall")
 	row.cols[4]:SetFontObject("GameFontHighlightSmall")
+	row.track, row.fill = miniBar(row, row.cols[5].x, 46)
+	row.cols[5]:ClearAllPoints()
+	row.cols[5]:SetPoint("LEFT", row.cols[5].x + 52, 0)
+	row.cols[5]:SetWidth(48)
+	row.cols[5]:SetFontObject("GameFontHighlightSmall")
 	row.pill = UI.Pill(row)
-	row.pill:SetPoint("LEFT", row.cols[5].x, 0)
-	row.cols[5]:Hide()
+	row.pill:SetPoint("LEFT", row.cols[6].x, 0)
+	row.cols[6]:Hide()
+	-- Hover: what happened in the run (bosses, quests, length).
+	row:SetScript("OnEnter", function(self)
+		local item = self.srItem
+		if item and item.kind == "run" then
+			UI.RunTooltip(self, item.run)
+		end
+	end)
+	row:SetScript("OnLeave", function()
+		if GameTooltip then
+			GameTooltip:Hide()
+		end
+	end)
 end
 
 local function fillRunRow(row, item)
 	row.srItem = item
 	local run, cols = item.run, row.cols
-	row.icon:SetTexture(
-		run.kind == "group" and "Interface\\Icons\\INV_Misc_GroupLooking" or "Interface\\Icons\\INV_Misc_Map_01"
-	)
-	cols[1]:SetText(item.name)
-	cols[2]:SetText(UI.Date(run.endedAt or run.startedAt))
+	local category, color = UI.CategoryName(run)
+	row.typePill:Set(category, color, 0.22)
+	if (tonumber((row.typePill:GetWidth())) or 0) > TYPE_PILL_MAX then
+		row.typePill:SetWidth(TYPE_PILL_MAX)
+		row.typePill.text:SetWidth(TYPE_PILL_MAX - 8)
+	end
+	cols[2]:SetText(item.name)
+	cols[3]:SetText(UI.Date(run.endedAt or run.startedAt))
 	local size = run.groupSize or (#run.members + 1)
-	cols[3]:SetText(ns.Locale.Count("RUN_PLAYERS", size, size))
+	cols[4]:SetText(ns.Locale.Count("RUN_PLAYERS", size, size))
 	local total = #run.members
 	local share = total > 0 and item.rated / total or 0
-	row.fill:SetWidth(math.max(1, 60 * share))
+	row.fill:SetWidth(math.max(1, 46 * share))
 	UI.SetColor(row.fill, share >= 1 and C.good or C.accent)
-	cols[4]:SetText(L.RUN_RATED_SHORT:format(item.rated, total))
+	cols[5]:SetText(L.RUN_RATED_SHORT:format(item.rated, total))
 	local status = STATUS[run.prompt] or STATUS.skipped
 	row.pill:Set(L[status[1]], status[2], 0.2)
 	UI.SetColor(row.stripe, status[2], run.prompt == "pending" and 0.9 or 0)
@@ -397,7 +415,15 @@ local function buildRuns(page)
 		end)
 	)
 	w.searchText = ""
-	header(page, RUN_COLS, { "COL_INSTANCE", "COL_DATE", "COL_PLAYERS", "COL_RATED", "COL_STATUS" }, -36, 38)
+	local typeOptions = {}
+	for _, category in ipairs(ns.Runs.CATEGORIES) do
+		typeOptions[#typeOptions + 1] = { value = category, text = L["CAT_" .. category] }
+	end
+	w.filterType = UI.FlatButton(page, "", 150, 26, function(self)
+		filterMenu(self, "runType", typeOptions)
+	end)
+	w.filterType:SetPoint("TOPRIGHT", 0, 0)
+	header(page, RUN_COLS, { "COL_TYPE", "COL_INSTANCE", "COL_DATE", "COL_PLAYERS", "COL_RATED", "COL_STATUS" }, -36)
 	w.list, w.empty = listArea(page, -56, buildRunRow, fillRunRow)
 	w.count = footer(page, L.RUNS_HINT)
 end
@@ -426,7 +452,8 @@ end
 
 local function refreshRuns()
 	local w = pages.runs
-	local items = runItems(w.searchText)
+	local items = runItems(w.searchText, view.runType)
+	w.filterType:SetText(L.FILTER_FMT:format(L.FILTER_TYPE, view.runType and L["CAT_" .. view.runType] or L.FILTER_ALL))
 	w.list:SetData(index(items))
 	w.count:SetText(L.COUNT_FMT:format(#items))
 	w.empty:SetShown(#items == 0)

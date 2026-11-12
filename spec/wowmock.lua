@@ -145,6 +145,17 @@ function mock.install()
 	_G.GetLocale = function()
 		return world.locale or "enUS"
 	end
+	_G.C_QuestLog = {
+		GetTitleForQuestID = function(questID)
+			return world.questTitles and world.questTitles[questID] or nil
+		end,
+	}
+	_G.C_PvP = {
+		GetZonePVPInfo = function()
+			return world.zonePvP or "contested", false, nil
+		end,
+	}
+	_G.GameTooltip = newObject("GameTooltip")
 	_G.Minimap = newObject("Frame")
 	_G.GetCursorPosition = function()
 		return 0, 0

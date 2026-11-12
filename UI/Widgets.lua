@@ -116,12 +116,115 @@ function UI.ClassName(classFile)
 	return type(name) == "string" and name or classFile
 end
 
--- Display name of a run: the dungeon, or "Group in <zone>" for an open-world group.
+UI.CATEGORY_COLORS = {
+	quest = { 1, 0.80, 0.30 },
+	world = { 0.56, 0.59, 0.65 },
+	dungeon = { 0.25, 0.72, 1 },
+	raid = { 0.64, 0.45, 0.95 },
+	worldraid = { 0.95, 0.55, 0.20 },
+	pvp = { 0.90, 0.32, 0.28 },
+	wpvp = { 0.85, 0.30, 0.55 },
+}
+
+-- Open-world group types that have their own "<type> in <zone>" name.
+local NAMED_GROUPS = { quest = true, worldraid = true, wpvp = true }
+
+-- Display name of a run: the dungeon, or "Group in <zone>" (questing, world raid, world PvP)
+-- for an open-world group.
 function UI.RunName(run)
 	if run.kind == "group" then
-		return L.RUN_GROUP_FMT:format(Util.Escape(run.instanceName or L.UNKNOWN_ZONE))
+		local zone = Util.Escape(run.instanceName or L.UNKNOWN_ZONE)
+		local category = ns.Runs.Category(run)
+		local format = NAMED_GROUPS[category] and L["RUN_IN_" .. category] or L.RUN_GROUP_FMT
+		return format:format(zone)
 	end
 	return Util.Escape(run.instanceName or L.UNKNOWN_INSTANCE)
+end
+
+function UI.CategoryName(run)
+	local category = ns.Runs.Category(run)
+	return L["CAT_" .. category], UI.CATEGORY_COLORS[category] or UI.CATEGORY_COLORS.world
+end
+
+-- One short line: "Dungeon  ·  3 bosses  ·  2 quests".
+function UI.RunSummary(run)
+	local parts = { (UI.CategoryName(run)) }
+	local bosses = run.bossKills or 0
+	if bosses > 0 then
+		parts[#parts + 1] = ns.Locale.Count("RUN_BOSSES", bosses, bosses)
+	end
+	local quests = #(run.quests or {})
+	if quests > 0 then
+		parts[#parts + 1] = ns.Locale.Count("RUN_QUESTS", quests, quests)
+	end
+	return table.concat(parts, "  ·  ")
+end
+
+local function questName(quest)
+	local title
+	if C_QuestLog and C_QuestLog.GetTitleForQuestID then
+		local ok, value = pcall(C_QuestLog.GetTitleForQuestID, quest.id)
+		title = ok and Compat.Clean(value, "string") or nil
+	end
+	title = title or quest.title
+	if not title or title == "" then
+		return L.QUEST_FALLBACK:format(tonumber(quest.id) or 0)
+	end
+	return Util.Escape(Util.Sanitize(title, 80))
+end
+
+local TIP_LIMIT = 10
+
+-- Fills GameTooltip with what happened in a run: type, date, length, bosses and quests.
+function UI.RunTooltip(owner, run)
+	if not GameTooltip then
+		return
+	end
+	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+	GameTooltip:SetText(UI.RunName(run), 1, 1, 1)
+	local category, color = UI.CategoryName(run)
+	GameTooltip:AddLine(category, color[1], color[2], color[3])
+	GameTooltip:AddLine(UI.Date(run.endedAt or run.startedAt), 0.7, 0.7, 0.7)
+	if run.startedAt and run.endedAt and run.endedAt > run.startedAt then
+		local minutes = math.max(1, math.floor((run.endedAt - run.startedAt) / 60 + 0.5))
+		GameTooltip:AddLine(L.RUN_TIP_DURATION:format(minutes), 0.7, 0.7, 0.7)
+	end
+
+	local function section(title, names)
+		if #names == 0 then
+			return
+		end
+		GameTooltip:AddLine(" ")
+		GameTooltip:AddLine(title, 1, 0.82, 0)
+		for i, name in ipairs(names) do
+			if i > TIP_LIMIT then
+				GameTooltip:AddLine(L.FMT_MORE:format(#names - TIP_LIMIT), 0.7, 0.7, 0.7)
+				break
+			end
+			GameTooltip:AddLine("  " .. name, 1, 1, 1)
+		end
+	end
+
+	local bosses = {}
+	for _, boss in ipairs(run.bosses or {}) do
+		bosses[#bosses + 1] = boss.name and Util.Escape(boss.name) or L.UNKNOWN_BOSS
+	end
+	for _ = #bosses + 1, run.bossKills or 0 do
+		bosses[#bosses + 1] = L.UNKNOWN_BOSS
+	end
+	local done, progressed = {}, {}
+	for _, quest in ipairs(run.quests or {}) do
+		local list = quest.done and done or progressed
+		list[#list + 1] = questName(quest)
+	end
+	section(L.RUN_TIP_BOSSES, bosses)
+	section(L.RUN_TIP_QUESTS_DONE, done)
+	section(L.RUN_TIP_QUESTS_PROGRESS, progressed)
+	if #bosses + #done + #progressed == 0 then
+		GameTooltip:AddLine(" ")
+		GameTooltip:AddLine(L.RUN_TIP_NOTHING, 0.7, 0.7, 0.7, true)
+	end
+	GameTooltip:Show()
 end
 
 -- Shows a one-line tooltip while the mouse is over `owner`.

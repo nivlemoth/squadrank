@@ -15,7 +15,28 @@ Runs.GROUP_MIN = 300
 -- The "Rate your squad" alert offers runs that ended within this window.
 Runs.ALERT_WINDOW = 3 * 86400
 
-local TRACKED = { party = true, raid = true }
+local TRACKED = { party = true, raid = true, pvp = true, arena = true }
+
+-- What kind of group a run was. Instance runs take it from the instance type; open-world
+-- group runs from what happened while grouped. Worked out on display, so older runs get one too.
+Runs.CATEGORIES = { "quest", "world", "dungeon", "raid", "worldraid", "pvp", "wpvp" }
+local INSTANCE_CATEGORY = { party = "dungeon", raid = "raid", pvp = "pvp", arena = "pvp", scenario = "dungeon" }
+-- Zone PvP types (C_PvP.GetZonePVPInfo) where an open-world group counts as world PvP.
+local WORLD_PVP_ZONES = { combat = true, arena = true }
+
+-- Per-run caps, so a long questing session cannot grow the saved file without limit.
+Runs.MAX_BOSSES = 30
+Runs.MAX_QUESTS = 40
+
+-- Records what an open-world group is doing (raid group, PvP zone) while it lasts.
+local function markGroup(run, state)
+	if state.inRaid then
+		run.raid = true
+	end
+	if WORLD_PVP_ZONES[state.zonePvP] then
+		run.wpvp = true
+	end
+end
 
 local function setInstance(run, state)
 	run.kind = nil
@@ -38,6 +59,7 @@ local function start(db, state, now, ruleset, kind)
 	if kind == "group" then
 		run.kind = "group"
 		run.instanceName = state.zoneName
+		markGroup(run, state)
 	else
 		setInstance(run, state)
 	end
@@ -86,7 +108,8 @@ function Runs.Finish(db, now)
 	run.outsideSince = nil
 	run.lastInside = nil
 	run.groupSize = #run.members + 1
-	run.prompt = "pending"
+	-- Battlegrounds hold up to 40 strangers: kept in the Runs tab, but no "Rate your squad" alert.
+	run.prompt = run.instanceType == "pvp" and "skipped" or "pending"
 	db.runs[run.id] = run
 	return run
 end
@@ -112,6 +135,7 @@ function Runs.Evaluate(db, state, now, ruleset)
 		end
 		if state.inGroup then
 			run.lastInside = now
+			markGroup(run, state)
 			return "grouped"
 		end
 		return "finished", Runs.Finish(db, now)
@@ -175,11 +199,81 @@ function Runs.AddMember(db, pid, role)
 	return true
 end
 
-function Runs.AddBossKill(db)
+-- A boss defeated during the current run. encounterID and name may be nil (count only).
+-- The same encounter is counted once per run, whichever event reported it.
+function Runs.AddBoss(db, encounterID, name, now)
 	local run = db.currentRun
-	if run then
-		run.bossKills = (run.bossKills or 0) + 1
+	if not run then
+		return false
 	end
+	run.bosses = run.bosses or {}
+	if encounterID then
+		for _, boss in ipairs(run.bosses) do
+			if boss.id == encounterID then
+				return false
+			end
+		end
+	end
+	run.bossKills = (run.bossKills or 0) + 1
+	if #run.bosses < Runs.MAX_BOSSES then
+		run.bosses[#run.bosses + 1] = { id = encounterID, name = name, at = now }
+	end
+	return true
+end
+
+function Runs.AddBossKill(db)
+	return Runs.AddBoss(db, nil, nil, nil)
+end
+
+-- A quest completed (done = true) or progressed during the current run, by quest ID.
+-- The title is kept only as a display fallback; it is looked up again when shown.
+function Runs.AddQuest(db, questID, title, done)
+	local run = db.currentRun
+	if not run or type(questID) ~= "number" then
+		return false
+	end
+	run.quests = run.quests or {}
+	for _, quest in ipairs(run.quests) do
+		if quest.id == questID then
+			quest.done = quest.done or done or nil
+			quest.title = title or quest.title
+			return true
+		end
+	end
+	if #run.quests >= Runs.MAX_QUESTS then
+		return false
+	end
+	run.quests[#run.quests + 1] = { id = questID, title = title, done = done or nil }
+	return true
+end
+
+-- Quests completed and quests only progressed during a run.
+function Runs.QuestCounts(run)
+	local done, progressed = 0, 0
+	for _, quest in ipairs(run.quests or {}) do
+		if quest.done then
+			done = done + 1
+		else
+			progressed = progressed + 1
+		end
+	end
+	return done, progressed
+end
+
+function Runs.Category(run)
+	if run.kind == "group" then
+		if run.wpvp then
+			return "wpvp"
+		end
+		if run.raid then
+			return "worldraid"
+		end
+		if run.quests and #run.quests > 0 then
+			return "quest"
+		end
+		return "world"
+	end
+	return INSTANCE_CATEGORY[run.instanceType] or "dungeon"
 end
 
 -- Stored runs, newest first.

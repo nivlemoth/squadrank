@@ -55,7 +55,7 @@ describe("locale table", function()
 		end
 	end)
 
-	it("has exactly seven positive and seven negative tags", function()
+	it("has exactly eight positive and eight negative tags", function()
 		local positive, negative = 0, 0
 		for _, tag in ipairs(ns.Ratings.TAGS) do
 			if tag.positive then
@@ -64,7 +64,7 @@ describe("locale table", function()
 				negative = negative + 1
 			end
 		end
-		assert.equals(7, positive)
-		assert.equals(7, negative)
+		assert.equals(8, positive)
+		assert.equals(8, negative)
 	end)
 end)

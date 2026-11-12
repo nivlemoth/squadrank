@@ -196,6 +196,8 @@ check("events seen this session", function()
 		"ENCOUNTER_START",
 		"ENCOUNTER_END",
 		"BOSS_KILL",
+		"QUEST_TURNED_IN",
+		"QUEST_WATCH_UPDATE",
 		"ADDON_RESTRICTION_STATE_CHANGED",
 	}
 	local parts = {}
@@ -217,6 +219,8 @@ for _, path in ipairs({
 	"ScrollUtil.InitScrollBoxListWithScrollBar",
 	"CreateDataProvider",
 	"C_ClassColor.GetClassColor",
+	"C_QuestLog.GetTitleForQuestID",
+	"C_PvP.GetZonePVPInfo",
 	"C_Timer.After",
 	"StaticPopup_Show",
 	"ButtonFrameTemplate_HidePortrait",

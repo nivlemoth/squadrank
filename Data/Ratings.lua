@@ -10,6 +10,7 @@ ns.Ratings = Ratings
 Ratings.TAGS = {
 	{ id = "role_good", positive = true },
 	{ id = "communicator", positive = true },
+	{ id = "leader", positive = true },
 	{ id = "helpful", positive = true },
 	{ id = "efficient", positive = true },
 	{ id = "fair_loot", positive = true },
@@ -17,6 +18,7 @@ Ratings.TAGS = {
 	{ id = "knows_dungeon", positive = true },
 	{ id = "role_bad", positive = false },
 	{ id = "ninja", positive = false },
+	{ id = "offspec", positive = false },
 	{ id = "left_early", positive = false },
 	{ id = "afk", positive = false },
 	{ id = "toxic", positive = false },

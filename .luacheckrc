@@ -59,6 +59,8 @@ read_globals = {
 	"GetInstanceInfo",
 	"GetZoneText",
 	"C_Texture",
+	"C_PvP",
+	"C_QuestLog",
 	"GetRealmName",
 	"GetServerTime",
 	"GetBuildInfo",

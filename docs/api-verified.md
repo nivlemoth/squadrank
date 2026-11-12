@@ -135,3 +135,18 @@ cover them: "minimap button" and "flat look".
 | `UNKNOWNOBJECT` (localized "Unknown") | GlobalStrings | already used by Compat | compared only; nil-safe |
 | TOC `## Notes-<locale>:` | TOC format (docs/ref/toc-format.md) | documented | English `## Notes:` first |
 | Font families with korean / simplifiedchinese / traditionalchinese / russian members | Blizzard_Fonts_Shared/Mainline/Fonts.xml | verified-src | no font change made |
+
+## Added for group types, quests and bosses (2026-11-12)
+
+| API / event | Source in Forever | Status | Guard / fallback |
+|---|---|---|---|
+| `QUEST_TURNED_IN` (questID, xpReward, moneyReward) | QuestLogDocumentation.lua | verified-src | number check; queued until out of combat |
+| `QUEST_WATCH_UPDATE` (questID) | QuestLogDocumentation.lua | verified-src | same |
+| `C_QuestLog.GetTitleForQuestID(questID)` -> title? | QuestLogDocumentation.lua | verified-src | pcall; stored title, then "Quest <id>" |
+| `C_PvP.GetZonePVPInfo()` -> pvpType, isSubZonePvP, factionName? | PvpInfoDocumentation.lua (namespace C_PvP) | verified-src | checked for nil; no world PvP type if missing |
+| `BOSS_KILL` (encounterID, encounterName) | EncounterInfoDocumentation.lua | verified-src | deduplicated with ENCOUNTER_END by ID |
+| `ENCOUNTER_END` args 1-2 (encounterID, encounterName) | EncounterInfoDocumentation.lua | verified-src | name cleaned (secret check) and sanitized |
+| `EditBox:HighlightText()` | SimpleEditBoxAPIDocumentation.lua | verified-src | |
+
+Self-test: "events seen" now also counts QUEST_TURNED_IN and QUEST_WATCH_UPDATE; the API list checks
+`C_QuestLog.GetTitleForQuestID` and `C_PvP.GetZonePVPInfo`.

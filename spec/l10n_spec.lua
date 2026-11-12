@@ -10,6 +10,8 @@ local PLURAL_FAMILIES = {
 	"DETAIL_AVG_RATINGS",
 	"MINIMAP_PENDING",
 	"MSG_LIST",
+	"RUN_BOSSES",
+	"RUN_QUESTS",
 }
 
 local function run(path, ns)

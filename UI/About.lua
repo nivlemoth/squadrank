@@ -7,6 +7,8 @@ local Anim = ns.Anim
 
 local C = UI.C
 local glowPulse
+-- Shown as text to copy: addons cannot open web pages, and SquadRank makes no network calls.
+local SUPPORT_LINK = "buymeacoffee.com/nivlemoth"
 
 local function feature(page, index, title, text, color)
 	local card = CreateFrame("Frame", nil, page)
@@ -72,9 +74,45 @@ local function build(page)
 	cmdHead:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
 	local commands = UI.Text(page, "GameFontHighlightSmall")
 	commands:SetPoint("TOPLEFT", 2, -292)
-	commands:SetWidth(590)
+	commands:SetWidth(350)
 	commands:SetSpacing(4)
 	commands:SetText(table.concat({ L.MSG_HELP_1, L.MSG_HELP_2, L.MSG_HELP_3, L.MSG_HELP_4, L.MSG_HELP_5 }, "\n"))
+
+	-- Support card: the link sits in a read-only text box, selected on click, ready for Ctrl+C.
+	local support = CreateFrame("Frame", nil, page)
+	support:SetSize(226, 120)
+	support:SetPoint("TOPLEFT", 372, -266)
+	UI.Fill(support, C.card)
+	local supportTop = support:CreateTexture(nil, "ARTWORK")
+	supportTop:SetPoint("TOPLEFT")
+	supportTop:SetPoint("TOPRIGHT")
+	supportTop:SetHeight(2)
+	UI.SetColor(supportTop, C.gold)
+	local supportTitle = UI.Text(support, "GameFontHighlight")
+	supportTitle:SetPoint("TOPLEFT", 12, -12)
+	supportTitle:SetText(L.ABOUT_SUPPORT_TITLE)
+	local supportText = UI.Text(support, "GameFontDisableSmall")
+	supportText:SetPoint("TOPLEFT", 12, -32)
+	supportText:SetWidth(202)
+	supportText:SetText(L.ABOUT_SUPPORT_TEXT)
+	local linkHolder, link = UI.TextBox(support, 202, 24, "", 64)
+	linkHolder:SetPoint("TOPLEFT", 12, -58)
+	link:SetText(SUPPORT_LINK)
+	link:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+	link:HookScript("OnEditFocusGained", function(self)
+		self:HighlightText()
+	end)
+	link:HookScript("OnTextChanged", function(self)
+		if self:GetText() ~= SUPPORT_LINK then
+			self:SetText(SUPPORT_LINK)
+			self:HighlightText()
+		end
+	end)
+	local supportHint = UI.Text(support, "GameFontDisableSmall")
+	supportHint:SetPoint("TOPLEFT", 12, -88)
+	supportHint:SetWidth(202)
+	supportHint:SetText(L.ABOUT_SUPPORT_HINT)
+	page.supportLink = link
 
 	local privacy = UI.Text(page, "GameFontDisableSmall")
 	privacy:SetPoint("BOTTOMLEFT", 2, 4)

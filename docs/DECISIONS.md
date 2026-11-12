@@ -144,3 +144,33 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
 46. **Locales and Forever.** Forever's UI source (`forever` @ 4cd0ab7) documents `GetLocale()` and ships
     font families for Korean, Chinese and Cyrillic, but it does not say which client languages Blizzard
     sells for Forever. SquadRank ships all ten catalogs; a language Forever does not offer simply never loads.
+
+## Group types, bosses, quests, loot tag, support link (2026-11-12, still 0.9.0-beta)
+
+47. **Seven group types, worked out on display.** `Runs.Category(run)` returns quest, world, dungeon, raid,
+    worldraid, pvp or wpvp from fields the run already has (instance type) or gathers while grouped (raid
+    group seen, PvP zone seen, quests recorded). Nothing is stored as a type, so runs saved before this
+    change get a type too and no migration is needed. Priority for open-world groups: world PvP, then world
+    raid, then questing, then open world.
+48. **World PvP** means the group was in a zone whose `C_PvP.GetZonePVPInfo()` type is "combat" or "arena".
+    War Mode alone is not enough: a War Mode questing group is still questing. **World raid** means a raid
+    group outside an instance (world bosses, raid questing).
+49. **Battlegrounds and arenas are now tracked** (instance types "pvp" and "arena"). A battleground holds
+    up to 40 strangers, so its run is stored with prompt "skipped": no alert, still rateable from the Runs
+    tab. Arenas prompt like dungeons. Battleground members are recorded as players like any other group;
+    unrated ones are pruned by the existing 180-day rule.
+50. **Quests by ID.** `QUEST_TURNED_IN` marks a quest completed, `QUEST_WATCH_UPDATE` marks it progressed,
+    both only while a run is open. The title from `C_QuestLog.GetTitleForQuestID` is kept as a fallback
+    and looked up again when shown (so it follows the client language when cached). Capped at 40 quests and
+    30 bosses per run.
+51. **Bosses with names.** `ENCOUNTER_END` (success only) and `BOSS_KILL` both report a boss; the encounter
+    ID makes each boss count once per run, whichever event arrives. `bossKills` stays as the count for old
+    code and old runs.
+52. **Combat.** These events fire in combat, when the database must not be written. They wait in a small
+    in-memory queue (60 items) and are applied with the next run check out of combat.
+53. **Loot tag.** New negative tag "Needed off-spec loot" next to "Ninja looted", and a positive "Led the group
+    well" so both sides keep the same count (8 and 8). The two rows of tag chips are now full; the
+    "Negative/Positive tags..." link moved next to the note box, so the card height is unchanged.
+54. **Support link.** The About page shows `buymeacoffee.com/nivlemoth` in a read-only text box that selects
+    itself on click for Ctrl+C. Addons cannot open web pages and SquadRank makes no network calls, so copy
+    and paste is the only option. The link is not translated.

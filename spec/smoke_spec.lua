@@ -255,6 +255,57 @@ describe("whole addon against a fake client", function()
 		noErrors()
 	end)
 
+	it("remembers bosses and quests of a run, even from combat, and shows them by type", function()
+		world.questTitles = { [501] = "Rats in the Cellar" }
+		world.units.party1 = BOB
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		roster()
+		-- Quest progress arrives in combat: kept in memory, written after the fight.
+		world.combat = true
+		mock.fire(ns, "QUEST_WATCH_UPDATE", 501)
+		mock.fire(ns, "QUEST_WATCH_UPDATE", 502)
+		mock.flush()
+		assert.is_nil(SquadRankDB.currentRun.quests)
+		world.combat = false
+		mock.fire(ns, "PLAYER_REGEN_ENABLED")
+		mock.fire(ns, "QUEST_TURNED_IN", 501, 100, 0)
+		mock.flush()
+		local run = SquadRankDB.currentRun
+		assert.equals(2, #run.quests)
+		assert.is_true(run.quests[1].done)
+		assert.equals("Rats in the Cellar", run.quests[1].title)
+		assert.equals("quest", ns.Runs.Category(run))
+
+		-- The group walks into a dungeon: bosses from both events count once.
+		world.instance = { name = "The Deadmines", type = "party", id = 36 }
+		mock.fire(ns, "PLAYER_ENTERING_WORLD", false, false)
+		mock.flush()
+		mock.fire(ns, "ENCOUNTER_END", 1, "Rhahk'Zor", 1, 5, 1)
+		mock.fire(ns, "BOSS_KILL", 1, "Rhahk'Zor")
+		mock.fire(ns, "ENCOUNTER_END", 2, "Sneed", 1, 5, 0)
+		mock.flush()
+		run = SquadRankDB.currentRun
+		assert.equals("dungeon", ns.Runs.Category(run))
+		assert.equals(1, run.bossKills)
+		assert.equals("Rhahk'Zor", run.bosses[1].name)
+		assert.equals(2, #run.quests)
+
+		-- It shows on the Runs page and in the tooltip without errors.
+		world.instance = nil
+		world.units.party1 = nil
+		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
+		mock.flush()
+		local stored = ns.Runs.List(SquadRankDB)[1]
+		assert.equals("Dungeon  ·  1 boss  ·  2 quests", ns.UI.RunSummary(stored))
+		ns.Hub.Show("runs")
+		assert.is_true(mock.click("Type: All"))
+		world.lastMenu.entries.Dungeon()
+		assert.is_true(mock.click("Type: Dungeon"))
+		ns.UI.RunTooltip(UIParent, stored)
+		ns.Hub.Show("about")
+		noErrors()
+	end)
+
 	it("records group members but shows no toast for unrated players", function()
 		world.units.party1 = BOB
 		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")

@@ -161,6 +161,10 @@ function Compat.InstanceState()
 		state.maxPlayers = clean(maxPlayers, "number")
 		state.instanceID = clean(instanceID, "number")
 		state.zoneName = clean(GetZoneText(), "string")
+		state.inRaid = Compat.IsInRaid()
+		if C_PvP and C_PvP.GetZonePVPInfo then
+			state.zonePvP = clean((C_PvP.GetZonePVPInfo()), "string")
+		end
 	end)
 	if not ok then
 		Debug.Error("InstanceState", err)

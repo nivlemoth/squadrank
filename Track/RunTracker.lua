@@ -6,10 +6,12 @@ local Debug = ns.Debug
 local Compat = ns.Compat
 local Events = ns.Events
 
-local RunTracker = { pendingKills = 0, ticking = false, lastAction = nil }
+local RunTracker = { pendingBosses = {}, pendingQuests = {}, ticking = false, lastAction = nil }
 ns.RunTracker = RunTracker
 
 local RECHECK_SECONDS = 30
+-- Events can arrive in combat, when the database must not be touched: they wait here.
+local QUEUE_LIMIT = 60
 
 local function onFinished(run)
 	local db = ns.db
@@ -28,10 +30,14 @@ local function check()
 	if not db then
 		return
 	end
-	while RunTracker.pendingKills > 0 do
-		ns.Runs.AddBossKill(db)
-		RunTracker.pendingKills = RunTracker.pendingKills - 1
+	local now = Compat.Now()
+	for _, boss in ipairs(RunTracker.pendingBosses) do
+		ns.Runs.AddBoss(db, boss.id, boss.name, now)
 	end
+	for _, quest in ipairs(RunTracker.pendingQuests) do
+		ns.Runs.AddQuest(db, quest.id, quest.title, quest.done)
+	end
+	RunTracker.pendingBosses, RunTracker.pendingQuests = {}, {}
 
 	local state = Compat.InstanceState()
 	local action, finished = ns.Runs.Evaluate(db, state, Compat.Now(), Compat.Ruleset())
@@ -77,10 +83,54 @@ Events.On("ZONE_CHANGED_NEW_AREA", "RunTracker", schedule)
 Events.On("GROUP_ROSTER_UPDATE", "RunTracker", schedule)
 Events.On("GROUP_LEFT", "RunTracker", schedule)
 
--- Boss kills are metadata only. Nothing depends on this event firing in Forever dungeons.
-Events.On("ENCOUNTER_END", "RunTracker", function(_, _, _, _, _, success)
-	if Compat.Clean(success, "number") == 1 then
-		RunTracker.pendingKills = RunTracker.pendingKills + 1
+local function queue(list, item)
+	if #list < QUEUE_LIMIT then
+		list[#list + 1] = item
 		schedule()
 	end
+end
+
+local function cleanName(value)
+	local text = Compat.Clean(value, "string")
+	if text and text ~= "" then
+		return ns.Util.Sanitize(text, 80)
+	end
+	return nil
+end
+
+-- Bosses and quests are metadata only: nothing else depends on these events firing in Forever.
+-- Outside a run (not grouped) they are dropped when the queue is applied.
+Events.On("ENCOUNTER_END", "RunTracker", function(_, encounterID, encounterName, _, _, success)
+	if Compat.Clean(success, "number") == 1 then
+		queue(RunTracker.pendingBosses, { id = Compat.Clean(encounterID, "number"), name = cleanName(encounterName) })
+	end
+end)
+
+Events.On("BOSS_KILL", "RunTracker", function(_, encounterID, encounterName)
+	queue(RunTracker.pendingBosses, { id = Compat.Clean(encounterID, "number"), name = cleanName(encounterName) })
+end)
+
+local function questTitle(questID)
+	if C_QuestLog and C_QuestLog.GetTitleForQuestID then
+		local ok, title = pcall(C_QuestLog.GetTitleForQuestID, questID)
+		if ok then
+			return cleanName(title)
+		end
+	end
+	return nil
+end
+
+local function onQuest(questID, done)
+	questID = Compat.Clean(questID, "number")
+	if questID then
+		queue(RunTracker.pendingQuests, { id = questID, title = questTitle(questID), done = done })
+	end
+end
+
+Events.On("QUEST_TURNED_IN", "RunTracker", function(_, questID)
+	onQuest(questID, true)
+end)
+
+Events.On("QUEST_WATCH_UPDATE", "RunTracker", function(_, questID)
+	onQuest(questID, false)
 end)

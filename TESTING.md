@@ -38,7 +38,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 11 | Right-click the other player's party frame | The menu has "Rate in SquadRank" at the bottom. |
 | 12 | Click it | The SquadRank window **fades in** on the **Rate** page. One card: role icon on the left, their name in class color, a grey line with role, level, class and reputation, and five colored score squares (1 red to 5 green) on the right. |
 | 13 | Hover a score square | Tooltip such as "4: Good". The square lightens. |
-| 14 | Click **4** | One click saves it: the square fills green-yellow and **pops**, a checkmark pops in, the bar at the top fills, and the card **slides open** to show 7 positive tags, a "Negative tags..." link and a note box. No chat line. |
+| 14 | Click **4** | One click saves it: the square fills green-yellow and **pops**, a checkmark pops in, the bar at the top fills, and the card **slides open** to show 8 positive tags, then a note box with a "Negative tags..." link beside it. No chat line. |
 | 15 | Click **Efficient**, click the role icon until it shows the healer cross, type a note, press Enter | The tag lights up green. The grey line now says Healer. Nothing else to click. |
 | 16 | Click **Done**. `/sr`, click the player's row | The window fades out. Reopened, the Players page shows the player with a score bar. Clicking the row slides their **history drawer** in from the right: big "4.0", a Healer bar that grows, tag Efficient, then one rating with your note. Click another row: the drawer stays and its content changes. The cross slides it away. |
 | 17 | Have the other player leave the party, then invite them again | A toast **slides down** near the top of the screen: their name, "New", "Rated once, score 4.0", "Healer 4.0 over 1 run", the tag, your note. It fades away after 8 seconds. |
@@ -100,6 +100,18 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 46 | `/sr debug locale ruRU`, `/reload`, open every page | Cyrillic text shows (not boxes). Section headings are not broken. |
 | 47 | `/sr debug locale off`, `/reload` | Back to your client language. Your ratings, tags and notes are exactly as before. |
 | 48 | (If you have a Korean or Chinese client) open every page | Text shows with the client's font. On a Latin client with the override, boxes are expected (font limit). |
+
+## H. Group types, bosses, quests
+
+| # | Do this | Expected |
+|---|---|---|
+| 49 | Group with someone and quest together for 5+ minutes: progress an objective, turn in a quest. Leave the group | The alert appears. `/sr` > **Runs**: the group shows a gold **Questing** label and "Questing in <zone>". Hover it: the quest you turned in under "Quests completed", others under "Quests progressed", and the duration. |
+| 50 | Do a dungeon and kill a boss or two | The run shows a blue **Dungeon** label. Hovering lists the bosses by name. On the Rate page the section header says "Dungeon  ·  2 bosses". |
+| 51 | (If possible) a raid group outside an instance, a battleground, or a group in a PvP zone | World raid / PvP / World PvP labels. A battleground gives no alert and shows as Skipped. |
+| 52 | Runs page: click **Type: All**, pick Dungeon | Only dungeon runs remain. Set it back to All. |
+| 53 | Rate someone, open the card: tags | 8 positive tags including "Led the group well"; "Negative tags..." next to the note box shows 8 including "Needed off-spec loot". |
+| 54 | About page, click the coffee link, Ctrl+C, paste it in a browser | The link selects itself, cannot be edited, and pastes as buymeacoffee.com/nivlemoth. |
+| 55 | `/sr selftest`, `/sr debug` after 49-50 | "events seen" shows QUEST_TURNED_IN and QUEST_WATCH_UPDATE above 0. Send me the line. |
 
 ## What I most need back
 

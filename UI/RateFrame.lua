@@ -212,14 +212,7 @@ local function paintChips(card)
 			end
 		end
 	end
-	local swap = card.swap
-	swap:ClearAllPoints()
-	swap:SetPoint(
-		"TOPLEFT",
-		(slot % CHIPS_PER_ROW) * (CHIP_W + CHIP_GAP),
-		-math.floor(slot / CHIPS_PER_ROW) * (CHIP_H + 4)
-	)
-	swap:SetText(set == "positive" and L.RATE_SHOW_NEGATIVE or L.RATE_SHOW_POSITIVE)
+	card.swap:SetText(set == "positive" and L.RATE_SHOW_NEGATIVE or L.RATE_SHOW_POSITIVE)
 end
 
 local function paintCard(card)
@@ -482,9 +475,11 @@ local function buildCard()
 		end)
 	)
 
-	local noteWidth = CHIPS_PER_ROW * CHIP_W + (CHIPS_PER_ROW - 1) * CHIP_GAP
+	-- Two rows of four tags; the note box and the "other tags" link share the third row.
+	local noteWidth = (CHIPS_PER_ROW - 1) * (CHIP_W + CHIP_GAP) - CHIP_GAP
 	card.noteHolder, card.note = UI.TextBox(card.details, noteWidth, 26, L.RATE_NOTE_HINT, ns.Ratings.NOTE_MAX)
 	card.noteHolder:SetPoint("TOPLEFT", 0, -2 * (CHIP_H + 4) - 6)
+	card.swap:SetPoint("LEFT", card.noteHolder, "RIGHT", CHIP_GAP, 0)
 	local function commitNote()
 		local text = card.note:GetText() or ""
 		if text ~= (card.entry.note or "") then
@@ -514,6 +509,21 @@ local function buildHeader()
 	header.title:SetPoint("BOTTOMLEFT", 2, 7)
 	header.count = UI.Text(header, "GameFontDisableSmall", "RIGHT")
 	header.count:SetPoint("BOTTOMRIGHT", -4, 8)
+	header.info = UI.Text(header, "GameFontDisableSmall")
+	header.info:SetPoint("LEFT", header.title, "RIGHT", 12, 0)
+	header.info:SetPoint("RIGHT", header.count, "LEFT", -12, 0)
+	header.info:SetWordWrap(false)
+	header:EnableMouse(true)
+	header:SetScript("OnEnter", function(self)
+		if self.run then
+			UI.RunTooltip(self, self.run)
+		end
+	end)
+	header:SetScript("OnLeave", function()
+		if GameTooltip then
+			GameTooltip:Hide()
+		end
+	end)
 	local line = header:CreateTexture(nil, "ARTWORK")
 	line:SetPoint("BOTTOMLEFT", 0, 2)
 	line:SetPoint("BOTTOMRIGHT", 0, 2)
@@ -657,8 +667,12 @@ local function populate(groups, title)
 			if group.run then
 				local run = group.run
 				header.title:SetText(L.RATE_RUN_FMT:format(UI.RunName(run), UI.Date(run.endedAt or run.startedAt)))
+				header.info:SetText(UI.RunSummary(run))
+				header.run = run
 			else
 				header.title:SetText(L.RATE_NO_RUN)
+				header.info:SetText("")
+				header.run = nil
 			end
 			header:Show()
 			section.header = header
