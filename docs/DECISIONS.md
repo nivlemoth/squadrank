@@ -223,3 +223,6 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
 67. **License.** All Rights Reserved (`LICENSE.txt`, shipped in the package). No third-party code, fonts,
     images or sounds are bundled; Blizzard's fonts, icons, atlases and sound kits are referenced at run time
     only. The file carries the Blizzard trademark and non-affiliation notice.
+68. **Own icon.** `Media/Icon.tga` (128x128, 32-bit, uncompressed) is the CurseForge logo. It is used by the
+    TOC `IconTexture` (AddOns list and Addon Compartment), the sidebar, the About page and the minimap button.
+    TGA is the format WoW loads for addon textures; the path is given without extension.

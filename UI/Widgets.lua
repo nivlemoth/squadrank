@@ -321,6 +321,9 @@ UI.C = {
 	bad = { 0.90, 0.32, 0.28 },
 }
 
+-- SquadRank's own logo (Media/Icon.tga, 128x128), the same art as the CurseForge project icon.
+UI.ICON = "Interface\\AddOns\\SquadRank\\Media\\Icon"
+
 UI.SCORE_COLORS = {
 	{ 0.86, 0.24, 0.20 },
 	{ 0.93, 0.52, 0.18 },

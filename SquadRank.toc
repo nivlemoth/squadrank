@@ -14,7 +14,7 @@
 ## Author: Nivlemoth
 ## Version: 1.0.0
 ## Category: Group
-## IconTexture: Interface\Icons\INV_Misc_GroupLooking
+## IconTexture: Interface\AddOns\SquadRank\Media\Icon
 ## SavedVariables: SquadRankDB, SquadRankDebug
 ## LoadSavedVariablesFirst: 1
 ## AddonCompartmentFunc: SquadRank_OnAddonCompartmentClick

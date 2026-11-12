@@ -16,7 +16,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 |---|---|---|
 | 1 | `/console scriptErrors 1` then `/reload` | No error window. Nothing printed by SquadRank (it is silent at load). |
 | 2 | `/dump select(4, GetBuildInfo())` | `16001`. If it is another number, tell me: the TOC needs it. |
-| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.0.0** is listed under the "Group" category and is not marked out of date. |
+| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.0.0** is listed under the "Group" category with the blue shield icon, and is not marked out of date. |
 | 4 | Look at the edge of the minimap | A round SquadRank button (group icon in a gold ring). Hover it: a tooltip with three hints. **Left-click**: one window **fades in** with a sidebar (Rate, Players, Runs, Settings, About) and "by Nivlemoth" at the bottom left. Left-click again: it fades out. **Right-click**: the window opens on Settings. **Drag** it: it slides round the minimap; `/reload` keeps the spot. If the ring or the icon is missing, tell me (screenshot). |
 | 4b | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The same window toggles. |
 | 5 | `/sr help` | Six help lines are printed. |

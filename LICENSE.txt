@@ -18,7 +18,8 @@ other liability arising from, out of or in connection with SquadRank or its use.
 Third-party material and notices
 
 SquadRank contains no third-party code, libraries, fonts, images or sounds. Every file in this
-package was written for SquadRank.
+package was made for SquadRank, including the logo (Media/Icon.tga), which is original artwork
+drawn for this project and covered by the copyright above.
 
 At run time SquadRank uses resources that belong to the World of Warcraft game client and are
 not included in, or redistributed with, this package: Blizzard's user-interface API, fonts,
