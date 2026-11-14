@@ -71,7 +71,7 @@ need on every item. **SquadRank remembers them for you**, so next time you know 
 | 🖱️ | **Right-click menu** | On a party member's frame: **Rate in SquadRank** and **Add to avoid list**. |
 | 🔔 | **Heads-up alerts** | Optional, off by default: a quiet reminder when a saved player whispers you, is targeted, or asks to trade or duel. One cooldown per player, adjustable from 0 to 180 minutes. |
 
-> **In the next build:** heads-up alerts for whispers, targets, trade requests and duel requests.
+> **New in 1.5:** heads-up alerts for whispers, targets, trade requests and duel requests.
 > Each one is opt-in, the cooldown is in memory only, and the whisper text is never read or stored.
 > See [the roadmap](docs/product/squadrank-roadmap.md) and
 > [the manual test plan](docs/testing/manual-test-plan.md).

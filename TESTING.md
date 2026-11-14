@@ -138,7 +138,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 69 | `/sr` > Runs | Only your PvE groups (questing, open world, dungeons, raids). The Type filter has only those four. |
 | 70 | Hover the raid on the PvP page | Same tooltip as on the Runs page (bosses, duration). Clicking it opens the Rate page if you do want to rate someone. |
 
-## K. Heads-up alerts (next build)
+## K. Heads-up alerts (1.5)
 
 These are the focused alert cases. The full matrix, with pass/fail status and automated coverage, is
 in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md).
