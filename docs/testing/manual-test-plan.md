@@ -1,11 +1,13 @@
-# Manual test plan: contextual alerts
+# Manual test plan: 1.5 alerts and onboarding
 
-Created 2026-11-13 for the first contextual-alert milestone. This plan is **release-blocking** for
-the milestone but has **not been executed**: no WoW Forever client is available in this
-environment. Every case below is therefore marked `NOT EXECUTED`.
+Created 2026-11-13 for the first contextual-alert milestone and extended for the 1.5 onboarding
+window and chat hello. This plan is **release-blocking** for the milestone but has **not been
+executed**: no WoW Forever client is available in this environment. Every case below is therefore
+marked `NOT EXECUTED`.
 
 `TESTING.md` remains the full release checklist. This document adds the focused cases for the new
-whisper, target, trade and duel alerts, plus regression checks for the paths they touch.
+whisper, target, trade and duel alerts, the what's-new window and the chat hello, plus regression
+checks for the paths they touch.
 
 ## How to record a result
 
@@ -99,9 +101,25 @@ purge or import against a file you cannot restore.
 | REG-04 | Complete a short dungeon and leave the group | The "Rate your squad" alert and rating flow behave exactly as before. | NOT EXECUTED |
 | REG-05 | Open and close every page (Rate, Players, Runs, PvP, Stats, Settings, About) | No layout change, no Lua error, no unexpected scroll jump. | NOT EXECUTED |
 | REG-06 | Switch the game language to German (or any non-English locale), `/reload`, repeat CA-07 | The four toast titles and all six settings labels are translated and fit their controls; no English fallback appears for the new keys. | NOT EXECUTED |
-| REG-07 | Load a schema-1 SavedVariables file from the previous build | All players, runs, ratings, notes and settings are intact. The four new switches default to off and the cooldown to 60. | NOT EXECUTED |
+| REG-07 | Load a schema-1 SavedVariables file from the previous build | All players, runs, ratings, notes and settings are intact. The four alert switches default to off, the cooldown to 60, and the two onboarding switches to on. | NOT EXECUTED |
 | REG-08 | Load a file with `schema = 99` | SquadRank opens read-only, prints its warning, and does not modify the file. | NOT EXECUTED |
 | REG-09 | `/sr purge <saved player>` then whisper from that name | No alert; the name is unknown again. | NOT EXECUTED |
+
+## H. What's new and the chat hello
+
+| ID | Steps | Expected | Status |
+|---|---|---|---|
+| ONB-01 | Use a fresh SavedVariables file (or delete `seenVersion`) and log in | A 600×470 window fades in once: logo, "SquadRank", a **v1.5** pill, five numbered cards, a thank-you line, **Open settings** and **Got it**. It is not shown in combat. | NOT EXECUTED |
+| ONB-02 | `/reload` without changing anything | The window does **not** appear again. `seenVersion` in `SquadRankDB` equals `1.5`. | NOT EXECUTED |
+| ONB-03 | Click **Open settings** | The what's-new window closes and the main window opens on the Settings page. | NOT EXECUTED |
+| ONB-04 | `/sr whatsnew` after the window has been seen | It reopens on demand. **Got it** closes it. | NOT EXECUTED |
+| ONB-05 | Turn **Show what's new after an update** off and `/reload` with `seenVersion` cleared | No automatic window. `/sr whatsnew` still opens it; the command ignores the setting. | NOT EXECUTED |
+| ONB-06 | Open the what's-new window, then start combat | The window hides and returns when combat ends. `/sr whatsnew` during combat prints the usual "not available in combat" line and does not open. | NOT EXECUTED |
+| ONB-07 | Log in with **Say hello in chat when you log in** on | Exactly one chat line per session: the SquadRank icon, the blue name, the tracking sentence, and the gold `/sr` hint. `/reload` starts a new session, so it prints once more (intended). | NOT EXECUTED |
+| ONB-08 | Turn the chat hello off and `/reload` | No hello line. Turn it on again: one line. | NOT EXECUTED |
+| ONB-09 | Switch to German or French, `/reload`, open `/sr whatsnew` | All five cards, the buttons, both settings labels and the hello line are translated. Long strings wrap inside a card and never overlap its neighbours or the buttons. | NOT EXECUTED |
+| ONB-10 | Set `seenVersion` to a number and a 20-character string in the SavedVariables file, `/reload` | `DB.repair` clears the malformed value; the window shows once and stores `1.5`. No error is printed. | NOT EXECUTED |
+| ONB-11 | Use a schema-99 or otherwise read-only database, log in | No what's-new window appears and no write is attempted. | NOT EXECUTED |
 
 ## Automated coverage (executed in this environment)
 
@@ -116,9 +134,11 @@ These do not replace the in-game cases, but they pin the logic:
 | Cooldown shared across contexts; zero disables it | `spec/alerts_spec.lua` | PASS |
 | Avoid exception, and its dependence on `avoidWarning` | `spec/alerts_spec.lua` | PASS |
 | Unknown player/context; reset | `spec/alerts_spec.lua` | PASS |
-| All 18 settings controls register (mock) | `spec/smoke_spec.lua` | PASS |
+| All 20 settings controls register (mock) | `spec/smoke_spec.lua` | PASS |
+| What's-new shows once, reopens on demand, obeys the switch, hides in combat | `spec/smoke_spec.lua` | PASS |
+| Chat hello prints once and stays quiet when off | `spec/smoke_spec.lua` | PASS |
 | TOC load order, event wiring, out-of-combat queue | `spec/smoke_spec.lua` | PASS |
-| Formatting and lint (58 → 61 files) | `tools/check.sh` | PASS, 0 warnings |
+| Formatting and lint (62 files, 157 tests) | `tools/check.sh` | PASS, 0 warnings |
 
 Static and mock tests prove load order and pure logic against a fake client. They do **not** prove
 that Blizzard's event payloads, secret values, toast anchoring, or sound behaviour match the mock.

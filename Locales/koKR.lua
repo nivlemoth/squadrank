@@ -329,4 +329,36 @@ ns.Locale.Register("koKR", function(L)
 	L.TOAST_ALERT_target = "저장된 플레이어를 대상으로 지정했습니다"
 	L.TOAST_ALERT_trade = "저장된 플레이어의 거래 요청"
 	L.TOAST_ALERT_duel = "저장된 플레이어의 결투 신청"
+
+	-- 새로운 점과 환영 (1.5)
+	L.WHATS_NEW_TITLE = "SquadRank %s의 새로운 점"
+	L.WHATS_NEW_SUBTITLE = "우리 그룹이 어떻게 지내는지 더 조용히 살펴보는 방법."
+	L.WHATS_NEW_F1_TITLE = "그룹 밖 알림"
+	L.WHATS_NEW_F1_TEXT =
+		"저장한 플레이어의 귓속말, 대상, 거래, 결투 알림입니다. 각각 스위치가 있으며 기본은 꺼짐입니다."
+	L.WHATS_NEW_F2_TITLE = "플레이어당 하나의 간격"
+	L.WHATS_NEW_F2_TEXT =
+		"네 가지 상황을 통틀어 플레이어당 알림은 한 번만 표시됩니다. 0~180분으로 설정할 수 있으며 0은 매번입니다."
+	L.WHATS_NEW_F3_TITLE = "피하는 목록이 우선"
+	L.WHATS_NEW_F3_TEXT =
+		"피하는 플레이어는 해당 상황의 스위치가 꺼져 있어도 빨간 경고를 띄울 수 있습니다. 간격은 그대로 적용됩니다."
+	L.WHATS_NEW_F4_TITLE = "개인정보 보호와 전투 안전"
+	L.WHATS_NEW_F4_TEXT =
+		"귓속말 내용은 읽거나 저장하지 않습니다. 전투 중에는 아무것도 조회하지 않으며 알림은 전투가 끝날 때까지 기다립니다."
+	L.WHATS_NEW_F5_TITLE = "다시 열기 쉬움"
+	L.WHATS_NEW_F5_TEXT =
+		"이 창은 버전마다 한 번 표시됩니다. 언제든 /sr whatsnew를 입력하거나 설정에서 끌 수 있습니다."
+	L.WHATS_NEW_TIP = "SquadRank를 사용해 주셔서 감사합니다. 우리 그룹은 좋은 손에 있습니다."
+	L.BTN_GOT_IT = "확인"
+	L.BTN_OPEN_SETTINGS = "설정 열기"
+	L.BTN_WHATSNEW = "새로운 점"
+	L.SET_WHATSNEW = "업데이트 후 새로운 점 표시"
+	L.SET_WHATSNEW_TIP =
+		"버전마다 짧은 창이 한 번 표시됩니다. /sr whatsnew로 언제든 다시 열 수 있습니다."
+	L.SET_CHAT_HELLO = "로그인할 때 채팅으로 인사"
+	L.SET_CHAT_HELLO_TIP =
+		"세션마다 짧은 SquadRank 한 줄을 표시하여 그룹을 추적 중임을 알려 줍니다."
+	L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r이(가)"
+		.. " 우리 그룹이 어떻게 지내는지 살펴보고 있습니다. |cffffd100/sr|r을 입력해 목록을 여세요."
+	L.MSG_HELP_7 = "/sr whatsnew - 이 버전의 새로운 점 표시"
 end)

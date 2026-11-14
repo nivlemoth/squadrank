@@ -52,6 +52,8 @@ keep it installed alongside a reputation addon.
   find an existing record.
 - All database reads are deferred out of combat through the existing event queue.
 - Clicking the toast opens the player's history drawer.
+- 1.5 polish: a one-time **what's new** window (`/sr whatsnew`), an optional chat hello, and both
+  switches default on but skippable. This is not a tutorial and never blocks play.
 
 **Acceptance criteria**
 
@@ -177,7 +179,8 @@ These are deliberately excluded, not deferred:
 - Retail client support without a separate approved plan.
 - Telemetry, analytics, crash reporting, or player-data sharing.
 - Copying TheList's code, UI assets, sounds, strings, or branding.
-- Default-on context alerts or forced onboarding.
+- Default-on context alerts or forced onboarding. (The 1.5 what's-new window and chat hello default
+  on, but both can be switched off and neither blocks play.)
 
 ## Sequencing and release gates
 

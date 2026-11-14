@@ -287,3 +287,32 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
 83. **In-game validation remains open.** The automated suite loads every TOC file against a fake
     client, which proves load order and pure logic, not Blizzard's event payloads or toast rendering.
     `docs/testing/manual-test-plan.md` lists the cases and marks all of them `NOT EXECUTED`.
+84. **Onboarding is a versioned window, not a tutorial.** `UI/WhatsNew.lua` shows one flat card per
+    headline feature and a thank-you line. It is not a multi-step wizard and never blocks play.
+    Anything that needs a choice stays in Settings. This keeps the feature small and testable, and
+    matches the existing About-page style.
+85. **One showing per version, tracked at the database root.** `db.seenVersion` is a short string
+    (`1.5`). It is not player data and does not change the schema. `DB.repair` clears a value that is
+    not a string or is longer than 16 characters, so a corrupted file cannot suppress forever or
+    crash the popup.
+86. **The chat hello is once per session.** A local flag in `Core/Main.lua` resets on `/reload`; a
+    reload starts a new session, like other add-on greetings. It is deliberately not persisted, so a
+    player who logs in twice sees it twice and no extra state accumulates.
+87. **Emoji live in the docs, not in the game font.** WoW Forever's client fonts do not reliably
+    render colour emoji. In game, the hello uses the add-on icon texture (`|T...|t`) and Blizzard
+    colour escapes, which render on every client. README, release notes and product docs use emoji
+    freely. No emoji font, texture pack or third-party asset is shipped.
+88. **Both onboarding switches default on and are additive.** `showWhatsNew` and `chatHello` join the
+    existing settings table; nothing is renamed or removed. Blizzard's panel grows from 18 to 20
+    controls. Turning `showWhatsNew` off suppresses only the automatic window; `/sr whatsnew` is an
+    explicit request and still works.
+89. **`/sr whatsnew` is a first-class command, not a debug affordance.** It is listed in `/sr help`
+    (now seven lines), the README command table and the Settings page, so a player who dismissed the
+    window can always find it again.
+90. **Combat rules are unchanged.** The popup hides on `PLAYER_REGEN_DISABLED` and returns on
+    `PLAYER_REGEN_ENABLED`; the command refuses to open it in combat. This is the same contract as
+    every other SquadRank window, so no new combat-sensitive API is called.
+91. **CurseForge inspiration was studied, not copied.** The read-only review of TheList and other
+    add-ons is recorded in `docs/product/curseforge-inspiration.md`. SquadRank keeps its own name,
+    art, text, data model and code. The 1.5 additions borrow general patterns only: a short
+    post-update note, a single chat greeting, and keeping optional noise opt-in.

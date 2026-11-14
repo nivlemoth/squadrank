@@ -70,9 +70,11 @@ need on every item. **SquadRank remembers them for you**, so next time you know 
 | 🔊 | **Sounds** | For the rating card, join pop-ups and avoid warnings, with a switch to turn them off. |
 | 🖱️ | **Right-click menu** | On a party member's frame: **Rate in SquadRank** and **Add to avoid list**. |
 | 🔔 | **Heads-up alerts** | Optional, off by default: a quiet reminder when a saved player whispers you, is targeted, or asks to trade or duel. One cooldown per player, adjustable from 0 to 180 minutes. |
+| 👋 | **A friendly welcome** | A short **what's new** window once per version, and an optional hello line in chat so you know SquadRank is watching your groups. Both can be switched off. |
 
-> **New in 1.5:** heads-up alerts for whispers, targets, trade requests and duel requests.
-> Each one is opt-in, the cooldown is in memory only, and the whisper text is never read or stored.
+> **New in 1.5:** heads-up alerts for whispers, targets, trade requests and duel requests, plus a
+> one-time **what's new** window, a chat hello and the `/sr whatsnew` command.
+> Each alert is opt-in, the cooldown is in memory only, and the whisper text is never read or stored.
 > See [the roadmap](docs/product/squadrank-roadmap.md) and
 > [the manual test plan](docs/testing/manual-test-plan.md).
 
@@ -119,6 +121,7 @@ More detail, including a `robocopy` one-liner for developers, is in [INSTALL.md]
 | `/sr list [text]` | 📋 Print your saved players in chat |
 | `/sr settings` | ⚙️ Open the settings |
 | `/sr about` | ℹ️ Open the About page |
+| `/sr whatsnew` | 👋 Reopen the what's-new window |
 | `/sr minimap` | 🧭 Show or hide the minimap button |
 | `/sr purge <name>` / `/sr purge all` | 🗑️ Delete one player, or all data (asks first) |
 | `/sr debug` | 🐞 Open the debug report for copying |
@@ -151,6 +154,10 @@ Players you rated or avoid are never removed automatically.
 
 **⚔️ Does it work in combat?**
 It steps aside: the window and pop-ups hide in combat and come back afterwards.
+
+**👋 How do I stop the what's-new window or the chat hello?**
+Open **Settings** and turn off **Show what's new after an update** or **Say hello in chat when you log in**.
+You can always reopen the window with `/sr whatsnew`.
 
 **🐛 Something doesn't work.**
 Type `/sr debug`, click in the box, press Ctrl+A then Ctrl+C, and paste the text in your report. It
@@ -215,8 +222,9 @@ tools are not shipped.
 | [docs/LOCALIZATION.md](docs/LOCALIZATION.md) | 🌍 How to add or fix a translation |
 | [docs/product/squadrank-roadmap.md](docs/product/squadrank-roadmap.md) | 🗺️ Where SquadRank is going next |
 | [docs/research/the-list-analysis.md](docs/research/the-list-analysis.md) | 🔎 Evidence log for the competitor review |
+| [docs/product/curseforge-inspiration.md](docs/product/curseforge-inspiration.md) | ✨ What 1.5 borrowed from other add-ons, and what it did not |
 | [docs/architecture/data-and-migrations.md](docs/architecture/data-and-migrations.md) | 💾 Saved data, settings, migrations and rollback |
-| [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md) | 🔔 Focused in-game cases for heads-up alerts |
+| [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md) | 🔔 Focused in-game cases for alerts and onboarding |
 
 ## ⚖️ License
 

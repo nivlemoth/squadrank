@@ -13,6 +13,9 @@ local function optional(moduleName, method)
 	end
 end
 
+-- Once per login session. A /reload starts a new session, like any other addon greeting.
+local greeted = false
+
 Events.On("ADDON_LOADED", "Main", function(_, name)
 	if name ~= ns.ADDON then
 		return
@@ -55,7 +58,12 @@ Events.On("PLAYER_LOGIN", "Main", function()
 	if ns.readOnly then
 		ns.Print(L.MSG_READONLY:format(tostring(ns.readOnlyReason)))
 	end
+	if ns.db and ns.db.settings.chatHello and not greeted then
+		greeted = true
+		ns.Print(L.MSG_HELLO)
+	end
 	optional("MinimapButton", "Update")
+	optional("WhatsNew", "MaybeShow")
 end)
 
 Events.On("PLAYER_LOGOUT", "Main", function()

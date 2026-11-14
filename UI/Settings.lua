@@ -11,7 +11,7 @@ local Compat = ns.Compat
 local SettingsUI = {}
 ns.SettingsUI = SettingsUI
 
-local CONTROLS = 18
+local CONTROLS = 20
 
 function SettingsUI.Register()
 	if not (Settings and Settings.RegisterVerticalLayoutCategory and Settings.RegisterAddOnSetting) then
@@ -96,6 +96,8 @@ function SettingsUI.Register()
 			ns.MinimapButton.Update()
 		end
 	end)
+	checkbox("showWhatsNew", L.SET_WHATSNEW, L.SET_WHATSNEW_TIP)
+	checkbox("chatHello", L.SET_CHAT_HELLO, L.SET_CHAT_HELLO_TIP)
 	button("purge player", L.SET_PURGE_PLAYER, L.BTN_OPEN_LIST, L.SET_PURGE_PLAYER_TIP, function()
 		ns.MainWindow.Show()
 	end)
@@ -210,6 +212,15 @@ local function buildPage(page)
 	toggle("minimapButton", L.SET_MINIMAP, L.SET_MINIMAP_TIP)
 	toggle("tooltipInfo", L.SET_TOOLTIP, L.SET_TOOLTIP_TIP)
 	toggle("recentAllies", L.SET_RECENT, L.SET_RECENT_TIP)
+	toggle("showWhatsNew", L.SET_WHATSNEW, L.SET_WHATSNEW_TIP)
+	toggle("chatHello", L.SET_CHAT_HELLO, L.SET_CHAT_HELLO_TIP)
+	row(L.WHATS_NEW_TITLE:format(ns.VERSION), L.SET_WHATSNEW_TIP, function(f)
+		return UI.FlatButton(f, L.BTN_WHATSNEW, 110, 26, function()
+			if ns.WhatsNew then
+				ns.WhatsNew.Show(true)
+			end
+		end)
+	end)
 	section(L.SET_SECTION_DATA)
 	toggle("allowShare", L.SET_SHARE, L.SET_SHARE_TIP)
 	row(L.SET_PURGE_ALL, L.SET_PURGE_ALL_TIP, function(f)

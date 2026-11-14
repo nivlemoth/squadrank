@@ -18,14 +18,31 @@ Version **1.5**. The database schema is unchanged (1) and no existing data or se
 - **Combat-safe.** Nothing is looked up during combat; events wait and resolve afterwards.
 - **Click to remember.** Clicking the pop-up opens that player's history.
 
+## New: a friendlier welcome
+
+- **What's new, once per version.** After an update, a short window shows the five things worth
+  knowing about 1.5. It never appears twice for the same version and does not show in combat.
+- **Reopen it any time.** Type `/sr whatsnew`, or use the button on the Settings page.
+- **A quiet hello in chat.** At login, SquadRank prints one short line with its icon so you know it
+  is tracking your groups. Once per session.
+- **Both are optional.** New switches in Settings (and Blizzard's AddOns panel) turn the automatic
+  window and the chat hello off. The `/sr whatsnew` command still works when the automatic window is off.
+- **No new data categories.** The window records only the last version it was shown for
+  (`seenVersion`, a short string in the saved file). No player data is added or changed.
+- **A little personality, safely.** 🎉 The README and release notes use emoji, and the in-game hello
+  carries the SquadRank icon. In-game text itself uses Blizzard colours and textures rather than
+  emoji, because Forever's fonts do not reliably draw colour emoji on every client. No extra font or
+  texture pack is shipped.
+
 ## Where to find it
 
 `/sr` → **Settings** → **Heads-up outside groups**, or Blizzard's AddOns options for SquadRank.
 The four new switches and the cooldown slider show the same values in both places.
+The welcome switches are under **Interface**, with the what's-new button just below them.
 
 ## Validation
 
-Automated checks pass (style, lint, 155 tests). An in-game pass has **not** been run: the cases are
+Automated checks pass (style, lint, 157 tests). An in-game pass has **not** been run: the cases are
 listed in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md) and are marked
 `NOT EXECUTED`. The player-facing behaviour should be treated as unverified until that pass happens.
 

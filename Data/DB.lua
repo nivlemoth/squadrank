@@ -27,6 +27,9 @@ DB.DEFAULT_SETTINGS = {
 	alertTrade = false,
 	alertDuel = false,
 	alertCooldown = 60,
+	-- Onboarding: one "what's new" popup per version, and one chat hello per session.
+	showWhatsNew = true,
+	chatHello = true,
 }
 
 DB.LIMITS = {
@@ -49,6 +52,10 @@ local function repair(db)
 	end
 	if type(db.nextId) ~= "number" then
 		db.nextId = 1
+	end
+	-- Last version whose "what's new" window was shown. Not player data; it only drives onboarding.
+	if db.seenVersion ~= nil and (type(db.seenVersion) ~= "string" or #db.seenVersion > 16) then
+		db.seenVersion = nil
 	end
 	for _, key in ipairs({ "currentRun", "session", "backup" }) do
 		if db[key] ~= nil and type(db[key]) ~= "table" then

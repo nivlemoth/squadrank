@@ -62,6 +62,7 @@ UI\Settings.lua
 UI\Stats.lua
 UI\UnitTooltip.lua
 UI\About.lua
+UI\WhatsNew.lua
 UI\MinimapButton.lua
 UI\DebugPanel.lua
 Core\SelfTest.lua

@@ -329,4 +329,34 @@ ns.Locale.Register("ptBR", function(L)
 	L.TOAST_ALERT_target = "Você selecionou um jogador salvo"
 	L.TOAST_ALERT_trade = "Pedido de troca de um jogador salvo"
 	L.TOAST_ALERT_duel = "Desafio de duelo de um jogador salvo"
+
+	-- Novidades e boas-vindas (1.5)
+	L.WHATS_NEW_TITLE = "Novidades do SquadRank %s"
+	L.WHATS_NEW_SUBTITLE = "Um jeito mais discreto de acompanhar como vai o seu grupo."
+	L.WHATS_NEW_F1_TITLE = "Avisos fora do grupo"
+	L.WHATS_NEW_F1_TEXT = "Avisos de sussurro, alvo, troca e duelo para jogadores salvos."
+		.. " Cada um tem seu próprio interruptor e vem desligado por padrão."
+	L.WHATS_NEW_F2_TITLE = "Um intervalo por jogador"
+	L.WHATS_NEW_F2_TEXT =
+		"No máximo um aviso por jogador nos quatro momentos. Ajuste de 0 a 180 minutos; 0 significa sempre."
+	L.WHATS_NEW_F3_TITLE = "Sua lista de evitados manda"
+	L.WHATS_NEW_F3_TEXT = "Um jogador evitado pode gerar um aviso vermelho"
+		.. " mesmo com o interruptor daquele momento desligado. O intervalo continua valendo."
+	L.WHATS_NEW_F4_TITLE = "Privado e seguro em combate"
+	L.WHATS_NEW_F4_TEXT =
+		"O texto dos sussurros nunca é lido nem salvo. Nada é consultado durante o combate; os avisos esperam a luta acabar."
+	L.WHATS_NEW_F5_TITLE = "Fácil de reabrir"
+	L.WHATS_NEW_F5_TEXT =
+		"Esta janela aparece uma vez por versão. Digite /sr whatsnew quando quiser ou desative nas configurações."
+	L.WHATS_NEW_TIP = "Obrigado por usar o SquadRank. Seu grupo está em boas mãos."
+	L.BTN_GOT_IT = "Entendi"
+	L.BTN_OPEN_SETTINGS = "Abrir ajustes"
+	L.BTN_WHATSNEW = "Novidades"
+	L.SET_WHATSNEW = "Mostrar novidades após uma atualização"
+	L.SET_WHATSNEW_TIP = "Uma janela curta por versão. Reabra quando quiser com /sr whatsnew."
+	L.SET_CHAT_HELLO = "Cumprimentar no chat ao entrar"
+	L.SET_CHAT_HELLO_TIP = "Uma linha curta do SquadRank por sessão, para você saber que ele acompanha seus grupos."
+	L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r "
+		.. "está de olho em como vai o seu grupo. Digite |cffffd100/sr|r para abrir a lista."
+	L.MSG_HELP_7 = "/sr whatsnew - mostrar as novidades desta versão"
 end)

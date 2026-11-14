@@ -1,7 +1,8 @@
 # Data model, settings and migrations
 
 Updated 2026-11-13. This describes what SquadRank saves, how it is upgraded, and what changes are
-safe. It reflects the working tree (schema 1) and the contextual-alert milestone.
+safe. It reflects the working tree (schema 1), the contextual-alert milestone and the 1.5 onboarding
+window.
 
 ## Saved variables
 
@@ -21,6 +22,7 @@ There is exactly one global addon table, `SquadRank`. Everything else lives on
 SquadRankDB = {
   schema   = 1,
   nextId   = <integer>,              -- shared counter for player/rating/run IDs
+  seenVersion = "1.5",               -- optional: last version whose what's-new window was shown
 
   settings = { ... },                -- see below
 
@@ -124,9 +126,20 @@ new key appears with its default without touching saved data.
 | `alertTrade` | `false` | **New:** context alert on trade request |
 | `alertDuel` | `false` | **New:** context alert on duel request |
 | `alertCooldown` | `60` | **New:** 0–180 minutes, per player across contexts |
+| `showWhatsNew` | `true` | **New:** show the what's-new window once per version |
+| `chatHello` | `true` | **New:** print one greeting line in chat per session |
 
 Numeric values are clamped in `DB.repair` on every load. A missing or malformed value falls back
 to the default through `Util.MergeDefaults`; a malformed table is replaced with `{}` first.
+
+### `seenVersion` is onboarding state, not player data
+
+`db.seenVersion` stores the last version whose what's-new window was shown. It is optional:
+
+- it contains only a short version string (`1.5`), never a name, GUID or note;
+- `DB.repair` clears it if it is not a string or is longer than 16 characters;
+- deleting it makes the window appear once more, which is harmless;
+- no migration is needed: an old file simply lacks the key and shows the window once.
 
 ### Context-alert cooldown is not saved
 
@@ -153,8 +166,9 @@ as a schema change.
    - On success, `info.migratedFrom` is set.
    - On failure, `info.readOnly = true`, reason `"migration failed: ..."`, and the caller gets a
      throwaway database. The saved file is left exactly as it was.
-4. **Repair** ensures `settings`, `players`, `runs` are tables, `nextId` is numeric, optional
-   tables are tables or removed, defaults are merged, and numeric settings are clamped.
+4. **Repair** ensures `settings`, `players`, `runs` are tables, `nextId` is numeric,
+   `seenVersion` is nil or a short string, optional tables are tables or removed, defaults are
+   merged, and numeric settings are clamped.
 5. **Prune** enforces the size limits (below) and reports counts in `info.pruned`.
 
 `Core/Main.lua` only assigns `SquadRankDB = db` when `info.readOnly` is false. This is the safety
@@ -226,6 +240,8 @@ with a default or adds an optional field that old readers can ignore.
 - [x] No database read in combat (event queue).
 - [x] No new global, library, network call or file.
 - [x] Existing schema-1 data loads unchanged; no migration step added.
-- [x] Automated tests cover defaults, clamping, opt-in behaviour, avoid exception, cooldown and
-      the unrated case.
+- [x] `seenVersion` is optional, length-checked on load and never contains player data.
+- [x] The what's-new window and chat hello default on and can each be turned off.
+- [x] Automated tests cover defaults, clamping, opt-in behaviour, avoid exception, cooldown,
+      the unrated case, the once-per-version window and the chat hello switch.
 - [ ] In-game validation on a copied SavedVariables file — **not executed** (no client available).

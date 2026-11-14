@@ -14,12 +14,12 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 
 | # | Do this | Expected |
 |---|---|---|
-| 1 | `/console scriptErrors 1` then `/reload` | No error window. Nothing printed by SquadRank (it is silent at load). |
+| 1 | `/console scriptErrors 1` then `/reload` | No error window. A short SquadRank **hello** line appears in chat with its icon, and the **what's new** window opens once (see section L). |
 | 2 | `/dump select(4, GetBuildInfo())` | `16001`. If it is another number, tell me: the TOC needs it. |
 | 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.5** is listed under the "Group" category with the blue shield icon, and is not marked out of date. |
 | 4 | Look at the edge of the minimap | A round SquadRank button (group icon in a gold ring). Hover it: a tooltip with three hints. **Left-click**: one window **fades in** with a sidebar (Rate, Players, Runs, Settings, About) and "by Nivlemoth" at the bottom left. Left-click again: it fades out. **Right-click**: the window opens on Settings. **Drag** it: it slides round the minimap; `/reload` keeps the spot. If the ring or the icon is missing, tell me (screenshot). |
 | 4b | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The same window toggles. |
-| 5 | `/sr help` | Six help lines are printed. |
+| 5 | `/sr help` | Seven help lines are printed, including `/sr whatsnew`. |
 
 ## B. Debug and self-test
 
@@ -68,7 +68,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 31 | `/sr`, type part of a name in the search box | The list narrows as you type. |
 | 32 | Click **Label: All**, choose **Trusted** | Only Trusted players remain; the button reads "Label: Trusted". Set it back to All. |
 | 33 | Scroll the list (rate a few players first, or skip if the list is short) | Smooth scrolling. If the list is blank or broken: `/sr debug lists`, `/reload`, and tell me. |
-| 34 | Esc > Options > AddOns > SquadRank | 18 controls, including "Show the minimap button", "Warn when an avoided player joins", "Play sounds", the four heads-up switches and the heads-up cooldown. |
+| 34 | Esc > Options > AddOns > SquadRank | 20 controls, including "Show the minimap button", "Warn when an avoided player joins", "Play sounds", the four heads-up switches, the heads-up cooldown, "Show what's new after an update" and "Say hello in chat when you log in". |
 | 35 | Untick "Show a toast when a rated player joins". Repeat step 17 | No toast. Tick it again. |
 | 36 | Untick "Offer to rate your squad when a group ends". Repeat step 21 | No alert. Tick it again. |
 | 37 | Set "Ratings needed for a label" to 1, reopen `/sr` | Players with one rating now show a label instead of "New". Set it back to 3. |
@@ -153,6 +153,18 @@ in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md).
 | 76 | Put that player on your avoid list, turn all four switches off, whisper again after the cooldown | A red avoid warning still appears (because the avoid warning is on). With the avoid warning off, nothing appears. |
 | 77 | Have an **unsaved** player whisper, trade and duel you | No toast for any of them. |
 | 78 | Do 72 in combat | No toast during combat; it appears after combat ends. `/sr debug` shows no names. |
+
+## L. What's new and the chat hello (1.5)
+
+| # | Do this | Expected |
+|---|---|---|
+| 79 | First login after updating (or `/reload` with `seenVersion` cleared) | A 600×470 window fades in: logo, "SquadRank", a **v1.5** pill, five numbered cards, a short thank-you line, **Open settings** and **Got it**. It does not show again after another `/reload`. |
+| 80 | Click **Open settings** | The window closes and the main window opens on **Settings**, with the what's-new switches visible. |
+| 81 | `/sr whatsnew` | The window reopens on demand, even after it has been seen. Close it with **Got it**. |
+| 82 | Turn off **Show what's new after an update**, clear the marker if possible, and `/reload` | No automatic window. `/sr whatsnew` still opens it. Turn the setting back on. |
+| 83 | Turn off **Say hello in chat when you log in** and `/reload` | No hello line in chat. Turn it back on and `/reload`: one line, once. |
+| 84 | Open the what's-new window, then enter combat | It hides and comes back when combat ends. `/sr whatsnew` in combat prints the usual "not available in combat" message. |
+| 85 | (German or French client) open the window | The five cards are translated; long lines wrap inside the card and do not overlap the buttons. |
 
 ## What I most need back
 

@@ -331,3 +331,32 @@ L.PVP_INFO = "Battlegrounds, arenas, world PvP and open-world raids live here, s
 L.PVP_HINT = "Large groups never ask for a rating. Click a group to rate it anyway."
 L.EMPTY_PVP_GROUPS = "No PvP or world raid groups yet."
 L.EMPTY_PVP_PLAYERS = "Nobody met in PvP or world raids yet."
+
+-- What's new window and onboarding (1.5)
+L.WHATS_NEW_TITLE = "What's new in SquadRank %s"
+L.WHATS_NEW_SUBTITLE = "A quieter way to keep track of how your groupies are doing."
+L.WHATS_NEW_F1_TITLE = "Heads-up outside groups"
+L.WHATS_NEW_F1_TEXT =
+	"Whisper, target, trade and duel alerts for players you saved. Each has its own switch and is off by default."
+L.WHATS_NEW_F2_TITLE = "One cooldown per player"
+L.WHATS_NEW_F2_TEXT =
+	"At most one heads-up per player across all four moments. Set it from 0 to 180 minutes; 0 means every time."
+L.WHATS_NEW_F3_TITLE = "Your avoid list still wins"
+L.WHATS_NEW_F3_TEXT =
+	"Someone you avoid can trigger a red warning even when that moment's switch is off. The cooldown still applies."
+L.WHATS_NEW_F4_TITLE = "Private and combat-safe"
+L.WHATS_NEW_F4_TEXT =
+	"Whisper text is never read or stored. Nothing is looked up during combat; alerts wait until the fight ends."
+L.WHATS_NEW_F5_TITLE = "Easy to reopen"
+L.WHATS_NEW_F5_TEXT = "This window appears once per version. Type /sr whatsnew any time, or turn it off in Settings."
+L.WHATS_NEW_TIP = "Thanks for using SquadRank. Your groupies are in good hands."
+L.BTN_GOT_IT = "Got it"
+L.BTN_OPEN_SETTINGS = "Open settings"
+L.BTN_WHATSNEW = "What's new"
+L.SET_WHATSNEW = "Show what's new after an update"
+L.SET_WHATSNEW_TIP = "One short popup per version. Reopen it any time with /sr whatsnew."
+L.SET_CHAT_HELLO = "Say hello in chat when you log in"
+L.SET_CHAT_HELLO_TIP = "A short SquadRank line once per session, so you know it is tracking your groups."
+L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r "
+	.. "is keeping track of how your groupies are doing. Type |cffffd100/sr|r to open the roster."
+L.MSG_HELP_7 = "/sr whatsnew - show what's new in this version"

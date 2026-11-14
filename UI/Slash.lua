@@ -173,6 +173,13 @@ function commands.about()
 	ns.Hub.Show("about")
 end
 
+function commands.whatsnew()
+	if blockedByCombat() or not ns.WhatsNew then
+		return
+	end
+	ns.WhatsNew.Show(true)
+end
+
 function commands.minimap()
 	local settings = ns.db.settings
 	settings.minimapButton = not settings.minimapButton
@@ -185,7 +192,15 @@ end
 
 function commands.help()
 	ns.Print(L.ADDON .. " " .. ns.VERSION)
-	for _, line in ipairs({ L.MSG_HELP_1, L.MSG_HELP_2, L.MSG_HELP_3, L.MSG_HELP_4, L.MSG_HELP_5, L.MSG_HELP_6 }) do
+	for _, line in ipairs({
+		L.MSG_HELP_1,
+		L.MSG_HELP_2,
+		L.MSG_HELP_3,
+		L.MSG_HELP_4,
+		L.MSG_HELP_5,
+		L.MSG_HELP_6,
+		L.MSG_HELP_7,
+	}) do
 		print("  " .. line)
 	end
 end

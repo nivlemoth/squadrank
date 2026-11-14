@@ -1,8 +1,8 @@
 # SquadRank vs TheList: feature-gap matrix
 
-Updated 2026-11-13 after the first contextual-alert milestone. “TheList” findings are
-source-observed from the distributed v0.5.10 package unless marked otherwise. “SquadRank” reflects
-the working tree, not a released build.
+Updated 2026-11-13 after the first contextual-alert milestone and the 1.5 onboarding polish.
+“TheList” findings are source-observed from the distributed v0.5.10 package unless marked otherwise.
+“SquadRank” reflects the working tree, not a released build.
 
 Legend: **Yes** = implemented; **Partial** = some support but a meaningful gap remains;
 **No** = not present. Priority is for SquadRank: **P0** = next release, **P1** = near-term,
@@ -86,6 +86,8 @@ Legend: **Yes** = implemented; **Partial** = some support but a meaningful gap r
 | First-save whisper | Yes, rate-limited | No | Deliberately out of scope: no outgoing whispers. | No |
 | Ask to kick Naughty members | Yes | No | Deliberately out of scope for now; social/automation risk. | No |
 | Share a summary | No visible path | Yes, opt-in one-line copy, never notes | Strength; manual copy only. | — |
+| Post-update note / onboarding | Not visible in the review | Yes, one skippable window per version, reopenable with `/sr whatsnew` | Added in 1.5. | — |
+| Login chat hello | No | Yes, one line per session with the add-on icon, switchable | Added in 1.5. | — |
 | Telemetry | Not audited | None | Keep none. | No |
 
 ## Platform, quality and operations

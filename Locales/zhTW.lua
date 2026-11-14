@@ -313,4 +313,34 @@ ns.Locale.Register("zhTW", function(L)
 	L.TOAST_ALERT_target = "你選中了已儲存的玩家"
 	L.TOAST_ALERT_trade = "已儲存的玩家請求交易"
 	L.TOAST_ALERT_duel = "已儲存的玩家發起決鬥"
+
+	-- 新內容與歡迎 (1.5)
+	L.WHATS_NEW_TITLE = "SquadRank %s 新內容"
+	L.WHATS_NEW_SUBTITLE = "更安靜地掌握你的隊伍近況。"
+	L.WHATS_NEW_F1_TITLE = "隊伍外提醒"
+	L.WHATS_NEW_F1_TEXT =
+		"為已儲存的玩家提供密語、目標、交易和決鬥提醒。每種提醒都有自己的開關，預設關閉。"
+	L.WHATS_NEW_F2_TITLE = "每位玩家一個冷卻"
+	L.WHATS_NEW_F2_TEXT =
+		"四種情況合計，每位玩家最多提醒一次。可設定為 0 到 180 分鐘；0 表示每次都提醒。"
+	L.WHATS_NEW_F3_TITLE = "迴避名單優先"
+	L.WHATS_NEW_F3_TEXT =
+		"即使該情況的開關已關閉，你迴避的玩家仍可觸發紅色警告。冷卻時間仍然有效。"
+	L.WHATS_NEW_F4_TITLE = "隱私與戰鬥安全"
+	L.WHATS_NEW_F4_TEXT =
+		"密語內容從不讀取或儲存。戰鬥中不查詢任何資料；提醒會等到戰鬥結束。"
+	L.WHATS_NEW_F5_TITLE = "隨時重新開啟"
+	L.WHATS_NEW_F5_TEXT = "此視窗每個版本顯示一次。隨時輸入 /sr whatsnew，或在設定中關閉。"
+	L.WHATS_NEW_TIP = "感謝使用 SquadRank。你的隊伍交給我們很放心。"
+	L.BTN_GOT_IT = "知道了"
+	L.BTN_OPEN_SETTINGS = "開啟設定"
+	L.BTN_WHATSNEW = "新內容"
+	L.SET_WHATSNEW = "更新後顯示新內容"
+	L.SET_WHATSNEW_TIP = "每個版本顯示一個簡短視窗。隨時用 /sr whatsnew 重新開啟。"
+	L.SET_CHAT_HELLO = "登入時在聊天中打招呼"
+	L.SET_CHAT_HELLO_TIP =
+		"每個工作階段顯示一行簡短的 SquadRank 提示，讓你了解它正在記錄隊伍。"
+	L.MSG_HELLO =
+		"|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r 正在記錄你的隊伍近況。輸入 |cffffd100/sr|r 開啟名單。"
+	L.MSG_HELP_7 = "/sr whatsnew - 顯示此版本的新內容"
 end)

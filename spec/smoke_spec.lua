@@ -40,6 +40,13 @@ describe("whole addon against a fake client", function()
 		world = mock.install()
 		world.units.player = ME
 		boot()
+		-- Every fresh database shows the versioned what's-new window once. Close it so the
+		-- rest of a test starts from the normal, already-seen state.
+		world.whatsNewShown = ns.WhatsNew.IsShown()
+		if world.whatsNewShown then
+			ns.WhatsNew.Hide()
+			mock.tick()
+		end
 	end)
 
 	it("loads, creates the database and registers its pieces", function()
@@ -48,10 +55,59 @@ describe("whole addon against a fake client", function()
 		assert.equals(ns.db, SquadRankDB)
 		assert.equals("function", type(SlashCmdList.SQUADRANK))
 		assert.equals("function", type(SquadRank_OnAddonCompartmentClick))
-		assert.equals("ok, 18 of 18 controls", ns.Debug.notes.settings)
+		assert.equals("ok, 20 of 20 controls", ns.Debug.notes.settings)
+		assert.is_true(world.whatsNewShown)
+		assert.equals(ns.VERSION, SquadRankDB.seenVersion)
+		assert.is_true(printed("keeping track of how your groupies"))
 		assert.equals("ok, 5 of 5 menus", ns.Debug.notes.unitMenu)
 		assert.equals("ok", ns.Debug.notes.tooltip)
 		world.tooltipPostCall(GameTooltip)
+	end)
+
+	it("shows what's new once per version, reopens it on demand, and can keep it quiet", function()
+		assert.equals(ns.VERSION, ns.db.seenVersion)
+		assert.is_false(ns.WhatsNew.IsShown())
+
+		-- A new version (or a cleared marker) shows it once and records the version.
+		ns.db.seenVersion = nil
+		ns.WhatsNew.MaybeShow()
+		assert.is_true(ns.WhatsNew.IsShown())
+		assert.equals(ns.VERSION, ns.db.seenVersion)
+		ns.WhatsNew.Hide()
+		mock.tick()
+		ns.WhatsNew.MaybeShow()
+		assert.is_false(ns.WhatsNew.IsShown())
+
+		-- /sr whatsnew always reopens it, and the command is in help.
+		SlashCmdList.SQUADRANK("whatsnew")
+		assert.is_true(ns.WhatsNew.IsShown())
+		SlashCmdList.SQUADRANK("help")
+		assert.is_true(printed("/sr whatsnew"))
+		ns.WhatsNew.Hide()
+		mock.tick()
+
+		-- Turning the setting off suppresses the automatic window, not the command.
+		ns.db.settings.showWhatsNew = false
+		ns.db.seenVersion = nil
+		ns.WhatsNew.MaybeShow()
+		assert.is_false(ns.WhatsNew.IsShown())
+		SlashCmdList.SQUADRANK("whatsnew")
+		assert.is_true(ns.WhatsNew.IsShown())
+		noErrors()
+	end)
+
+	it("keeps the chat hello quiet when the setting is off", function()
+		SquadRankDB.settings.chatHello = false
+		world.printed = {}
+		boot()
+		world.whatsNewShown = ns.WhatsNew.IsShown()
+		if world.whatsNewShown then
+			ns.WhatsNew.Hide()
+			mock.tick()
+		end
+		assert.is_false(printed("keeping track of how your groupies"))
+		assert.equals(ns.VERSION, SquadRankDB.seenVersion)
+		noErrors()
 	end)
 
 	it("delivers opt-in context alerts out of combat without reading whisper text", function()
@@ -446,14 +502,17 @@ describe("whole addon against a fake client", function()
 		ns.Toast.Push({ title = "t", lines = {}, duration = 30 })
 		mock.flush()
 		SlashCmdList.SQUADRANK("debug")
+		SlashCmdList.SQUADRANK("whatsnew")
 		assert.is_true(ns.Hub.IsShown())
 		assert.is_true(ns.DebugPanel.IsShown())
+		assert.is_true(ns.WhatsNew.IsShown())
 		assert.is_not_nil(ns.Toast.current)
 
 		world.combat = true
 		mock.fire(ns, "PLAYER_REGEN_DISABLED")
 		assert.is_false(ns.Hub.IsShown())
 		assert.is_false(ns.DebugPanel.IsShown())
+		assert.is_false(ns.WhatsNew.IsShown())
 		assert.is_nil(ns.Toast.current)
 		world.units.party1 = BOB
 		assert.is_nil(ns.UnitTooltip.Line("party1"))
@@ -466,6 +525,7 @@ describe("whole addon against a fake client", function()
 		mock.flush()
 		assert.is_true(ns.Hub.IsShown())
 		assert.is_true(ns.DebugPanel.IsShown())
+		assert.is_true(ns.WhatsNew.IsShown())
 		assert.is_not_nil(ns.Toast.current)
 		noErrors()
 	end)
