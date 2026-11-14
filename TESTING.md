@@ -1,4 +1,4 @@
-# SquadRank 1.0.0-release: in-game test checklist
+# SquadRank 1.5: in-game test checklist
 
 Run these in order on a WoW Forever character. Each step has what to type or do, and what should happen.
 You need one other player (a friend or a second account) for steps 9 to 27.
@@ -8,7 +8,7 @@ back to me. If the window itself fails, type `/reload` and send the file
 `WTF\Account\<ACCOUNT>\SavedVariables\SquadRank.lua` (the `SquadRankDebug` part).
 To see Lua errors on screen, type `/console scriptErrors 1` once.
 
-**Before you start:** ratings from 0.1.0 and 0.2.0 are kept: 1.0.0-release reads them as is.
+**Before you start:** ratings from 0.1.0 and 0.2.0 are kept: 1.5 reads them as is.
 
 ## A. Loading
 
@@ -16,7 +16,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 |---|---|---|
 | 1 | `/console scriptErrors 1` then `/reload` | No error window. Nothing printed by SquadRank (it is silent at load). |
 | 2 | `/dump select(4, GetBuildInfo())` | `16001`. If it is another number, tell me: the TOC needs it. |
-| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.0.0-release** is listed under the "Group" category with the blue shield icon, and is not marked out of date. |
+| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.5** is listed under the "Group" category with the blue shield icon, and is not marked out of date. |
 | 4 | Look at the edge of the minimap | A round SquadRank button (group icon in a gold ring). Hover it: a tooltip with three hints. **Left-click**: one window **fades in** with a sidebar (Rate, Players, Runs, Settings, About) and "by Nivlemoth" at the bottom left. Left-click again: it fades out. **Right-click**: the window opens on Settings. **Drag** it: it slides round the minimap; `/reload` keeps the spot. If the ring or the icon is missing, tell me (screenshot). |
 | 4b | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The same window toggles. |
 | 5 | `/sr help` | Six help lines are printed. |
@@ -68,12 +68,12 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 31 | `/sr`, type part of a name in the search box | The list narrows as you type. |
 | 32 | Click **Label: All**, choose **Trusted** | Only Trusted players remain; the button reads "Label: Trusted". Set it back to All. |
 | 33 | Scroll the list (rate a few players first, or skip if the list is short) | Smooth scrolling. If the list is blank or broken: `/sr debug lists`, `/reload`, and tell me. |
-| 34 | Esc > Options > AddOns > SquadRank | 13 controls, including "Show the minimap button", "Warn when an avoided player joins" and "Play sounds". |
+| 34 | Esc > Options > AddOns > SquadRank | 18 controls, including "Show the minimap button", "Warn when an avoided player joins", "Play sounds", the four heads-up switches and the heads-up cooldown. |
 | 35 | Untick "Show a toast when a rated player joins". Repeat step 17 | No toast. Tick it again. |
 | 36 | Untick "Offer to rate your squad when a group ends". Repeat step 21 | No alert. Tick it again. |
 | 37 | Set "Ratings needed for a label" to 1, reopen `/sr` | Players with one rating now show a label instead of "New". Set it back to 3. |
 | 38 | `/reload`, reopen the settings | Your changes are still there. |
-| 38a | `/sr settings` | The window opens on **Settings**: four sections (Alerts, Reputation, Interface, Your data). The switches show the same values as Blizzard's panel. |
+| 38a | `/sr settings` | The window opens on **Settings**: five sections (Alerts, Heads-up outside groups, Reputation, Interface, Your data). The switches show the same values as Blizzard's panel. |
 | 38b | Click the "Show the minimap button" switch | The knob **slides** and the minimap button disappears. Click again: it is back. `/sr minimap` does the same. |
 | 38c | Click **+** next to "Ratings needed for a label" | The number pops and goes up. Open Esc > Options > AddOns > SquadRank: the slider shows the same number. Set it back to 3. |
 | 38d | Click **About** in the sidebar | The page slides in: logo with a soft glow, "SquadRank", version, "by Nivlemoth", three feature cards and the commands. |
@@ -137,6 +137,22 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 68 | Sidebar > **PvP** | The raid is under **Groups** (World PvP, World raid or PvP label). **Players met** lists its members; clicking one slides the history drawer in on this page. |
 | 69 | `/sr` > Runs | Only your PvE groups (questing, open world, dungeons, raids). The Type filter has only those four. |
 | 70 | Hover the raid on the PvP page | Same tooltip as on the Runs page (bosses, duration). Clicking it opens the Rate page if you do want to rate someone. |
+
+## K. Heads-up alerts (next build)
+
+These are the focused alert cases. The full matrix, with pass/fail status and automated coverage, is
+in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md).
+
+| # | Do this | Expected |
+|---|---|---|
+| 71 | `/sr` > Settings > **Heads-up outside groups** | Four switches, all **off**, and a cooldown of **60**. The same controls appear in Blizzard's AddOns options. |
+| 72 | Turn **Whisper alerts** on. Have a rated player whisper you | A toast "A saved player whispered you" with their label and top tag. Clicking it opens their history. |
+| 73 | Whisper again within a minute | No second toast. |
+| 74 | Turn **Target alerts** on. Target the same player | A toast "You targeted a saved player", once per cooldown. |
+| 75 | Turn **Trade** and **Duel** alerts on. Have the player request each | One toast per request, subject to the same cooldown. |
+| 76 | Put that player on your avoid list, turn all four switches off, whisper again after the cooldown | A red avoid warning still appears (because the avoid warning is on). With the avoid warning off, nothing appears. |
+| 77 | Have an **unsaved** player whisper, trade and duel you | No toast for any of them. |
+| 78 | Do 72 in combat | No toast during combat; it appears after combat ends. `/sr debug` shows no names. |
 
 ## What I most need back
 

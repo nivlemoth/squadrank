@@ -311,4 +311,22 @@ ns.Locale.Register("koKR", function(L)
 	L.PVP_HINT = "큰 파티는 평가를 요청하지 않습니다. 파티를 클릭하면 평가할 수 있습니다."
 	L.EMPTY_PVP_GROUPS = "아직 PvP나 필드 공격대 기록이 없습니다."
 	L.EMPTY_PVP_PLAYERS = "아직 PvP나 필드 공격대에서 만난 플레이어가 없습니다."
+	-- 그룹 밖 알림
+	L.SET_SECTION_CONTEXT = "그룹 밖 알림"
+	L.SET_ALERT_WHISPER = "귓속말 알림"
+	L.SET_ALERT_WHISPER_TIP =
+		"평가했거나 피하는 플레이어가 귓속말을 보내면 알립니다. 메시지는 읽거나 저장하지 않습니다."
+	L.SET_ALERT_TARGET = "대상 알림"
+	L.SET_ALERT_TARGET_TIP = "평가했거나 피하는 플레이어를 대상으로 지정하면 알립니다."
+	L.SET_ALERT_TRADE = "거래 알림"
+	L.SET_ALERT_TRADE_TIP = "평가했거나 피하는 플레이어가 거래를 요청하면 알립니다."
+	L.SET_ALERT_DUEL = "결투 알림"
+	L.SET_ALERT_DUEL_TIP = "평가했거나 피하는 플레이어가 결투를 신청하면 알립니다."
+	L.SET_ALERT_COOLDOWN = "알림 간격 (분)"
+	L.SET_ALERT_COOLDOWN_TIP =
+		"이 시간 동안 플레이어당 알림은 한 번만 표시됩니다. 0은 매번 표시합니다."
+	L.TOAST_ALERT_whisper = "저장된 플레이어가 귓속말을 보냈습니다"
+	L.TOAST_ALERT_target = "저장된 플레이어를 대상으로 지정했습니다"
+	L.TOAST_ALERT_trade = "저장된 플레이어의 거래 요청"
+	L.TOAST_ALERT_duel = "저장된 플레이어의 결투 신청"
 end)

@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>Rate your squad in one click. Remember who made the run great.</b><br>
-  A World of Warcraft add-on for <b>WoW Forever</b> (Interface 16001) · version <b>1.0.0-release</b>
+  A World of Warcraft add-on for <b>WoW Forever</b> (Interface 16001) · version <b>1.5</b>
 </p>
 
 <p align="center">
@@ -69,6 +69,12 @@ need on every item. **SquadRank remembers them for you**, so next time you know 
 | 🧭 | **Minimap button** | Left-click opens, right-click opens Settings, drag to move. A gold dot pulses when players are waiting. Also in the Addon Compartment. |
 | 🔊 | **Sounds** | For the rating card, join pop-ups and avoid warnings, with a switch to turn them off. |
 | 🖱️ | **Right-click menu** | On a party member's frame: **Rate in SquadRank** and **Add to avoid list**. |
+| 🔔 | **Heads-up alerts** | Optional, off by default: a quiet reminder when a saved player whispers you, is targeted, or asks to trade or duel. One cooldown per player, adjustable from 0 to 180 minutes. |
+
+> **In the next build:** heads-up alerts for whispers, targets, trade requests and duel requests.
+> Each one is opt-in, the cooldown is in memory only, and the whisper text is never read or stored.
+> See [the roadmap](docs/product/squadrank-roadmap.md) and
+> [the manual test plan](docs/testing/manual-test-plan.md).
 
 ## 🔒 Private by design
 
@@ -78,6 +84,7 @@ need on every item. **SquadRank remembers them for you**, so next time you know 
 - ✋ It never writes to Blizzard's own notes.
 - ⚔️ It never reads or saves anything during combat. Every window, alert and pop-up hides when combat
   starts and comes back after.
+- 🤫 **Whisper alerts use only the sender's name.** The message text is never read, logged or saved.
 - 🧹 The debug report contains counts only: no player names, realms, notes or IDs (names are scrubbed even
   from error messages).
 - 🗑️ `/sr purge <name>` removes exactly that player; `/sr purge all` removes everything but your settings.
@@ -172,7 +179,8 @@ This runs 🎨 [StyLua](https://github.com/JohnnyMorganz/StyLua) (formatting),
 client in `spec/wowmock.lua`, including end-to-end "smoke" scenarios. Tool paths can be overridden with the
 `STYLUA`, `LUACHECK` and `LUA` environment variables.
 
-**Manual testing** in the game client follows [TESTING.md](TESTING.md).
+**Manual testing** in the game client follows [TESTING.md](TESTING.md), with the focused
+heads-up cases in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md).
 
 ## 🗂️ Project layout
 
@@ -205,6 +213,10 @@ tools are not shipped.
 | [docs/DECISIONS.md](docs/DECISIONS.md) | 🧠 Why things work the way they do |
 | [docs/api-verified.md](docs/api-verified.md) | ✅ Every game API used and how it was verified |
 | [docs/LOCALIZATION.md](docs/LOCALIZATION.md) | 🌍 How to add or fix a translation |
+| [docs/product/squadrank-roadmap.md](docs/product/squadrank-roadmap.md) | 🗺️ Where SquadRank is going next |
+| [docs/research/the-list-analysis.md](docs/research/the-list-analysis.md) | 🔎 Evidence log for the competitor review |
+| [docs/architecture/data-and-migrations.md](docs/architecture/data-and-migrations.md) | 💾 Saved data, settings, migrations and rollback |
+| [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md) | 🔔 Focused in-game cases for heads-up alerts |
 
 ## ⚖️ License
 

@@ -20,6 +20,13 @@ DB.DEFAULT_SETTINGS = {
 	minRunMinutes = 3,
 	tooltipInfo = true,
 	allowShare = false,
+	-- Context alerts are opt-in: a saved player whispering, being targeted, or asking to
+	-- trade or duel. The cooldown is per player across every context.
+	alertWhisper = false,
+	alertTarget = false,
+	alertTrade = false,
+	alertDuel = false,
+	alertCooldown = 60,
 }
 
 DB.LIMITS = {
@@ -53,6 +60,7 @@ local function repair(db)
 	db.settings.minRatings = Util.Clamp(math.floor(db.settings.minRatings), 1, 10)
 	db.settings.minimapAngle = db.settings.minimapAngle % 360
 	db.settings.minRunMinutes = Util.Clamp(math.floor(db.settings.minRunMinutes), 0, 30)
+	db.settings.alertCooldown = Util.Clamp(math.floor(db.settings.alertCooldown), 0, 180)
 end
 
 -- Turns whatever was loaded from SavedVariables into a usable database.

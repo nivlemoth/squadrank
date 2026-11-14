@@ -312,4 +312,21 @@ ns.Locale.Register("itIT", function(L)
 	L.PVP_HINT = "I gruppi grandi non chiedono mai una valutazione. Clicca su un gruppo per valutarlo."
 	L.EMPTY_PVP_GROUPS = "Ancora nessun gruppo PvP o incursione mondiale."
 	L.EMPTY_PVP_PLAYERS = "Ancora nessuno incontrato in PvP o incursioni mondiali."
+	-- Avvisi fuori dal gruppo
+	L.SET_SECTION_CONTEXT = "Avvisi fuori dal gruppo"
+	L.SET_ALERT_WHISPER = "Avvisi sui sussurri"
+	L.SET_ALERT_WHISPER_TIP =
+		"Quando ti sussurra un giocatore valutato o evitato. Il messaggio non viene letto né salvato."
+	L.SET_ALERT_TARGET = "Avvisi sul bersaglio"
+	L.SET_ALERT_TARGET_TIP = "Quando bersagli un giocatore valutato o evitato."
+	L.SET_ALERT_TRADE = "Avvisi sugli scambi"
+	L.SET_ALERT_TRADE_TIP = "Quando un giocatore valutato o evitato chiede uno scambio."
+	L.SET_ALERT_DUEL = "Avvisi sui duelli"
+	L.SET_ALERT_DUEL_TIP = "Quando un giocatore valutato o evitato ti sfida a duello."
+	L.SET_ALERT_COOLDOWN = "Attesa tra gli avvisi (minuti)"
+	L.SET_ALERT_COOLDOWN_TIP = "Al massimo un avviso per giocatore in questo tempo. 0 significa ogni volta."
+	L.TOAST_ALERT_whisper = "Un giocatore salvato ti ha sussurrato"
+	L.TOAST_ALERT_target = "Hai bersagliato un giocatore salvato"
+	L.TOAST_ALERT_trade = "Richiesta di scambio da un giocatore salvato"
+	L.TOAST_ALERT_duel = "Sfida a duello da un giocatore salvato"
 end)

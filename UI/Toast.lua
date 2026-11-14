@@ -183,6 +183,31 @@ function Toast.ShowJoin(pids)
 	})
 end
 
+-- A contextual heads-up: a saved player whispered, was targeted, or asked to trade or duel.
+-- The summary is the same one used by join toasts, so tags and notes stay consistent.
+function Toast.ShowContext(pid, context)
+	local db = ns.db
+	local rec = db.players[pid]
+	if not rec then
+		return
+	end
+	local now, minRatings = Compat.Now(), db.settings.minRatings
+	local summary = ns.Ratings.Summary(rec, now, minRatings)
+	local lines = UI.SummaryLines(summary)
+	local avoided = rec.avoid == true
+	local label = avoided and "avoid" or summary.label
+	table.insert(lines, 1, UI.ColoredName(rec) .. "   " .. UI.LabelText(label))
+	Debug.Log("TOAST", "context toast %s", context)
+	Toast.Push({
+		title = L["TOAST_ALERT_" .. context],
+		lines = lines,
+		duration = db.settings.toastDuration,
+		onClick = openHistory(pid),
+		accent = avoided and UI.C.bad or UI.C.accent,
+		sound = avoided and "avoid" or "join",
+	})
+end
+
 -- A red warning: players on the avoid list are in the group. Shown even when join toasts are off.
 function Toast.ShowAvoid(pids)
 	local db = ns.db

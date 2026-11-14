@@ -312,4 +312,21 @@ ns.Locale.Register("ptBR", function(L)
 	L.PVP_HINT = "Grupos grandes nunca pedem avaliação. Clique em um grupo para avaliá-lo."
 	L.EMPTY_PVP_GROUPS = "Nenhum grupo de JxJ ou raide mundial ainda."
 	L.EMPTY_PVP_PLAYERS = "Ninguém visto em JxJ ou raides mundiais ainda."
+	-- Avisos fora do grupo
+	L.SET_SECTION_CONTEXT = "Avisos fora do grupo"
+	L.SET_ALERT_WHISPER = "Avisos de sussurro"
+	L.SET_ALERT_WHISPER_TIP =
+		"Quando um jogador avaliado ou evitado sussurra para você. A mensagem não é lida nem guardada."
+	L.SET_ALERT_TARGET = "Avisos de alvo"
+	L.SET_ALERT_TARGET_TIP = "Quando você seleciona um jogador avaliado ou evitado como alvo."
+	L.SET_ALERT_TRADE = "Avisos de troca"
+	L.SET_ALERT_TRADE_TIP = "Quando um jogador avaliado ou evitado pede uma troca."
+	L.SET_ALERT_DUEL = "Avisos de duelo"
+	L.SET_ALERT_DUEL_TIP = "Quando um jogador avaliado ou evitado desafia você para um duelo."
+	L.SET_ALERT_COOLDOWN = "Intervalo entre avisos (minutos)"
+	L.SET_ALERT_COOLDOWN_TIP = "No máximo um aviso por jogador nesse intervalo. 0 significa sempre."
+	L.TOAST_ALERT_whisper = "Um jogador salvo sussurrou para você"
+	L.TOAST_ALERT_target = "Você selecionou um jogador salvo"
+	L.TOAST_ALERT_trade = "Pedido de troca de um jogador salvo"
+	L.TOAST_ALERT_duel = "Desafio de duelo de um jogador salvo"
 end)

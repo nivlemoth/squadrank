@@ -236,3 +236,54 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
     Avoid warnings and toasts for rated players still fire in crowds. A raid group with War Mode on now
     counts as world PvP (`C_PvP.IsWarModeActive`), so a Tarren Mill raid in a contested zone is caught; a raid
     in the open world without it is a world raid, which is also a crowd. Nothing stored changed.
+
+## Contextual alerts (2026-11-13, no version bump)
+
+70. **A competitor review, not a template.** The addon studied for this milestone is **TheList by
+    Spinosaur** (CurseForge 1786119, slug `you-just-made-the-list`, All Rights Reserved), not "The
+    Sh*t List". Its distributed v0.5.10 package was read for behaviour only: event names, defaults,
+    cooldown length and queue size. No code, strings, art, sounds or layout were copied, and SquadRank
+    makes no affiliation claim. The evidence log is `docs/research/the-list-analysis.md`.
+71. **Opt-in, not default-on.** TheList enables all six alert types in a fresh profile. SquadRank
+    makes the four new contexts default to off, so the addon remains quiet for someone who just wants
+    ratings. The existing join toast, rating alert and avoid warning keep their own defaults.
+72. **Four contexts, one cooldown.** Whisper, target, trade and duel share one per-player cooldown
+    rather than four timers. This matches how a person experiences "stop telling me about Bob for a
+    while", and it keeps the settings page small. Default 60 minutes, range 0–180, 0 meaning every
+    time. The value is clamped on load.
+73. **Cooldown lives in memory.** `Alerts.last` is not in `SquadRankDB`: no new player data is saved,
+    no schema change, and a reload clears it. The trade-off — a reload can repeat one heads-up — was
+    chosen deliberately. A test pins the 60-minute default and the 0–180 clamp.
+74. **Only known players.** TheList requires a record to exist; SquadRank requires a **rating** or
+    the **avoid flag**. A name-only record created by `/sr rate <name>` but never rated stays silent,
+    which avoids noise about strangers who happen to share a saved name.
+75. **Avoid is an exception, not a fifth context.** If `avoidWarning` is on, an avoided player can
+    alert even when that context's switch is off, because the avoid list is a safety promise. The
+    shared cooldown still applies, and turning `avoidWarning` off removes the exception. Covered by
+    two tests.
+76. **Events match the observed competitor.** `CHAT_MSG_WHISPER` (sender argument only),
+    `PLAYER_TARGET_CHANGED`, `TRADE_REQUEST` and `DUEL_REQUESTED`. `TRADE_SHOW` is deliberately not
+    used: a trade window implies the request was already accepted and would duplicate the event.
+77. **The whisper body is never touched.** The handler signature ignores the message argument. Only
+    the sender string is cleaned and resolved against saved records. Debug output is `context
+    whisper` plus counts, never the text, name or GUID.
+78. **No database read in combat.** Every context goes through `Events.RunOutOfCombat` with a
+    per-context/per-name key, then `Alerts.ResolveName` or `Players.Lookup` and `ShouldAlert`. Queue
+    keys dedupe repeated events while waiting. The toast itself already hides in combat.
+79. **New files, not a rewrite.** `Data/Alerts.lua` holds pure rules (time passed in) and
+    `Track/ContextAlerts.lua` holds only event wiring. `Toast.ShowContext` reuses the existing queue,
+    duration, accent, sound and click-to-history behaviour. The TOC gained two lines in load order;
+    no existing module changed its public contract.
+80. **Settings are additive.** Five keys with defaults (`alertWhisper`, `alertTarget`, `alertTrade`,
+    `alertDuel`, `alertCooldown`); no key renamed or removed. Blizzard's panel grew from 13 to 18
+    controls, and the in-window page gained a "Heads-up outside groups" section. Both read the same
+    saved table.
+81. **Translations were added, not machine-published.** All ten non-English catalogues got the 15 new
+    keys, with the same `%`/`|` validation as the rest. Native-speaker review is still pending.
+82. **Version 1.5.** John asked for a bump from 1 to 1.5, so the TOC and `ns.VERSION` both say `1.5`
+    and the build is labelled that way in the README, install guide and release notes. The schema
+    stays 1. The release package ships from this version; whether CurseForge wants a four-part
+    version later is a separate decision.
+83. **In-game validation remains open.** The automated suite loads every TOC file against a fake
+    client, which proves load order and pure logic, not Blizzard's event payloads or toast rendering.
+    `docs/testing/manual-test-plan.md` lists the cases and marks all of them `NOT EXECUTED`.

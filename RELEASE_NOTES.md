@@ -1,3 +1,42 @@
+# SquadRank 1.5: heads-up outside groups
+
+Version **1.5**. The database schema is unchanged (1) and no existing data or setting is touched.
+
+## New: optional heads-up alerts
+
+- **Four new moments.** A player you saved can now get your attention when they **whisper you**,
+  when you **target them**, or when they **ask to trade or duel**. Each has its own switch.
+- **Off by default.** SquadRank stays quiet unless you ask for it. The join toast, rating alert and
+  avoid warning work exactly as before.
+- **One cooldown per player.** At most one heads-up per player across all four moments, adjustable
+  from 0 to 180 minutes (default 60). It resets on `/reload` and is never written to your saved file.
+- **Avoid list still wins.** A player on your avoid list can produce a red warning even when that
+  moment's switch is off, as long as the existing avoid warning is on. The cooldown still applies.
+- **Only players you know.** Players with no rating and no avoid flag never trigger a heads-up.
+- **Private by design.** A whisper alert uses only the sender's name. The message text is never
+  read, logged or stored.
+- **Combat-safe.** Nothing is looked up during combat; events wait and resolve afterwards.
+- **Click to remember.** Clicking the pop-up opens that player's history.
+
+## Where to find it
+
+`/sr` → **Settings** → **Heads-up outside groups**, or Blizzard's AddOns options for SquadRank.
+The four new switches and the cooldown slider show the same values in both places.
+
+## Validation
+
+Automated checks pass (style, lint, 155 tests). An in-game pass has **not** been run: the cases are
+listed in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md) and are marked
+`NOT EXECUTED`. The player-facing behaviour should be treated as unverified until that pass happens.
+
+The competitor research and product plan behind this change are in
+[docs/research/the-list-analysis.md](docs/research/the-list-analysis.md),
+[docs/product/feature-gap-matrix.md](docs/product/feature-gap-matrix.md) and
+[docs/product/squadrank-roadmap.md](docs/product/squadrank-roadmap.md). SquadRank is an independent
+addon and is not affiliated with TheList or its author.
+
+---
+
 # SquadRank 1.0.0-release: first release
 
 Checked for 1.0: nothing is ever sent to other players; the debug report holds counts only (names are

@@ -11,7 +11,7 @@ local Compat = ns.Compat
 local SettingsUI = {}
 ns.SettingsUI = SettingsUI
 
-local CONTROLS = 13
+local CONTROLS = 18
 
 function SettingsUI.Register()
 	if not (Settings and Settings.RegisterVerticalLayoutCategory and Settings.RegisterAddOnSetting) then
@@ -78,6 +78,11 @@ function SettingsUI.Register()
 
 	checkbox("toastEnabled", L.SET_TOAST, L.SET_TOAST_TIP)
 	slider("toastDuration", L.SET_DURATION, L.SET_DURATION_TIP, 3, 30)
+	checkbox("alertWhisper", L.SET_ALERT_WHISPER, L.SET_ALERT_WHISPER_TIP)
+	checkbox("alertTarget", L.SET_ALERT_TARGET, L.SET_ALERT_TARGET_TIP)
+	checkbox("alertTrade", L.SET_ALERT_TRADE, L.SET_ALERT_TRADE_TIP)
+	checkbox("alertDuel", L.SET_ALERT_DUEL, L.SET_ALERT_DUEL_TIP)
+	slider("alertCooldown", L.SET_ALERT_COOLDOWN, L.SET_ALERT_COOLDOWN_TIP, 0, 180)
 	slider("minRatings", L.SET_MIN, L.SET_MIN_TIP, 1, 10)
 	checkbox("promptAfterRun", L.SET_PROMPT, L.SET_PROMPT_TIP)
 	checkbox("recentAllies", L.SET_RECENT, L.SET_RECENT_TIP)
@@ -193,6 +198,12 @@ local function buildPage(page)
 	stepper("toastDuration", L.SET_DURATION, L.SET_DURATION_TIP, 3, 30)
 	toggle("avoidWarning", L.SET_AVOID, L.SET_AVOID_TIP)
 	toggle("sound", L.SET_SOUND, L.SET_SOUND_TIP)
+	section(L.SET_SECTION_CONTEXT)
+	toggle("alertWhisper", L.SET_ALERT_WHISPER, L.SET_ALERT_WHISPER_TIP)
+	toggle("alertTarget", L.SET_ALERT_TARGET, L.SET_ALERT_TARGET_TIP)
+	toggle("alertTrade", L.SET_ALERT_TRADE, L.SET_ALERT_TRADE_TIP)
+	toggle("alertDuel", L.SET_ALERT_DUEL, L.SET_ALERT_DUEL_TIP)
+	stepper("alertCooldown", L.SET_ALERT_COOLDOWN, L.SET_ALERT_COOLDOWN_TIP, 0, 180)
 	section(L.SET_SECTION_REPUTATION)
 	stepper("minRatings", L.SET_MIN, L.SET_MIN_TIP, 1, 10)
 	section(L.SET_SECTION_INTERFACE)

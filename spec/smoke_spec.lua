@@ -48,10 +48,57 @@ describe("whole addon against a fake client", function()
 		assert.equals(ns.db, SquadRankDB)
 		assert.equals("function", type(SlashCmdList.SQUADRANK))
 		assert.equals("function", type(SquadRank_OnAddonCompartmentClick))
-		assert.equals("ok, 13 of 13 controls", ns.Debug.notes.settings)
+		assert.equals("ok, 18 of 18 controls", ns.Debug.notes.settings)
 		assert.equals("ok, 5 of 5 menus", ns.Debug.notes.unitMenu)
 		assert.equals("ok", ns.Debug.notes.tooltip)
 		world.tooltipPostCall(GameTooltip)
+	end)
+
+	it("delivers opt-in context alerts out of combat without reading whisper text", function()
+		SlashCmdList.SQUADRANK("rate Bob")
+		assert.is_true(mock.click("4"))
+		ns.Alerts.Reset()
+
+		-- Off by default: a whisper from a rated player changes nothing.
+		mock.fire(ns, "CHAT_MSG_WHISPER", "private text", "Bob")
+		assert.is_nil(ns.Toast.current)
+
+		ns.db.settings.alertWhisper = true
+		mock.fire(ns, "CHAT_MSG_WHISPER", "private text", "Bob")
+		assert.is_not_nil(ns.Toast.current)
+		assert.equals(ns.L.TOAST_ALERT_whisper, ns.Toast.current.title)
+		ns.Toast.Dismiss()
+		mock.flush()
+
+		-- The same player stays quiet inside the cooldown.
+		mock.fire(ns, "CHAT_MSG_WHISPER", "private text", "Bob")
+		assert.is_nil(ns.Toast.current)
+
+		-- Target, trade and duel use the same rules; zero minutes removes the cooldown.
+		ns.db.settings.alertCooldown = 0
+		ns.db.settings.alertTarget = true
+		ns.db.settings.alertTrade = true
+		ns.db.settings.alertDuel = true
+		ns.Alerts.Reset()
+		world.units.target = BOB
+		mock.fire(ns, "PLAYER_TARGET_CHANGED")
+		assert.equals(ns.L.TOAST_ALERT_target, ns.Toast.current.title)
+		ns.Toast.Dismiss()
+		mock.flush()
+
+		mock.fire(ns, "TRADE_REQUEST", "Bob")
+		assert.equals(ns.L.TOAST_ALERT_trade, ns.Toast.current.title)
+		ns.Toast.Dismiss()
+		mock.flush()
+
+		-- In combat the database is not read and the toast waits.
+		world.combat = true
+		mock.fire(ns, "DUEL_REQUESTED", "Bob")
+		assert.is_nil(ns.Toast.current)
+		world.combat = false
+		mock.fire(ns, "PLAYER_REGEN_ENABLED")
+		assert.equals(ns.L.TOAST_ALERT_duel, ns.Toast.current.title)
+		noErrors()
 	end)
 
 	it("runs the self-test and builds the debug report without errors", function()

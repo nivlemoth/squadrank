@@ -12,6 +12,7 @@ local FILES = {
 	"Data/DB.lua",
 	"Data/Migrations.lua",
 	"Data/Players.lua",
+	"Data/Alerts.lua",
 	"Data/Ratings.lua",
 	"Data/Runs.lua",
 	"Data/Session.lua",

@@ -162,3 +162,24 @@ Self-test: "events seen" now also counts QUEST_TURNED_IN and QUEST_WATCH_UPDATE;
 | `GameTooltip:GetUnit()` -> name, unit | Blizzard FrameXML (tooltip mixin) | not in generated docs | pcall; no line if it fails |
 
 | `C_PvP.IsWarModeActive()` -> bool | PvpInfoDocumentation.lua (namespace C_PvP) | verified-src | checked for nil; secret-checked; false if missing |
+
+## Added for contextual alerts (2026-11-13)
+
+**No new game functions are called.** The milestone reuses `Events.On`, `Events.RunOutOfCombat`,
+`Compat.Clean`, `Compat.UnitIdentity`, `Compat.Now`, `Players.Find`, `Players.Lookup`,
+`Ratings.Summary` and the existing `Toast` queue. Only four event registrations are new.
+
+| Event | Status | Payload used | Guard / fallback |
+|---|---|---|---|
+| `CHAT_MSG_WHISPER` | Standard client event; **not in the generated API docs checked**; observed in TheList v0.5.10; **unverified in Forever** | first argument (message) **ignored**; third argument (sender name) | `Events.On` registers in `pcall`; a missing event logs and is ignored. Non-string sender is cleaned to nil and dropped. |
+| `PLAYER_TARGET_CHANGED` | Standard client event; **unverified in Forever** | none; handler reads `target` through `Compat.UnitIdentity` | Same registration guard; a unit with no identity is dropped. |
+| `TRADE_REQUEST` | Standard client event; **not in the generated API docs checked**; observed in TheList; **unverified in Forever** | second argument (requester name) | Same registration guard; `TRADE_SHOW` deliberately not used. |
+| `DUEL_REQUESTED` | Standard client event; **not in the generated API docs checked**; observed in TheList; **unverified in Forever** | second argument (challenger name) | Same registration guard. |
+
+**What still needs the client.** Confirm that each event fires in Forever 1.60.1 with the
+argument positions above, that `PLAYER_TARGET_CHANGED` fires for players as well as NPCs, and that a
+whisper sender arrives as a plain name. `/sr selftest` counts events seen, so a simple in-game check
+is to trigger each event and compare the counter before and after.
+
+**Privacy note.** The whisper handler's signature `function(_, _, sender)` means the message body is
+never bound to a local and cannot reach the log or the database.

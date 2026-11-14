@@ -311,4 +311,21 @@ ns.Locale.Register("deDE", function(L)
 	L.PVP_HINT = "Große Gruppen fragen nie nach einer Bewertung. Klicke auf eine, um sie zu bewerten."
 	L.EMPTY_PVP_GROUPS = "Noch keine PvP- oder Weltschlachtzuggruppen."
 	L.EMPTY_PVP_PLAYERS = "Noch niemand aus PvP oder Weltschlachtzügen."
+	-- Hinweise außerhalb der Gruppe
+	L.SET_SECTION_CONTEXT = "Hinweise außerhalb der Gruppe"
+	L.SET_ALERT_WHISPER = "Flüster-Hinweise"
+	L.SET_ALERT_WHISPER_TIP =
+		"Wenn dir ein bewerteter oder gemiedener Spieler flüstert. Die Nachricht wird nicht gelesen oder gespeichert."
+	L.SET_ALERT_TARGET = "Ziel-Hinweise"
+	L.SET_ALERT_TARGET_TIP = "Wenn du einen bewerteten oder gemiedenen Spieler als Ziel hast."
+	L.SET_ALERT_TRADE = "Handels-Hinweise"
+	L.SET_ALERT_TRADE_TIP = "Wenn ein bewerteter oder gemiedener Spieler handeln möchte."
+	L.SET_ALERT_DUEL = "Duell-Hinweise"
+	L.SET_ALERT_DUEL_TIP = "Wenn ein bewerteter oder gemiedener Spieler dich zum Duell fordert."
+	L.SET_ALERT_COOLDOWN = "Abstand für Hinweise (Minuten)"
+	L.SET_ALERT_COOLDOWN_TIP = "Höchstens ein Hinweis pro Spieler in dieser Zeit. 0 bedeutet jedes Mal."
+	L.TOAST_ALERT_whisper = "Ein gespeicherter Spieler hat dir geflüstert"
+	L.TOAST_ALERT_target = "Du hast einen gespeicherten Spieler als Ziel"
+	L.TOAST_ALERT_trade = "Handelsanfrage von einem gespeicherten Spieler"
+	L.TOAST_ALERT_duel = "Duellforderung von einem gespeicherten Spieler"
 end)

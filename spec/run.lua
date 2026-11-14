@@ -8,6 +8,7 @@ local SPECS = {
 	"spec/util_spec.lua",
 	"spec/db_spec.lua",
 	"spec/players_spec.lua",
+	"spec/alerts_spec.lua",
 	"spec/ratings_spec.lua",
 	"spec/runs_spec.lua",
 	"spec/debug_spec.lua",

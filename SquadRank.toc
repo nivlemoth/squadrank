@@ -12,7 +12,7 @@
 ## Notes-zhCN: 记住以往队友的表现，并在他们加入队伍时提醒你。
 ## Notes-zhTW: 記住以往隊友的表現，並在他們加入隊伍時提醒你。
 ## Author: Nivlemoth
-## Version: 1.0.0-release
+## Version: 1.5
 ## Category: Group
 ## IconTexture: Interface\AddOns\SquadRank\Media\Icon
 ## SavedVariables: SquadRankDB, SquadRankDebug
@@ -39,11 +39,13 @@ Core\Events.lua
 Data\DB.lua
 Data\Migrations.lua
 Data\Players.lua
+Data\Alerts.lua
 Data\Ratings.lua
 Data\Runs.lua
 Data\Session.lua
 Data\Stats.lua
 Track\Roster.lua
+Track\ContextAlerts.lua
 Track\RunTracker.lua
 Integrations\RecentAllies.lua
 UI\Widgets.lua
