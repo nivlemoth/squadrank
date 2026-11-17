@@ -115,11 +115,23 @@ local function paint(rec)
 		w.scoreSub:SetText(L.DETAIL_NO_RATINGS)
 	end
 
+	local hasRoles = false
+	for _, role in ipairs(ns.Ratings.ROLES) do
+		if summary.roles[role] then
+			hasRoles = true
+			break
+		end
+	end
+	w.rolesEmpty:SetShown(not hasRoles)
 	for i, role in ipairs(ns.Ratings.ROLES) do
 		local bar = w.roles[i]
 		local stat = summary.roles[role]
+		bar.name:SetShown(hasRoles)
+		bar.track:SetShown(hasRoles)
+		bar.fill:SetShown(hasRoles)
+		bar.value:SetShown(hasRoles)
 		if stat then
-			bar.value:SetText(("%.1f"):format(stat.avg))
+			bar.value:SetText(("%.1f (%d)"):format(stat.avg, stat.count))
 			UI.SetColor(bar.fill, UI.ScoreColor(stat.avg))
 			bar.target = (BAR_W - 20) * stat.avg / 5
 		else
@@ -204,12 +216,12 @@ local function build(page)
 		bar.name = UI.Text(drawer, "GameFontHighlightSmall")
 		bar.name:SetPoint("TOPLEFT", 110, y)
 		bar.name:SetText(L["ROLE_" .. role])
-		local track = drawer:CreateTexture(nil, "ARTWORK")
-		track:SetPoint("TOPLEFT", 160, y - 5)
-		track:SetSize(BAR_W - 20, 5)
-		track:SetColorTexture(1, 1, 1, 0.08)
+		bar.track = drawer:CreateTexture(nil, "ARTWORK")
+		bar.track:SetPoint("TOPLEFT", 160, y - 5)
+		bar.track:SetSize(BAR_W - 20, 5)
+		bar.track:SetColorTexture(1, 1, 1, 0.08)
 		bar.fill = drawer:CreateTexture(nil, "ARTWORK", nil, 1)
-		bar.fill:SetPoint("TOPLEFT", track, "TOPLEFT")
+		bar.fill:SetPoint("TOPLEFT", bar.track, "TOPLEFT")
 		bar.fill:SetHeight(5)
 		bar.fill:SetWidth(1)
 		bar.value = UI.Text(drawer, "GameFontHighlightSmall", "RIGHT")
@@ -217,6 +229,12 @@ local function build(page)
 		bar.target = 1
 		w.roles[i] = bar
 	end
+	w.rolesEmpty = UI.Text(drawer, "GameFontDisableSmall")
+	w.rolesEmpty:SetPoint("TOPLEFT", 110, -84)
+	w.rolesEmpty:SetWidth(WIDTH - 126)
+	w.rolesEmpty:SetWordWrap(true)
+	w.rolesEmpty:SetText(L.DETAIL_NO_ROLE_RATINGS)
+	w.rolesEmpty:Hide()
 	w.tags = UI.Text(drawer, "GameFontHighlightSmall")
 	w.tags:SetPoint("TOPLEFT", 18, -144)
 	w.tags:SetWidth(WIDTH - 36)

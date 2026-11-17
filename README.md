@@ -61,7 +61,7 @@ need on every item. **SquadRank remembers them for you**, so next time you know 
 | 💀 | **Run details** | Bosses defeated, wipes, quests completed and progressed, and how long the group lasted. Hover any group to see it. |
 | 🏅 | **Reputation** | Players become **Trusted**, **Mixed** or **Caution** from a recency-weighted average (older ratings count less). You choose how many ratings it takes. |
 | 🚫 | **Avoid list** | Mark a player and you're warned with a sound when they join. They show in red everywhere. |
-| 💬 | **Player tooltips** | Hover anyone you've rated to see their SquadRank score, or the avoid warning. |
+| 💬 | **Player tooltips** | Hover anyone you've rated to see their SquadRank score and a line per role, or the avoid warning. |
 | 📊 | **Stats page** | Groups and hours, bosses and quests, who you group with most, who you rated highest, groups by type. |
 | 📤 | **Share a summary** | Opt-in. One line about a player to paste in chat. Your notes are never included. |
 | ⏱️ | **No prompt for quick visits** | Dungeons left within 3 minutes (adjustable) don't ask for a rating. |
@@ -74,7 +74,10 @@ need on every item. **SquadRank remembers them for you**, so next time you know 
 
 > **New in 1.5:** heads-up alerts for whispers, targets, trade requests and duel requests, plus a
 > one-time **what's new** window, a chat hello and the `/sr whatsnew` command.
-> Each alert is opt-in, the cooldown is in memory only, and the whisper text is never read or stored.
+> Per-role history now shows in the history drawer, rating cards, join pop-ups and tooltips, and
+> `/sr allies` lists players from Blizzard's Recent Allies that you already saved (read-only and
+> off by default). Each alert is opt-in, the cooldown is in memory only, and the whisper text is never
+> read or stored.
 > See [the roadmap](docs/product/squadrank-roadmap.md) and
 > [the manual test plan](docs/testing/manual-test-plan.md).
 
@@ -84,6 +87,11 @@ need on every item. **SquadRank remembers them for you**, so next time you know 
   addon-channel code. Nothing is sent, shared or uploaded.
 - 💾 Ratings and notes live only in your own SavedVariables file.
 - ✋ It never writes to Blizzard's own notes.
+- 👀 **Recent Allies is read-only.** When you turn it on, SquadRank only reads Blizzard's Recent Allies
+  list to match players you already saved. It never writes notes, pins or Recent Allies records, and
+  `/sr allies` shows only data that is already on your computer.
+- 🚫 **No performance grading.** SquadRank does not grade buffs, dispels, interrupts or threat, and it
+  never reads the combat log, auras or threat APIs.
 - ⚔️ It never reads or saves anything during combat. Every window, alert and pop-up hides when combat
   starts and comes back after.
 - 🤫 **Whisper alerts use only the sender's name.** The message text is never read, logged or saved.
@@ -119,6 +127,7 @@ More detail, including a `robocopy` one-liner for developers, is in [INSTALL.md]
 | `/sr` | 🪟 Open or close the window |
 | `/sr rate [name]` | ⭐ Rate a player, or your last group when no name is given |
 | `/sr list [text]` | 📋 Print your saved players in chat |
+| `/sr allies` | 👥 List saved players that appear in Blizzard's Recent Allies |
 | `/sr settings` | ⚙️ Open the settings |
 | `/sr about` | ℹ️ Open the About page |
 | `/sr whatsnew` | 👋 Reopen the what's-new window |
@@ -146,6 +155,15 @@ SquadRank follows your game language automatically, with English for everything 
 
 **👀 Does anyone else see my ratings?**
 No. They are stored only on your computer. If you turn on sharing, you choose what to paste and where.
+
+**👥 What does `/sr allies` show?**
+Players from Blizzard's Recent Allies that you already have saved locally, with your own scores and
+per-role history. Turn on **Recent Allies** in Settings first. SquadRank only reads that list when you
+ask; it never adds, edits or pins anything there.
+
+**🚫 Does it grade how well I played?**
+No. SquadRank does not grade buffs, dispels, interrupts or threat. It only remembers the score, role,
+tags and note you give a player yourself.
 
 **🐢 Will it slow down my game?**
 No. SquadRank works out of combat and keeps its data small. Old, unrated players are cleaned up

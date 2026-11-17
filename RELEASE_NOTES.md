@@ -34,17 +34,41 @@ Version **1.5**. The database schema is unchanged (1) and no existing data or se
   emoji, because Forever's fonts do not reliably draw colour emoji on every client. No extra font or
   texture pack is shipped.
 
+## New: per-role history and Recent Allies
+
+- **Role history, one role at a time.** The Players drawer shows a bar for each role you have rated,
+  with that role's own count and average (for example "Tank 4.0 (2)"), and "No role ratings yet." when
+  there are none. Rating cards and join pop-ups use a compact line ("Tank 4.0, Healer 2.0"), and a
+  player tooltip adds one line per role ("Tank 4.0 over 2 runs"). A role you have never rated is left
+  out, not shown as a zero.
+- **Recent Allies, read-only.** With **Recent Allies** turned on in Settings, `/sr allies` lists the
+  players from Blizzard's Recent Allies that are already in your saved players. Each entry shows your
+  label and per-role history; notes are left out of the chat list. Players who are not already saved are
+  ignored, so the command never creates a local record.
+- **It never writes to Blizzard's data.** No notes, pins or Recent Allies records are added or changed.
+  Turning the setting off changes nothing that was saved.
+- **Rating does not depend on boss events.** `/sr rate` opens a group from its start/end and members,
+  even if `ENCOUNTER_END` and `BOSS_KILL` never fired. Those events only add boss names and wipes to the
+  run details.
+- **Per-role data is unchanged.** Ratings keep the same shape and the schema stays 1; every new line is
+  worked out from ratings you already have.
+- **Not included in 1.5:** buffs, dispels, interrupts and threat. SquadRank does not grade them and does
+  not read auras, threat APIs or the combat log. The score is always the one you gave.
+
 ## Where to find it
 
 `/sr` → **Settings** → **Heads-up outside groups**, or Blizzard's AddOns options for SquadRank.
 The four new switches and the cooldown slider show the same values in both places.
 The welcome switches are under **Interface**, with the what's-new button just below them.
+Recent Allies has its own switch in Settings; `/sr allies` is the read-only list view.
 
 ## Validation
 
-Automated checks pass (style, lint, 157 tests). An in-game pass has **not** been run: the cases are
+Automated checks pass (style, lint, 163 tests). An in-game pass has **not** been run: the cases are
 listed in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md) and are marked
 `NOT EXECUTED`. The player-facing behaviour should be treated as unverified until that pass happens.
+The 2026-11-16 live probe results and the banned-API scan are recorded in
+[docs/api-verified.md](docs/api-verified.md).
 
 The competitor research and product plan behind this change are in
 [docs/research/the-list-analysis.md](docs/research/the-list-analysis.md),

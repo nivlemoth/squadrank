@@ -352,6 +352,37 @@ function mock.install()
 	return world
 end
 
+-- Installs a fake C_RecentAllies for the current world. config fields:
+--   enabled (default true), supported (default true), list (array of entries),
+--   byName (full name -> entry), listError / lookupError / enabledError (raise).
+function mock.recentAllies(config)
+	config = config or {}
+	local function maybeFail(flag)
+		if flag then
+			error("mock Recent Allies failure")
+		end
+	end
+	_G.C_RecentAllies = {
+		IsSystemSupported = function()
+			return config.supported ~= false
+		end,
+		IsSystemEnabled = function()
+			maybeFail(config.enabledError)
+			return config.enabled ~= false
+		end,
+		GetRecentAllies = function()
+			maybeFail(config.listError)
+			return config.list or {}
+		end,
+		GetRecentAllyByFullName = function(fullName)
+			maybeFail(config.lookupError)
+			local entry = config.byName and config.byName[fullName]
+			return entry
+		end,
+	}
+	return _G.C_RecentAllies
+end
+
 -- Loads every Lua file listed in the TOC, in order, into one namespace. Returns the namespace.
 function mock.loadAddon()
 	local ns = {}

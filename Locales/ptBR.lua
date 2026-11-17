@@ -13,6 +13,7 @@ ns.Locale.Register("ptBR", function(L)
 	L.ROLE_tank = "Tanque"
 	L.ROLE_healer = "Curador"
 	L.ROLE_dps = "DPS"
+	L.ROLE_unknown = "Função desconhecida"
 
 	-- Marcadores
 	L.TAG_role_good = "Ótimo na função"
@@ -65,6 +66,7 @@ ns.Locale.Register("ptBR", function(L)
 	L.RATE_ALL_DONE = "Todos avaliados. Obrigado!"
 	L.RATE_HINT = "Clique em uma nota para salvá-la. Clique em um cartão para marcadores e anotação."
 	L.RATE_ROLE_TIP = "Função: %s. Clique para mudar."
+	L.RATE_LAST_ROLE = "Da última vez: %s"
 	L.RATE_NOTE_HINT = "Adicionar uma anotação (opcional)"
 	L.RATE_SHOW_NEGATIVE = "Negativos..."
 	L.RATE_SHOW_POSITIVE = "Positivos..."
@@ -359,4 +361,9 @@ ns.Locale.Register("ptBR", function(L)
 	L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r "
 		.. "está de olho em como vai o seu grupo. Digite |cffffd100/sr|r para abrir a lista."
 	L.MSG_HELP_7 = "/sr whatsnew - mostrar as novidades desta versão"
+	L.MSG_HELP_8 = "/sr allies - listar jogadores salvos dos aliados recentes da Blizzard"
+	L.DETAIL_NO_ROLE_RATINGS = "Ainda não há avaliações por função."
+	L.MSG_ALLIES_HEADER = "Aliados recentes entre os seus jogadores salvos:"
+	L.MSG_ALLIES_NONE = "Nenhum aliado recente corresponde aos seus jogadores salvos."
+	L.MSG_ALLIES_UNAVAILABLE = "Os aliados recentes estão desativados ou indisponíveis. Ative-os nas configurações."
 end)

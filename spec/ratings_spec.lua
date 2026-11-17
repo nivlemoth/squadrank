@@ -138,6 +138,27 @@ describe("Ratings.Summary", function()
 		assert.is_nil(s.roles.tank)
 	end)
 
+	it("keeps each role's scores and each player's history separate", function()
+		local s = Ratings.Summary(rec({ { 5, "tank" }, { 1, "healer" }, { 3, "dps" } }), NOW, 3)
+		assert.equals(5, s.roles.tank.avg)
+		assert.equals(1, s.roles.healer.avg)
+		assert.equals(3, s.roles.dps.avg)
+		assert.equals(1, s.roles.tank.count)
+		assert.equals(1, s.roles.healer.count)
+		assert.equals(1, s.roles.dps.count)
+
+		local other = Ratings.Summary({
+			name = "Eve",
+			ratings = {
+				{ id = "e1", score = 2, role = "healer", createdAt = NOW, updatedAt = NOW, tags = {} },
+			},
+		}, NOW, 3)
+		assert.equals(2, other.roles.healer.avg)
+		assert.is_nil(other.roles.tank)
+		assert.is_nil(other.roles.dps)
+		assert.equals(5, s.roles.tank.avg)
+	end)
+
 	it("ranks tags by count, then by list order", function()
 		local s = Ratings.Summary(
 			rec({

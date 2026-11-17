@@ -43,6 +43,16 @@ local function check()
 	RunTracker.pendingBosses, RunTracker.pendingQuests, RunTracker.pendingWipes = {}, {}, 0
 
 	local state = Compat.InstanceState()
+	state.memberPids = {}
+	for _, unit in ipairs(Compat.GroupUnits()) do
+		local ident = Compat.UnitIdentity(unit)
+		if ident then
+			local pid = ns.Players.Lookup(db, ident)
+			if pid then
+				state.memberPids[#state.memberPids + 1] = pid
+			end
+		end
+	end
 	local action, finished = ns.Runs.Evaluate(db, state, Compat.Now(), Compat.Ruleset())
 	if action ~= RunTracker.lastAction then
 		Debug.Log(

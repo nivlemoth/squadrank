@@ -231,6 +231,10 @@ local function paintCard(card)
 			L.DETAIL_CLASS_LEVEL:format(tostring(rec.level or "?"), Util.Escape(UI.ClassName(rec.classFile)))
 	end
 	parts[#parts + 1] = UI.LabelText(summary.label)
+	local roles = UI.RoleText(summary)
+	if roles ~= "" then
+		parts[#parts + 1] = roles
+	end
 	card.sub:SetText(table.concat(parts, "   "))
 	pcall(card.roleIcon.SetAtlas, card.roleIcon, ROLE_ATLAS[entry.role])
 

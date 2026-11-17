@@ -10,6 +10,9 @@ ns.Runs = Runs
 Runs.OUTSIDE_GRACE = 300
 -- A saved run older than this is never resumed (logged out inside, came back next day).
 Runs.RESUME_LIMIT = 4 * 3600
+-- Re-entering the same instance shortly after a run ended, with a player from that run,
+-- continues the run instead of saving a second copy of the same dungeon visit.
+Runs.REOPEN_WINDOW = 15 * 60
 -- An open-world group shorter than this (a quick summon, a trade) is not worth a prompt.
 Runs.GROUP_MIN = 300
 -- The "Rate your squad" alert offers runs that ended within this window.
@@ -117,6 +120,88 @@ local function start(db, state, now, ruleset, kind)
 	return run
 end
 
+-- The pids of the group as it is now. The tracker fills state.memberPids; tests may pass
+-- either that or state.members = { pid, ... }.
+local function currentPids(state)
+	if type(state.memberPids) == "table" then
+		return state.memberPids
+	end
+	if type(state.members) ~= "table" then
+		return nil
+	end
+	local pids = {}
+	for _, member in ipairs(state.members) do
+		if type(member) == "string" then
+			pids[#pids + 1] = member
+		elseif type(member) == "table" and member.pid then
+			pids[#pids + 1] = member.pid
+		end
+	end
+	return pids
+end
+
+local function sharesMember(run, pids)
+	if type(pids) ~= "table" then
+		return false
+	end
+	local inRun = {}
+	for _, member in ipairs(run.members or {}) do
+		inRun[member.pid] = true
+	end
+	for _, pid in ipairs(pids) do
+		if inRun[pid] then
+			return true
+		end
+	end
+	return false
+end
+
+-- A recent run for this instance that shares at least one player: the group reformed and
+-- walked back in, so this is the same run rather than a second one.
+local function recentRun(db, state, now)
+	if state.instanceID == nil then
+		return nil
+	end
+	local pids = currentPids(state)
+	if not pids or #pids == 0 then
+		return nil
+	end
+	local best
+	for _, run in pairs(db.runs) do
+		if
+			type(run) == "table"
+			and run.kind ~= "group"
+			and run.instanceID == state.instanceID
+			and type(run.endedAt) == "number"
+			and now - run.endedAt <= Runs.REOPEN_WINDOW
+			and sharesMember(run, pids)
+		then
+			if not best or (run.endedAt or 0) > (best.endedAt or 0) then
+				best = run
+			end
+		end
+	end
+	return best
+end
+
+-- Moves a just-finished run back into the current slot. Its members stay as they were;
+-- the roster adds anyone new and AddMember ignores duplicates.
+local function reopen(db, state, now)
+	local run = recentRun(db, state, now)
+	if not run then
+		return nil
+	end
+	db.runs[run.id] = nil
+	db.currentRun = run
+	run.endedAt = nil
+	run.outsideSince = nil
+	run.lastInside = now
+	if Runs.RatedCount(db, run) == 0 then
+		run.prompt = "pending"
+	end
+	return run
+end
+
 -- True when the group run carried on straight from a dungeon run (run.after) and has nobody
 -- new: that squad is already up for rating, so the group run is not worth a second prompt.
 local function coveredByPrevious(db, run)
@@ -148,7 +233,8 @@ function Runs.Finish(db, now)
 	end
 	if run.kind == "group" then
 		local last = run.lastInside or now
-		run.endedAt = (now - last > Runs.RESUME_LIMIT) and last or now
+		local endedAt = run.outsideSince or now
+		run.endedAt = (now - last > Runs.RESUME_LIMIT) and last or endedAt
 		if run.endedAt - (run.startedAt or now) < Runs.GROUP_MIN or coveredByPrevious(db, run) then
 			return nil
 		end
@@ -184,18 +270,28 @@ function Runs.Evaluate(db, state, now, ruleset)
 			-- The group walked into a dungeon together: same squad, now a dungeon run.
 			setInstance(run, state)
 			run.lastInside = now
+			run.outsideSince = nil
 			return "started"
 		end
 		if state.inGroup then
+			run.outsideSince = nil
 			run.lastInside = now
 			markGroup(run, state)
 			return "grouped"
 		end
-		return "finished", Runs.Finish(db, now)
+		-- One false group reading (a roster update, a reconnect) does not end the run.
+		run.outsideSince = run.outsideSince or now
+		if now - run.outsideSince >= Runs.OUTSIDE_GRACE then
+			return "finished", Runs.Finish(db, now)
+		end
+		return "pending"
 	end
 
 	if not run then
 		if inside then
+			if reopen(db, state, now) then
+				return "resumed"
+			end
 			start(db, state, now, ruleset)
 			return "started"
 		end
@@ -218,8 +314,10 @@ function Runs.Evaluate(db, state, now, ruleset)
 		return "started", finished
 	end
 
+	-- Being outside is not proof the run ended (dying in Vanilla puts you outside), and a
+	-- single false reading must not either. Wait for the grace period to pass.
 	run.outsideSince = run.outsideSince or now
-	if not state.inGroup or now - run.outsideSince >= Runs.OUTSIDE_GRACE then
+	if now - run.outsideSince >= Runs.OUTSIDE_GRACE then
 		local finished = Runs.Finish(db, now)
 		if state.inGroup and not state.inInstance then
 			-- Still together after the dungeon: carry on as an open-world group run.

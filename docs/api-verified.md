@@ -17,7 +17,7 @@ before use. **in-game ✔** = John has confirmed it in game (no entries yet).
 | `UnitClass(unit)` → locName, classFile, classID | verified-src F+L | ret1 ConditionalSecret only | |
 | `UnitFactionGroup(unit)` → tag, localized | verified-src F+L | none | |
 | `UnitExists`, `UnitIsPlayer`, `UnitIsUnit` | verified-src F+L | | |
-| `UnitGroupRolesAssigned(unit)` | verified-src F+L | SecretWhenUnitIdentityRestricted | `/run print(UnitGroupRolesAssigned("party1"))` (may be NONE in Forever, which has no queue roles) |
+| `UnitGroupRolesAssigned(unit)` | verified-src F+L | SecretWhenUnitIdentityRestricted | `/run print(UnitGroupRolesAssigned("party1"))` — returns `NONE` in Forever manual groups (confirmed by the unknown-role bug, not a new probe) |
 | `UnitTokenFromGUID(guid)` | verified-src F+L | SecretWhenUnitIdentityRestricted | |
 | `GetPlayerInfoByGUID(guid)` → locClass, class, locRace, race, sex, name, realm, level? | verified-src F+L | none flagged | `/run print(GetPlayerInfoByGUID(UnitGUID("party1")))` |
 | `IsInGroup()` | **undocumented** | | `/run print(type(IsInGroup), IsInGroup())` |
@@ -183,3 +183,41 @@ is to trigger each event and compare the counter before and after.
 
 **Privacy note.** The whisper handler's signature `function(_, _, sender)` means the message body is
 never bound to a local and cannot reach the log or the database.
+
+## Live probe for 1.5 (2026-11-16)
+
+Run in the installed Forever client. Status labels: **in-game ✔** = the value or call behaved as expected;
+**in-game ✘** = the probe did not give a usable result; **not used** = deliberately avoided even where a call
+appears to work.
+
+| API / event | Probe result | Status | How SquadRank uses it |
+|---|---|---|---|
+| `UnitName(unit)` -> name, realm/surname | returned plain strings | in-game ✔ | `Compat.UnitIdentity`; both parts cleaned |
+| `UnitGUID(unit)` | returned a plain string | in-game ✔ | identity key; a secret GUID is dropped |
+| `UnitGroupRolesAssigned(unit)` | returned a plain string; `NONE` in Forever manual groups (confirmed by the unknown-role bug, not a new probe) | in-game ✔ | rating role only; `NONE` stays unknown, never guessed as DPS |
+| `C_RecentAllies.IsSystemSupported()` | `true` | in-game ✔ | `/sr allies` availability |
+| `C_RecentAllies.IsSystemEnabled()` | `true` | in-game ✔ | `/sr allies` availability |
+| `C_RecentAllies` data-ready state | `/sr selftest` reported `IsRecentAllyDataReady=true` | in-game ✔ | read-only list and typed-name lookup |
+| `C_CombatLog.IsCombatLogRestricted()` | `true` in town and in a dungeon | in-game ✔ | confirms the combat log is not an input |
+| `COMBAT_LOG_EVENT_UNFILTERED` registration | registration did not error but the event was ignored | in-game ✘ | **not used**; never registered |
+| `C_Secrets.ShouldAurasBeSecret()` | `false` in town, `true` in a dungeon even out of combat | in-game ✔ | never branched on; aura fields are not read |
+| `C_UnitAuras.GetAuraDataByIndex(unit, 1, "HELPFUL")` | call succeeded inside `pcall` | in-game ✔ | **not used**; no aura field is read |
+| Debuff / threat probes | returned nothing usable | in-game ✘ | **not used** |
+| `UnitDetailedThreatSituation` | not called | not used | **never called** |
+| `C_GameRules.IsHardcoreActive()` | `false` | in-game ✔ | ruleset tag only |
+| LFG completion probe | not a clean boolean | in-game ✘ | not used for any rule |
+| `ENCOUNTER_END` / `BOSS_KILL` | counters stayed at `0` (no encounter observed during the probe) | in-game ✘ | optional run details; nothing depends on it |
+| `C_RestrictedActions.IsAddOnRestrictionActive()` with no argument | returned nothing | in-game ✘ | called with an explicit type elsewhere |
+
+**Banned by design.** SquadRank does not grade buffs, dispels, interrupts or threat, and the source and tests
+must not reference `C_UnitAuras`, `UnitAura`, `UnitBuff`, `UnitDebuff`,
+`UnitDetailedThreatSituation`, `CombatLogGetCurrentEventInfo`, `COMBAT_LOG_EVENT` or
+`COMBAT_LOG_EVENT_UNFILTERED`. `spec/api_spec.lua` scans every TOC-listed addon file and every spec file and
+fails the suite if one of those names appears. The scan builds the names from pieces so the scanner does not
+match itself.
+
+**Recent Allies display.** The social frame's recent-ally list and card tooltips are created dynamically by
+Blizzard, and the hook was not verified against the installed client source. SquadRank therefore does not hook
+that frame. Instead, `/sr allies` reads `C_RecentAllies.GetRecentAllies()` behind `pcall`, cleans each entry,
+and lists only entries that match a player already saved locally. It never writes a Blizzard note, pin or
+Recent Allies record and never creates a local player record.

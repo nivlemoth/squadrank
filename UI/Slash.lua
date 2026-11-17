@@ -112,6 +112,42 @@ function commands.list(arg)
 	end
 end
 
+local ALLIES_LIMIT = 15
+
+function commands.allies()
+	if blockedByCombat() then
+		return
+	end
+	local RecentAllies = ns.RecentAllies
+	if not RecentAllies then
+		ns.Print(L.MSG_ALLIES_UNAVAILABLE)
+		return
+	end
+	local list = RecentAllies.List()
+	if not list then
+		ns.Print(L.MSG_ALLIES_UNAVAILABLE)
+		return
+	end
+	local matches = RecentAllies.Matches(ns.db, list)
+	if #matches == 0 then
+		ns.Print(L.MSG_ALLIES_NONE)
+		return
+	end
+	ns.Print(L.MSG_ALLIES_HEADER)
+	local now, minRatings = Compat.Now(), ns.db.settings.minRatings
+	local shown = math.min(#matches, ALLIES_LIMIT)
+	for i = 1, shown do
+		local match = matches[i]
+		local summary = ns.Ratings.Summary(match.rec, now, minRatings)
+		for _, line in ipairs(RecentAllies.Lines(summary, match.rec)) do
+			print("  " .. line)
+		end
+	end
+	if #matches > shown then
+		print("  " .. L.FMT_MORE:format(#matches - shown))
+	end
+end
+
 function commands.purge(arg)
 	if blockedByCombat() then
 		return
@@ -200,6 +236,7 @@ function commands.help()
 		L.MSG_HELP_5,
 		L.MSG_HELP_6,
 		L.MSG_HELP_7,
+		L.MSG_HELP_8,
 	}) do
 		print("  " .. line)
 	end

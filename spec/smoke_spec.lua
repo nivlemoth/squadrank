@@ -26,6 +26,16 @@ describe("whole addon against a fake client", function()
 		mock.flush()
 	end
 
+	-- Leaving is not enough on its own: the tracker waits out the outside grace period,
+	-- so a single false group reading cannot split a run in two.
+	local function leaveGroup(key)
+		mock.fire(ns, "GROUP_LEFT", 0, key or "Party-1-AAAA")
+		mock.flush()
+		world.now = world.now + ns.Runs.OUTSIDE_GRACE
+		mock.fire(ns, "PLAYER_ENTERING_WORLD", false, false)
+		mock.flush()
+	end
+
 	local function printed(text)
 		for _, line in ipairs(world.printed) do
 			if line:find(text, 1, true) then
@@ -226,8 +236,7 @@ describe("whole addon against a fake client", function()
 		roster()
 		world.now = world.now + 900
 		world.units.party1 = nil
-		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
-		mock.flush()
+		leaveGroup()
 		assert.equals(1, ns.Hub.PendingCount())
 		assert.is_true(mock.click("Rate"))
 		assert.is_not_nil(ns.RateFrame.FindCard("g:" .. EVE.guid))
@@ -256,6 +265,7 @@ describe("whole addon against a fake client", function()
 		assert.equals("deDE", ns.Locale.code)
 		SlashCmdList.SQUADRANK("rate Bob")
 		assert.is_true(mock.click("4"))
+		mock.press(ns.RateFrame.FindCard("n:bob").role)
 		assert.is_true(mock.click(L.TAG_fair_loot))
 		SlashCmdList.SQUADRANK("rate Eve-Vale")
 		assert.is_true(mock.click("2"))
@@ -319,8 +329,7 @@ describe("whole addon against a fake client", function()
 			roster()
 			world.now = world.now + 900
 			world.units.party1 = nil
-			mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
-			mock.flush()
+			leaveGroup()
 			assert.is_true(ns.SquadAlert.IsShown(), code)
 			ns.SquadAlert.Open()
 			local pid = "g:" .. BOB.guid
@@ -336,6 +345,7 @@ describe("whole addon against a fake client", function()
 			ns.Hub.Show("about")
 			ns.Hub.Show("rate")
 			SlashCmdList.SQUADRANK("list")
+			SlashCmdList.SQUADRANK("allies")
 			SlashCmdList.SQUADRANK("help")
 			SlashCmdList.SQUADRANK("debug")
 			mock.flush()
@@ -398,8 +408,7 @@ describe("whole addon against a fake client", function()
 		-- It shows on the Runs page and in the tooltip without errors.
 		world.instance = nil
 		world.units.party1 = nil
-		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
-		mock.flush()
+		leaveGroup()
 		local stored = ns.Runs.List(SquadRankDB)[1]
 		assert.equals("Dungeon  ·  1 boss  ·  1 wipe  ·  2 quests", ns.UI.RunSummary(stored))
 		assert.equals(1, stored.wipes)
@@ -579,8 +588,7 @@ describe("whole addon against a fake client", function()
 		world.now = world.now + 1200
 		world.instance = nil
 		world.units.party1 = nil
-		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
-		mock.flush()
+		leaveGroup()
 		ns.SquadAlert.Open()
 		mock.press(ns.RateFrame.FindCard("g:" .. EVE.guid).pips[5])
 		mock.flush()
@@ -600,8 +608,7 @@ describe("whole addon against a fake client", function()
 		for i = 1, 12 do
 			world.units["raid" .. i] = nil
 		end
-		mock.fire(ns, "GROUP_LEFT", 0, "Raid-1-AAAA")
-		mock.flush()
+		leaveGroup("Raid-1-AAAA")
 		noErrors()
 
 		-- No alert, no badge, nothing on the Rate page for the raid.
@@ -644,6 +651,171 @@ describe("whole addon against a fake client", function()
 		noErrors()
 		assert.is_not_nil(ns.db.players["g:" .. BOB.guid])
 		assert.is_nil(ns.Toast.current)
+	end)
+
+	it("shows a separate history for each role in the drawer, card and tooltip", function()
+		local pid = ns.Players.Resolve(ns.db, { name = "Roles", guid = "Player-1-000000R0" }, world.now)
+		ns.Ratings.Save(ns.db, pid, { score = 5, role = "tank" }, world.now)
+		ns.Ratings.Save(ns.db, pid, { score = 4, role = "tank" }, world.now + 1)
+		ns.Ratings.Save(ns.db, pid, { score = 2, role = "healer" }, world.now + 2)
+		local summary = ns.Ratings.Summary(ns.db.players[pid], world.now, 3)
+
+		local lines = ns.UI.RoleLines(summary)
+		assert.equals(2, #lines)
+		assert.is_not_nil(lines[1]:find("Tank", 1, true))
+		assert.is_not_nil(lines[2]:find("Healer", 1, true))
+		local text = ns.UI.RoleText(summary)
+		assert.is_not_nil(text:find("Tank 4.5", 1, true))
+		assert.is_nil(text:find("DPS", 1, true))
+		assert.is_not_nil(ns.UI.RoleText(summary, true):find("DPS -", 1, true))
+
+		ns.RateFrame.OpenPlayers({ pid })
+		local card = ns.RateFrame.FindCard(pid)
+		assert.is_not_nil(card)
+		assert.is_not_nil(card.sub:GetText():find("Tank 4.5", 1, true))
+
+		world.units.party1 = { name = "Roles", guid = "Player-1-000000R0", class = "MAGE", role = "DPS" }
+		local tip = ns.UnitTooltip.Lines("party1")
+		assert.equals(3, #tip)
+		assert.is_not_nil(tip[1].text:find("SquadRank", 1, true))
+		assert.is_not_nil(tip[2].text:find("Tank", 1, true))
+		assert.is_not_nil(tip[3].text:find("Healer", 1, true))
+
+		ns.PlayerDetail.Open(pid)
+		noErrors()
+	end)
+
+	it("lists recent allies from local records without writing or creating players", function()
+		SlashCmdList.SQUADRANK("rate Bob")
+		assert.is_true(mock.click("4"))
+		SlashCmdList.SQUADRANK("rate Eve-Vale")
+		assert.is_true(mock.click("2"))
+		ns.db.players["n:bob"].ratings[1].note = "private note"
+
+		world.printed = {}
+		SlashCmdList.SQUADRANK("allies")
+		assert.is_true(printed(ns.L.MSG_ALLIES_UNAVAILABLE))
+
+		ns.db.settings.recentAllies = true
+		mock.recentAllies({
+			list = {
+				{
+					characterData = {
+						guid = "Player-1-000000B0",
+						name = "Bob",
+						realmName = "Normal Realm",
+						level = 20,
+						fullName = "Bob-Normal Realm",
+					},
+				},
+				{
+					characterData = {
+						guid = "Player-1-000000E0",
+						name = "Eve",
+						realmName = "Vale",
+						level = 20,
+						fullName = "Eve-Vale",
+					},
+				},
+				{
+					characterData = {
+						guid = "Player-1-000000FF",
+						name = "Stranger",
+						realmName = "Normal Realm",
+						level = 20,
+						fullName = "Stranger-Normal Realm",
+					},
+				},
+				{ characterData = { guid = world.secret, name = "NoGuid", realmName = "Normal Realm", level = 20 } },
+				{
+					characterData = {
+						guid = "Player-1-000000EE",
+						name = world.secret,
+						realmName = "Normal Realm",
+						level = 20,
+					},
+				},
+				{ characterData = { guid = "Player-1-000000DD", name = "", realmName = "Normal Realm", level = 20 } },
+				"not a table",
+			},
+		})
+		local list = ns.RecentAllies.List()
+		assert.equals(4, #list)
+		local noGuid
+		for _, ident in ipairs(list) do
+			assert.is_true(ident.name ~= world.secret)
+			assert.is_true(ident.guid ~= world.secret)
+			if ident.name == "NoGuid" then
+				noGuid = ident
+			end
+		end
+		assert.is_not_nil(noGuid)
+		assert.is_nil(noGuid.guid)
+
+		world.printed = {}
+		SlashCmdList.SQUADRANK("allies")
+		noErrors()
+		assert.is_true(printed(ns.L.MSG_ALLIES_HEADER))
+		assert.is_true(printed("Bob"))
+		assert.is_true(printed("Eve-Vale"))
+		assert.is_nil(ns.db.players["n:stranger"])
+		assert.is_nil(ns.db.players["g:Player-1-000000FF"])
+		for _, line in ipairs(world.printed) do
+			assert.is_nil(line:find("private note", 1, true))
+			assert.is_nil(line:find("NoGuid", 1, true))
+			assert.is_nil(line:find("Stranger", 1, true))
+		end
+		assert.equals(2, #ns.RecentAllies.Matches(ns.db, list))
+	end)
+
+	it("handles Recent Allies being disabled, unavailable or failing without errors", function()
+		ns.db.settings.recentAllies = true
+
+		world.printed = {}
+		SlashCmdList.SQUADRANK("allies")
+		assert.is_true(printed(ns.L.MSG_ALLIES_UNAVAILABLE))
+
+		mock.recentAllies({ enabled = false })
+		world.printed = {}
+		SlashCmdList.SQUADRANK("allies")
+		assert.is_true(printed(ns.L.MSG_ALLIES_UNAVAILABLE))
+
+		mock.recentAllies({ listError = true })
+		world.printed = {}
+		SlashCmdList.SQUADRANK("allies")
+		assert.is_true(printed(ns.L.MSG_ALLIES_UNAVAILABLE))
+
+		mock.recentAllies({ enabledError = true })
+		world.printed = {}
+		SlashCmdList.SQUADRANK("allies")
+		assert.is_true(printed(ns.L.MSG_ALLIES_UNAVAILABLE))
+		noErrors()
+	end)
+
+	it("uses a Recent Allies GUID for a typed name, and survives lookup failure", function()
+		ns.db.settings.recentAllies = true
+		mock.recentAllies({ lookupError = true })
+		SlashCmdList.SQUADRANK("rate Someone")
+		assert.is_true(mock.click("3"))
+		assert.is_not_nil(ns.db.players["n:someone"])
+		noErrors()
+
+		mock.recentAllies({
+			byName = {
+				["Known-Normal Realm"] = {
+					characterData = {
+						guid = "Player-1-000000AA",
+						name = "Known",
+						realmName = "Normal Realm",
+						level = 20,
+					},
+				},
+			},
+		})
+		SlashCmdList.SQUADRANK("rate Known-Normal Realm")
+		assert.is_true(mock.click("4"))
+		assert.is_not_nil(ns.db.players["g:Player-1-000000AA"])
+		noErrors()
 	end)
 
 	it("rates by name, then toasts once when that player joins, and never in combat", function()
@@ -744,8 +916,7 @@ describe("whole addon against a fake client", function()
 
 		-- The group breaks up: the run ends and the alert slides in.
 		world.units.party1, world.units.party2 = nil, nil
-		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
-		mock.flush()
+		leaveGroup()
 		noErrors()
 		assert.is_nil(SquadRankDB.currentRun)
 		assert.equals("pending", SquadRankDB.runs[runId].prompt)
@@ -795,8 +966,7 @@ describe("whole addon against a fake client", function()
 
 		world.now = world.now + 900
 		world.units.party1 = nil
-		mock.fire(ns, "GROUP_LEFT", 0, "Party-1-AAAA")
-		mock.flush()
+		leaveGroup()
 		noErrors()
 		assert.is_true(ns.SquadAlert.IsShown())
 

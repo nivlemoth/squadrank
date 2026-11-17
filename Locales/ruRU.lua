@@ -13,6 +13,7 @@ ns.Locale.Register("ruRU", function(L)
 	L.ROLE_tank = "Танк"
 	L.ROLE_healer = "Лекарь"
 	L.ROLE_dps = "Боец"
+	L.ROLE_unknown = "Роль неизвестна"
 
 	-- Метки
 	L.TAG_role_good = "Отлично в роли"
@@ -70,6 +71,7 @@ ns.Locale.Register("ruRU", function(L)
 	L.RATE_HINT =
 		"Нажмите на оценку, чтобы сохранить её. Нажмите на карточку для меток и заметки."
 	L.RATE_ROLE_TIP = "Роль: %s. Нажмите, чтобы сменить."
+	L.RATE_LAST_ROLE = "В прошлый раз: %s"
 	L.RATE_NOTE_HINT = "Добавить заметку (необязательно)"
 	L.RATE_SHOW_NEGATIVE = "Негативные..."
 	L.RATE_SHOW_POSITIVE = "Позитивные..."
@@ -413,4 +415,11 @@ ns.Locale.Register("ruRU", function(L)
 	L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r "
 		.. "следит за тем, как идут дела у вашей группы. Введите |cffffd100/sr|r, чтобы открыть список."
 	L.MSG_HELP_7 = "/sr whatsnew - показать, что нового в этой версии"
+	L.MSG_HELP_8 =
+		"/sr allies - показать сохранённых игроков из недавних союзников Blizzard"
+	L.DETAIL_NO_ROLE_RATINGS = "Оценок по ролям пока нет."
+	L.MSG_ALLIES_HEADER = "Недавние союзники среди сохранённых игроков:"
+	L.MSG_ALLIES_NONE = "Среди недавних союзников нет сохранённых игроков."
+	L.MSG_ALLIES_UNAVAILABLE =
+		"Недавние союзники отключены или недоступны. Включите их в настройках."
 end)

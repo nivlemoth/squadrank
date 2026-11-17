@@ -12,6 +12,7 @@ ns.Locale.Register("deDE", function(L)
 	L.ROLE_tank = "Tank"
 	L.ROLE_healer = "Heiler"
 	L.ROLE_dps = "Schaden"
+	L.ROLE_unknown = "Unbekannte Rolle"
 
 	-- Merkmale
 	L.TAG_role_good = "Stark in der Rolle"
@@ -64,6 +65,7 @@ ns.Locale.Register("deDE", function(L)
 	L.RATE_ALL_DONE = "Alle bewertet. Danke!"
 	L.RATE_HINT = "Klicke auf eine Wertung, um sie zu speichern. Klicke auf eine Karte für Merkmale und Notiz."
 	L.RATE_ROLE_TIP = "Rolle: %s. Klicken zum Ändern."
+	L.RATE_LAST_ROLE = "Letztes Mal: %s"
 	L.RATE_NOTE_HINT = "Notiz hinzufügen (optional)"
 	L.RATE_SHOW_NEGATIVE = "Negative Merkmale..."
 	L.RATE_SHOW_POSITIVE = "Positive Merkmale..."
@@ -358,4 +360,10 @@ ns.Locale.Register("deDE", function(L)
 	L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r "
 		.. "behält im Blick, wie deine Gruppe so drauf ist. Tippe |cffffd100/sr|r, um die Liste zu öffnen."
 	L.MSG_HELP_7 = "/sr whatsnew - zeigt die Neuigkeiten dieser Version"
+	L.MSG_HELP_8 = "/sr allies - gespeicherte Spieler aus Blizzards zuletzt gesehenen Verbündeten auflisten"
+	L.DETAIL_NO_ROLE_RATINGS = "Noch keine Rollenbewertungen."
+	L.MSG_ALLIES_HEADER = "Zuletzt gesehene Verbündete in deinen gespeicherten Spielern:"
+	L.MSG_ALLIES_NONE = "Keine zuletzt gesehenen Verbündeten passen zu deinen gespeicherten Spielern."
+	L.MSG_ALLIES_UNAVAILABLE =
+		"Zuletzt gesehene Verbündete ist aus oder nicht verfügbar. Aktiviere es in den Einstellungen."
 end)

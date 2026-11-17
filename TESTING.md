@@ -1,7 +1,7 @@
 # SquadRank 1.5: in-game test checklist
 
 Run these in order on a WoW Forever character. Each step has what to type or do, and what should happen.
-You need one other player (a friend or a second account) for steps 9 to 27.
+You need one other player (a friend or a second account) for steps 9 to 27 and 86 to 89.
 
 **If anything goes wrong:** type `/sr debug`, click in the box, press Ctrl+A then Ctrl+C, and paste the text
 back to me. If the window itself fails, type `/reload` and send the file
@@ -19,7 +19,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.5** is listed under the "Group" category with the blue shield icon, and is not marked out of date. |
 | 4 | Look at the edge of the minimap | A round SquadRank button (group icon in a gold ring). Hover it: a tooltip with three hints. **Left-click**: one window **fades in** with a sidebar (Rate, Players, Runs, Settings, About) and "by Nivlemoth" at the bottom left. Left-click again: it fades out. **Right-click**: the window opens on Settings. **Drag** it: it slides round the minimap; `/reload` keeps the spot. If the ring or the icon is missing, tell me (screenshot). |
 | 4b | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The same window toggles. |
-| 5 | `/sr help` | Seven help lines are printed, including `/sr whatsnew`. |
+| 5 | `/sr help` | Eight help lines are printed, including `/sr whatsnew` and `/sr allies`. |
 
 ## B. Debug and self-test
 
@@ -50,13 +50,14 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 
 | # | Do this | Expected |
 |---|---|---|
-| 21 | Stay grouped with the other player for **at least 5 minutes** anywhere outside a dungeon. Then leave the party | About 2 seconds later a small card **slides down** from the top of the screen: three role icons, "Rate your squad", "Group in <zone>, 1 to rate", with a slow gold pulse. It stays until you act. |
+| 21 | Stay grouped with the other player for **at least 5 minutes** anywhere outside a dungeon. Then leave the party and wait about 5 minutes | Once the tracker's outside grace period passes, a small card **slides down** from the top of the screen: three role icons, "Rate your squad", "Group in <zone>, 1 to rate", with a slow gold pulse. It stays until you act. (A single false group reading does not end the run.) |
 | 22 | Fight something while it is showing | It disappears in combat and slides back after the fight. |
 | 23 | Click the card | It slides away and SquadRank opens on the **Rate** page. A section header "Group in <zone>  <date>  0/1 rated", then the card; cards **fade in one after another**. |
 | 24 | Click a score, then click **Done** | Saved with one click, as in step 14. The card does not come back. In `/sr` > **Runs** the group shows `1/1 rated`. |
 | 25 | Group again, walk into any dungeon together. `/sr debug` | "current run: instance". The log has `[RUN] started`. The open-world group turned into the dungeon run. |
 | 26 | `/reload` inside the dungeon, then `/sr debug`. Walk out, wait 30 seconds, `/sr debug` | Still "current run: instance" after the reload (`[RUN] resumed`), and outside (`[RUN] pending`). |
-| 27 | Leave the party | The alert slides in: "<dungeon>, 1 to rate". Click it, rate with one click. In `/sr` > **Runs** the run shows `1/1 rated`. |
+| 27 | Leave the party and wait about 5 minutes | The alert slides in: "<dungeon>, 1 to rate". Click it, rate with one click. In `/sr` > **Runs** the run shows `1/1 rated`. |
+| 27a | Start a dungeon with a full party. Stay inside. Have one member leave and another join (or be replaced). Then leave the party and wait about 5 minutes | `/sr` > **Runs** has **one** run for that dungeon visit, not two. It lists the original members plus the replacement once, and the alert rates that one run. |
 | 28 | Do 25 and 27 again, but close the alert with its **X** | It slides away and does not come back on its own. `/sr rate` (no name) still opens that run. |
 | 29 | Kill a dungeon boss during a run, then `/sr selftest` and `/sr debug` | The "events seen" row shows whether `ENCOUNTER_END` and `BOSS_KILL` are above 0. Either answer is fine; I need to know which. |
 | 30 | (Needs 3+ players, optional) Rate a run of several players | Clicking a score on one card closes the previous card and opens this one, smoothly. The cards below do not jump. When everyone is rated the bar turns green and says "Everyone rated. Thank you!". |
@@ -105,7 +106,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 
 | # | Do this | Expected |
 |---|---|---|
-| 49 | Group with someone and quest together for 5+ minutes: progress an objective, turn in a quest. Leave the group | The alert appears. `/sr` > **Runs**: the group shows a gold **Questing** label and "Questing in <zone>". Hover it: the quest you turned in under "Quests completed", others under "Quests progressed", and the duration. |
+| 49 | Group with someone and quest together for 5+ minutes: progress an objective, turn in a quest. Leave the group and wait about 5 minutes | The alert appears. `/sr` > **Runs**: the group shows a gold **Questing** label and "Questing in <zone>". Hover it: the quest you turned in under "Quests completed", others under "Quests progressed", and the duration. |
 | 50 | Do a dungeon and kill a boss or two | The run shows a blue **Dungeon** label. Hovering lists the bosses by name. On the Rate page the section header says "Dungeon  ·  2 bosses". |
 | 51 | (If possible) a raid group outside an instance, a battleground, or a group in a PvP zone | World raid / PvP / World PvP labels. A battleground gives no alert and shows as Skipped. |
 | 52 | Runs page: click **Type: All**, pick Dungeon | Only dungeon runs remain. Set it back to All. |
@@ -123,7 +124,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 59 | `/sr` > Players > **Label: All** > Avoid | Only avoided players, with a red "Avoid" label. Open one: the drawer shows Avoid in red and a **Don't avoid** button. Click it. |
 | 60 | Sidebar > **Stats** | Four totals, three lists (names open the history drawer), bars by group type that grow in. |
 | 61 | Settings > Your data > turn on "Allow sharing player summaries". Open a player, click **Share** (top right of the drawer) | A box with one line, already selected: Ctrl+C, paste in chat. No notes, no colours. |
-| 62 | Enter a dungeon and leave within a minute, then leave the group | No alert. The run is in the Runs tab as Skipped. |
+| 62 | Enter a dungeon and leave within a minute, then leave the group and wait about 5 minutes | No alert. The run is in the Runs tab as Skipped. |
 | 63 | Wipe on a boss | Runs tab tooltip shows "1 wipe" for that run. |
 | 64 | Settings > Play sounds off; repeat step 58 | The warning shows with no sound. |
 | 65 | `/sr selftest` | "TooltipDataProcessor.AddTooltipPostCall" and "PlaySound" rows PASS; `/sr debug` notes show "tooltip: ok". |
@@ -132,7 +133,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 
 | # | Do this | Expected |
 |---|---|---|
-| 66 | Join a world PvP or world boss raid (or a battleground) for a few minutes, then leave | No "Rate your squad" card, no gold number on Rate or the minimap. |
+| 66 | Join a world PvP or world boss raid (or a battleground) for a few minutes, then leave and wait about 5 minutes | No "Rate your squad" card, no gold number on Rate or the minimap. |
 | 67 | `/sr` > Players | None of the raid's strangers appear. Players you rated or avoid still do. |
 | 68 | Sidebar > **PvP** | The raid is under **Groups** (World PvP, World raid or PvP label). **Players met** lists its members; clicking one slides the history drawer in on this page. |
 | 69 | `/sr` > Runs | Only your PvE groups (questing, open world, dungeons, raids). The Type filter has only those four. |
@@ -165,6 +166,17 @@ in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md).
 | 83 | Turn off **Say hello in chat when you log in** and `/reload` | No hello line in chat. Turn it back on and `/reload`: one line, once. |
 | 84 | Open the what's-new window, then enter combat | It hides and comes back when combat ends. `/sr whatsnew` in combat prints the usual "not available in combat" message. |
 | 85 | (German or French client) open the window | The five cards are translated; long lines wrap inside the card and do not overlap the buttons. |
+
+## M. Role history and Recent Allies (1.5)
+
+| # | Do this | Expected |
+|---|---|---|
+| 86 | Rate one player twice: once as Tank with **4**, once as Healer with **2**. Open their history drawer | The drawer shows a Tank bar and a Healer bar, each with its own count and average (for example "4.0 (1)" and "2.0 (1)"). A role you have not rated is not shown as a zero. |
+| 87 | Open the same player on the Rate page, in a join toast, and in their player tooltip | The Rate card and toast show a compact role summary ("Tank 4.0, Healer 2.0"). The tooltip adds one line per role ("Tank 4.0 over 1 run"). |
+| 88 | Turn on **Recent Allies** in Settings, then type `/sr allies` | Chat lists only players from Blizzard's Recent Allies that you already saved locally, with your label and per-role history. Notes are left out, and nobody new is added to your saved players. This is the supported Recent Allies check; SquadRank does not hook Blizzard's Recent Allies frame or tooltip. |
+| 89 | Group with the other player for **5+ minutes**, kill no boss, and leave the group. Then type `/sr rate` with no name | The group is offered for rating and opens normally. `ENCOUNTER_END` and `BOSS_KILL` are not required; those events only add boss names and wipes to the run details. |
+
+**Not included in 1.5:** buffs, dispels, interrupts and threat. SquadRank does not grade them, does not read auras, threat APIs or the combat log, and does not add them to a player's history.
 
 ## What I most need back
 

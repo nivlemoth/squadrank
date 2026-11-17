@@ -128,13 +128,12 @@ function UI.TagNames(tagIds, limit)
 	return table.concat(names, L.LIST_SEP)
 end
 
--- Text lines describing a player's reputation, shared by the toast and the history window.
-function UI.SummaryLines(summary)
+-- Detailed per-role history lines: "Tank 4.5 over 2 runs". Only roles with ratings appear,
+-- so an unknown role is never shown as a zero.
+function UI.RoleLines(summary)
 	local lines = {}
-	if summary.count == 1 then
-		lines[#lines + 1] = L.FMT_RATED_ONCE:format(summary.weighted or 0)
-	elseif summary.count > 1 then
-		lines[#lines + 1] = ns.Locale.Count("FMT_RATED_TIMES", summary.count, summary.count, summary.weighted or 0)
+	if type(summary) ~= "table" or type(summary.roles) ~= "table" then
+		return lines
 	end
 	for _, role in ipairs(ns.Ratings.ROLES) do
 		local stat = summary.roles[role]
@@ -147,6 +146,40 @@ function UI.SummaryLines(summary)
 			end
 		end
 	end
+	return lines
+end
+
+-- Compact per-role history: "Tank 4.5, DPS 3.0". Missing roles stay out unless asked for,
+-- and then show a dash rather than an invented score.
+function UI.RoleText(summary, includeMissing)
+	local parts = {}
+	if type(summary) ~= "table" or type(summary.roles) ~= "table" then
+		return ""
+	end
+	for _, role in ipairs(ns.Ratings.ROLES) do
+		local stat = summary.roles[role]
+		if stat then
+			parts[#parts + 1] = ("%s %.1f"):format(L["ROLE_" .. role], stat.avg)
+		elseif includeMissing then
+			parts[#parts + 1] = ("%s -"):format(L["ROLE_" .. role])
+		end
+	end
+	return table.concat(parts, L.LIST_SEP)
+end
+
+-- Text lines describing a player's reputation, shared by the toast, history and chat output.
+-- options.noNote leaves the note out (used by the read-only Recent Allies list).
+function UI.SummaryLines(summary, options)
+	options = options or {}
+	local lines = {}
+	if summary.count == 1 then
+		lines[#lines + 1] = L.FMT_RATED_ONCE:format(summary.weighted or 0)
+	elseif summary.count > 1 then
+		lines[#lines + 1] = ns.Locale.Count("FMT_RATED_TIMES", summary.count, summary.count, summary.weighted or 0)
+	end
+	for _, line in ipairs(UI.RoleLines(summary)) do
+		lines[#lines + 1] = line
+	end
 	if #summary.topTags > 0 then
 		local ids = {}
 		for i = 1, math.min(3, #summary.topTags) do
@@ -154,7 +187,7 @@ function UI.SummaryLines(summary)
 		end
 		lines[#lines + 1] = L.FMT_TAGS:format(UI.TagNames(ids))
 	end
-	if summary.lastNote and summary.lastNote ~= "" then
+	if not options.noNote and summary.lastNote and summary.lastNote ~= "" then
 		lines[#lines + 1] = L.FMT_NOTE:format(Util.Sanitize(summary.lastNote))
 	end
 	return lines

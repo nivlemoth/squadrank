@@ -165,6 +165,10 @@ function Toast.ShowJoin(pids)
 		local rec = db.players[pid]
 		local summary = ns.Ratings.Summary(rec, now, minRatings)
 		local line = UI.ColoredName(rec) .. "   " .. UI.LabelText(summary.label)
+		local roles = UI.RoleText(summary)
+		if roles ~= "" then
+			line = line .. "   " .. roles
+		end
 		if summary.topTags[1] then
 			line = line .. "   " .. L["TAG_" .. summary.topTags[1].id]
 		end

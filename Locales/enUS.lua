@@ -20,6 +20,7 @@ L.LABEL_caution = "Caution"
 L.ROLE_tank = "Tank"
 L.ROLE_healer = "Healer"
 L.ROLE_dps = "DPS"
+L.ROLE_unknown = "Unknown role"
 
 -- Tags
 L.TAG_role_good = "Great at role"
@@ -74,6 +75,7 @@ L.RATE_PROGRESS = "%d of %d rated"
 L.RATE_ALL_DONE = "Everyone rated. Thank you!"
 L.RATE_HINT = "Click a score to save it. Click a card for tags and a note."
 L.RATE_ROLE_TIP = "Role: %s. Click to change."
+L.RATE_LAST_ROLE = "Last time: %s"
 L.RATE_NOTE_HINT = "Add a note (optional)"
 L.RATE_SHOW_NEGATIVE = "Negative tags..."
 L.RATE_SHOW_POSITIVE = "Positive tags..."
@@ -360,3 +362,10 @@ L.SET_CHAT_HELLO_TIP = "A short SquadRank line once per session, so you know it 
 L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r "
 	.. "is keeping track of how your groupies are doing. Type |cffffd100/sr|r to open the roster."
 L.MSG_HELP_7 = "/sr whatsnew - show what's new in this version"
+L.MSG_HELP_8 = "/sr allies - list saved players from Blizzard's Recent Allies"
+
+-- Per-role history and the read-only Recent Allies view (1.5)
+L.DETAIL_NO_ROLE_RATINGS = "No role ratings yet."
+L.MSG_ALLIES_HEADER = "Recent allies in your saved players:"
+L.MSG_ALLIES_NONE = "No recent allies match your saved players."
+L.MSG_ALLIES_UNAVAILABLE = "Recent Allies is off or unavailable. Turn it on in Settings."

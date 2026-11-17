@@ -13,6 +13,7 @@ ns.Locale.Register("zhTW", function(L)
 	L.ROLE_tank = "坦克"
 	L.ROLE_healer = "治療者"
 	L.ROLE_dps = "傷害輸出"
+	L.ROLE_unknown = "未知職責"
 
 	-- 標籤
 	L.TAG_role_good = "職責出色"
@@ -62,6 +63,7 @@ ns.Locale.Register("zhTW", function(L)
 	L.RATE_ALL_DONE = "全部評價完畢。謝謝！"
 	L.RATE_HINT = "點擊分數即可儲存。點擊卡片可加入標籤和備註。"
 	L.RATE_ROLE_TIP = "職責：%s。點擊以變更。"
+	L.RATE_LAST_ROLE = "上次：%s"
 	L.RATE_NOTE_HINT = "加入備註（選填）"
 	L.RATE_SHOW_NEGATIVE = "負面標籤……"
 	L.RATE_SHOW_POSITIVE = "正面標籤……"
@@ -343,4 +345,9 @@ ns.Locale.Register("zhTW", function(L)
 	L.MSG_HELLO =
 		"|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r 正在記錄你的隊伍近況。輸入 |cffffd100/sr|r 開啟名單。"
 	L.MSG_HELP_7 = "/sr whatsnew - 顯示此版本的新內容"
+	L.MSG_HELP_8 = "/sr allies - 列出暴雪最近盟友中的已儲存玩家"
+	L.DETAIL_NO_ROLE_RATINGS = "還沒有按職責的評價。"
+	L.MSG_ALLIES_HEADER = "已儲存玩家中的最近盟友："
+	L.MSG_ALLIES_NONE = "最近盟友中沒有已儲存的玩家。"
+	L.MSG_ALLIES_UNAVAILABLE = "最近盟友已關閉或無法使用。請在設定中開啟。"
 end)

@@ -13,6 +13,7 @@ ns.Locale.Register("koKR", function(L)
 	L.ROLE_tank = "방어 전담"
 	L.ROLE_healer = "치유 전담"
 	L.ROLE_dps = "공격 전담"
+	L.ROLE_unknown = "알 수 없는 역할"
 
 	-- 태그
 	L.TAG_role_good = "역할 수행 우수"
@@ -64,6 +65,7 @@ ns.Locale.Register("koKR", function(L)
 	L.RATE_HINT =
 		"점수를 클릭하면 저장됩니다. 카드를 클릭하면 태그와 메모를 추가할 수 있습니다."
 	L.RATE_ROLE_TIP = "역할: %s. 클릭하여 변경합니다."
+	L.RATE_LAST_ROLE = "지난번: %s"
 	L.RATE_NOTE_HINT = "메모 추가 (선택)"
 	L.RATE_SHOW_NEGATIVE = "부정적 태그..."
 	L.RATE_SHOW_POSITIVE = "긍정적 태그..."
@@ -361,4 +363,10 @@ ns.Locale.Register("koKR", function(L)
 	L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r이(가)"
 		.. " 우리 그룹이 어떻게 지내는지 살펴보고 있습니다. |cffffd100/sr|r을 입력해 목록을 여세요."
 	L.MSG_HELP_7 = "/sr whatsnew - 이 버전의 새로운 점 표시"
+	L.MSG_HELP_8 = "/sr allies - Blizzard 최근 동료 중 저장된 플레이어 표시"
+	L.DETAIL_NO_ROLE_RATINGS = "아직 역할별 평가가 없습니다."
+	L.MSG_ALLIES_HEADER = "저장된 플레이어 중 최근 동료:"
+	L.MSG_ALLIES_NONE = "저장된 플레이어와 일치하는 최근 동료가 없습니다."
+	L.MSG_ALLIES_UNAVAILABLE =
+		"최근 동료 기능이 꺼져 있거나 사용할 수 없습니다. 설정에서 켜세요."
 end)

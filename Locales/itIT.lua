@@ -12,6 +12,7 @@ ns.Locale.Register("itIT", function(L)
 	L.ROLE_tank = "Difensore"
 	L.ROLE_healer = "Guaritore"
 	L.ROLE_dps = "Assaltatore"
+	L.ROLE_unknown = "Ruolo sconosciuto"
 
 	-- Etichette
 	L.TAG_role_good = "Ottimo nel ruolo"
@@ -64,6 +65,7 @@ ns.Locale.Register("itIT", function(L)
 	L.RATE_ALL_DONE = "Tutti valutati. Grazie!"
 	L.RATE_HINT = "Clicca su un voto per salvarlo. Clicca su una scheda per etichette e note."
 	L.RATE_ROLE_TIP = "Ruolo: %s. Clicca per cambiarlo."
+	L.RATE_LAST_ROLE = "L'ultima volta: %s"
 	L.RATE_NOTE_HINT = "Aggiungi una nota (facoltativa)"
 	L.RATE_SHOW_NEGATIVE = "Etichette negative..."
 	L.RATE_SHOW_POSITIVE = "Etichette positive..."
@@ -359,4 +361,9 @@ ns.Locale.Register("itIT", function(L)
 	L.MSG_HELLO = "|TInterface\\AddOns\\SquadRank\\Media\\Icon:16:16|t |cff33bbffSquadRank|r "
 		.. "tiene d'occhio come va il tuo gruppo. Digita |cffffd100/sr|r per aprire la lista."
 	L.MSG_HELP_7 = "/sr whatsnew - mostra le novità di questa versione"
+	L.MSG_HELP_8 = "/sr allies - elenca i giocatori salvati dagli alleati recenti di Blizzard"
+	L.DETAIL_NO_ROLE_RATINGS = "Ancora nessuna valutazione per ruolo."
+	L.MSG_ALLIES_HEADER = "Alleati recenti tra i tuoi giocatori salvati:"
+	L.MSG_ALLIES_NONE = "Nessun alleato recente corrisponde ai tuoi giocatori salvati."
+	L.MSG_ALLIES_UNAVAILABLE = "Gli alleati recenti sono disattivati o non disponibili. Attivali nelle impostazioni."
 end)
