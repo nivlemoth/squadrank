@@ -48,8 +48,13 @@ function Ratings.Validate(input)
 	if not score or score ~= math.floor(score) or score < 1 or score > 5 then
 		return nil, "score"
 	end
-	if not Ratings.ROLE_SET[input.role] then
-		return nil, "role"
+	local role = input.role
+	if role ~= nil and role ~= "" then
+		if not Ratings.ROLE_SET[role] then
+			return nil, "role"
+		end
+	else
+		role = nil
 	end
 	local tags, seen = {}, {}
 	if type(input.tags) == "table" then
@@ -65,7 +70,7 @@ function Ratings.Validate(input)
 	end)
 	return {
 		score = score,
-		role = input.role,
+		role = role,
 		tags = tags,
 		note = Util.Sanitize(input.note, Ratings.NOTE_MAX),
 		runId = type(input.runId) == "string" and input.runId or nil,

@@ -30,6 +30,14 @@ local ROLE_ATLAS = {
 	dps = "groupfinder-icon-role-large-dps",
 }
 
+-- An unassigned role is unknown, never DPS. The client returns NONE for manual groups.
+local function roleName(role)
+	if role and ns.Ratings.ROLE_SET[role] then
+		return L["ROLE_" .. role]
+	end
+	return L.ROLE_unknown
+end
+
 local page, scroll, child
 local w = {}
 local hasContent = false
@@ -225,7 +233,10 @@ local function paintCard(card)
 	card.name:SetText(UI.ColoredName(rec))
 
 	local summary = ns.Ratings.Summary(rec, Compat.Now(), db.settings.minRatings)
-	local parts = { L["ROLE_" .. entry.role] }
+	local parts = { roleName(entry.role) }
+	if not entry.role and entry.lastRole then
+		parts[#parts + 1] = L.RATE_LAST_ROLE:format(L["ROLE_" .. entry.lastRole])
+	end
 	if rec.classFile then
 		parts[#parts + 1] =
 			L.DETAIL_CLASS_LEVEL:format(tostring(rec.level or "?"), Util.Escape(UI.ClassName(rec.classFile)))
@@ -236,7 +247,15 @@ local function paintCard(card)
 		parts[#parts + 1] = roles
 	end
 	card.sub:SetText(table.concat(parts, "   "))
-	pcall(card.roleIcon.SetAtlas, card.roleIcon, ROLE_ATLAS[entry.role])
+	if entry.role then
+		card.roleIcon:SetShown(true)
+		pcall(card.roleIcon.SetAtlas, card.roleIcon, ROLE_ATLAS[entry.role])
+		card.roleText:Hide()
+	else
+		card.roleIcon:Hide()
+		card.roleText:SetText("?")
+		card.roleText:Show()
+	end
 
 	for score, pip in ipairs(card.pips) do
 		local color = SCORE_COLORS[score]
@@ -393,6 +412,9 @@ local function buildCard()
 	card.role:SetPoint("TOPLEFT", 10, -11)
 	card.roleIcon = card.role:CreateTexture(nil, "ARTWORK")
 	card.roleIcon:SetAllPoints()
+	card.roleText = card.role:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	card.roleText:SetPoint("CENTER")
+	card.roleText:Hide()
 	local roleHover = card.role:CreateTexture(nil, "HIGHLIGHT")
 	roleHover:SetAllPoints()
 	roleHover:SetColorTexture(1, 1, 1, 0.15)
@@ -401,19 +423,21 @@ local function buildCard()
 		ns.Safe("rate role", function()
 			local entry = card.entry
 			local roles = ns.Ratings.ROLES
+			local nextRole = roles[1]
 			for i, role in ipairs(roles) do
 				if role == entry.role then
-					entry.role = roles[i % #roles + 1]
+					nextRole = roles[i % #roles + 1]
 					break
 				end
 			end
+			entry.role = nextRole
 			persist(card)
 			paintCard(card)
 			Anim.Pop(card.role, 1.25)
 		end)
 	)
 	UI.SetTooltip(card.role, function()
-		return L.RATE_ROLE_TIP:format(L["ROLE_" .. card.entry.role])
+		return L.RATE_ROLE_TIP:format(roleName(card.entry.role))
 	end)
 
 	card.name = UI.Text(card, "GameFontHighlightMedium")
@@ -643,10 +667,13 @@ local function newEntry(pid, runId, role)
 			entry.tags[id] = true
 		end
 	end
-	if not entry.role then
-		local summary = ns.Ratings.Summary(rec, Compat.Now(), ns.db.settings.minRatings)
-		entry.role = role or summary.lastRole or "dps"
+	local summary = ns.Ratings.Summary(rec, Compat.Now(), ns.db.settings.minRatings)
+	-- The client's role for this run wins. A previous run's role is display only, and an
+	-- unassigned role stays unknown until the user picks one on the card.
+	if not ns.Ratings.ROLE_SET[entry.role] then
+		entry.role = ns.Ratings.ROLE_SET[role] and role or nil
 	end
+	entry.lastRole = ns.Ratings.ROLE_SET[summary.lastRole] and summary.lastRole or nil
 	return entry
 end
 

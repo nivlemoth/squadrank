@@ -35,6 +35,20 @@ describe("Ratings.Save", function()
 		assert.equals(0, #db.players[pid].ratings)
 	end)
 
+	it("keeps an unknown role unknown instead of guessing DPS", function()
+		-- The client says NONE for a manual group; the compat layer turns that into nil.
+		local clean = Ratings.Validate({ score = 4, role = nil })
+		assert.is_nil(clean.role)
+		local r = Ratings.Save(db, pid, { score = 4 }, NOW)
+		assert.equals(4, r.score)
+		assert.is_nil(r.role)
+		-- NONE is not a role we store, and it is certainly not DPS.
+		local none, err = Ratings.Save(db, pid, { score = 4, role = "NONE" }, NOW + 1)
+		assert.is_nil(none)
+		assert.equals("role", err)
+		assert.equals(1, #db.players[pid].ratings)
+	end)
+
 	it("drops unknown and duplicate tags and orders the rest", function()
 		local r =
 			Ratings.Save(db, pid, { score = 3, role = "dps", tags = { "toxic", "hacker", "efficient", "toxic" } }, NOW)

@@ -1,3 +1,39 @@
+# SquadRank 1.5.1: unassigned roles stay unknown
+
+Version **1.5.1**. The database schema is unchanged (1) and no existing data or setting is touched.
+
+## Fixed: an unassigned role is no longer saved as DPS
+
+- **The bug.** In 1.5, when the client did not assign a role (common in manually formed groups),
+  the rating card filled in DPS. The first score click then saved that guess, so a healer could end
+  up in your history as a DPS.
+- **What 1.5.1 does.** It only uses Tank, Healer or DPS when `UnitGroupRolesAssigned` actually
+  returns that role. If the role is missing, the card shows the unknown-role label and a **?** on the
+  role button, never the DPS icon.
+- **Clicking a score saves the score only.** No role is written until the client assigned one or you
+  choose one yourself.
+- **The role button starts on Unknown.** Clicking it cycles Tank, Healer, DPS, and that click is an
+  explicit choice: the chosen role is saved with the rating.
+- **Last time's role is only a hint.** It can appear as secondary text such as "Last time: healer",
+  but it is not this run's role and is never saved on its own.
+- **Nothing is inferred.** SquadRank does not guess a role from spells, class, spec, power type, or
+  from another player tanking. It does not grade anything new.
+
+## Your old ratings are unchanged
+
+- **1.5 ratings are left exactly as they are.** A stored DPS role from 1.5 may be wrong, but the addon
+  cannot tell which ones, so it does not migrate or rewrite them. Only new ratings follow the rule
+  above.
+- **SavedVariables are preserved.** Missing roles are stored as absent, never as the string `"dps"`.
+
+## Validation
+
+Automated checks pass (style, lint, 173 tests). An in-game pass has **not** been run for
+1.5.1: the focused role check is listed in [TESTING.md](TESTING.md), section N, and should be treated
+as unverified until it is run.
+
+---
+
 # SquadRank 1.5: heads-up outside groups
 
 Version **1.5**. The database schema is unchanged (1) and no existing data or setting is touched.

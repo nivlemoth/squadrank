@@ -1,4 +1,4 @@
-# SquadRank 1.5: in-game test checklist
+# SquadRank 1.5.1: in-game test checklist
 
 Run these in order on a WoW Forever character. Each step has what to type or do, and what should happen.
 You need one other player (a friend or a second account) for steps 9 to 27 and 86 to 89.
@@ -8,7 +8,8 @@ back to me. If the window itself fails, type `/reload` and send the file
 `WTF\Account\<ACCOUNT>\SavedVariables\SquadRank.lua` (the `SquadRankDebug` part).
 To see Lua errors on screen, type `/console scriptErrors 1` once.
 
-**Before you start:** ratings from 0.1.0 and 0.2.0 are kept: 1.5 reads them as is.
+**Before you start:** ratings from earlier versions are kept as they are. 1.5.1 reads them without
+migrating or rewriting them.
 
 ## A. Loading
 
@@ -16,7 +17,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 |---|---|---|
 | 1 | `/console scriptErrors 1` then `/reload` | No error window. A short SquadRank **hello** line appears in chat with its icon, and the **what's new** window opens once (see section L). |
 | 2 | `/dump select(4, GetBuildInfo())` | `16001`. If it is another number, tell me: the TOC needs it. |
-| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.5** is listed under the "Group" category with the blue shield icon, and is not marked out of date. |
+| 3 | Open the AddOn list (Esc > AddOns) | **SquadRank 1.5.1** is listed under the "Group" category with the blue shield icon, and is not marked out of date. |
 | 4 | Look at the edge of the minimap | A round SquadRank button (group icon in a gold ring). Hover it: a tooltip with three hints. **Left-click**: one window **fades in** with a sidebar (Rate, Players, Runs, Settings, About) and "by Nivlemoth" at the bottom left. Left-click again: it fades out. **Right-click**: the window opens on Settings. **Drag** it: it slides round the minimap; `/reload` keeps the spot. If the ring or the icon is missing, tell me (screenshot). |
 | 4b | Click the addon button on the minimap (Addon Compartment) and pick SquadRank | The same window toggles. |
 | 5 | `/sr help` | Eight help lines are printed, including `/sr whatsnew` and `/sr allies`. |
@@ -58,6 +59,7 @@ To see Lua errors on screen, type `/console scriptErrors 1` once.
 | 26 | `/reload` inside the dungeon, then `/sr debug`. Walk out, wait 30 seconds, `/sr debug` | Still "current run: instance" after the reload (`[RUN] resumed`), and outside (`[RUN] pending`). |
 | 27 | Leave the party and wait about 5 minutes | The alert slides in: "<dungeon>, 1 to rate". Click it, rate with one click. In `/sr` > **Runs** the run shows `1/1 rated`. |
 | 27a | Start a dungeon with a full party. Stay inside. Have one member leave and another join (or be replaced). Then leave the party and wait about 5 minutes | `/sr` > **Runs** has **one** run for that dungeon visit, not two. It lists the original members plus the replacement once, and the alert rates that one run. |
+| 27b | In a manual group, rate a priest healer whose role the client leaves unassigned | The card shows the unknown-role text and a **?** on the role button, **not** the DPS icon. Click a score: the score is saved with no role. Only after you click the role button does it show and save a role. |
 | 28 | Do 25 and 27 again, but close the alert with its **X** | It slides away and does not come back on its own. `/sr rate` (no name) still opens that run. |
 | 29 | Kill a dungeon boss during a run, then `/sr selftest` and `/sr debug` | The "events seen" row shows whether `ENCOUNTER_END` and `BOSS_KILL` are above 0. Either answer is fine; I need to know which. |
 | 30 | (Needs 3+ players, optional) Rate a run of several players | Clicking a score on one card closes the previous card and opens this one, smoothly. The cards below do not jump. When everyone is rated the bar turns green and says "Everyone rated. Thank you!". |
@@ -159,7 +161,7 @@ in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md).
 
 | # | Do this | Expected |
 |---|---|---|
-| 79 | First login after updating (or `/reload` with `seenVersion` cleared) | A 600×470 window fades in: logo, "SquadRank", a **v1.5** pill, five numbered cards, a short thank-you line, **Open settings** and **Got it**. It does not show again after another `/reload`. |
+| 79 | First login after updating (or `/reload` with `seenVersion` cleared) | A 600×470 window fades in: logo, "SquadRank", a **v1.5.1** pill, five numbered cards, a short thank-you line, **Open settings** and **Got it**. It does not show again after another `/reload`. |
 | 80 | Click **Open settings** | The window closes and the main window opens on **Settings**, with the what's-new switches visible. |
 | 81 | `/sr whatsnew` | The window reopens on demand, even after it has been seen. Close it with **Got it**. |
 | 82 | Turn off **Show what's new after an update**, clear the marker if possible, and `/reload` | No automatic window. `/sr whatsnew` still opens it. Turn the setting back on. |
@@ -177,6 +179,19 @@ in [docs/testing/manual-test-plan.md](docs/testing/manual-test-plan.md).
 | 89 | Group with the other player for **5+ minutes**, kill no boss, and leave the group. Then type `/sr rate` with no name | The group is offered for rating and opens normally. `ENCOUNTER_END` and `BOSS_KILL` are not required; those events only add boss names and wipes to the run details. |
 
 **Not included in 1.5:** buffs, dispels, interrupts and threat. SquadRank does not grade them, does not read auras, threat APIs or the combat log, and does not add them to a player's history.
+
+## N. Unassigned role fix (1.5.1)
+
+This is the focused check for the 1.5.1 fix. It needs a manual group where the client leaves a
+healer's role unassigned (for example, invite a priest healer without using the group finder).
+
+| # | Do this | Expected |
+|---|---|---|
+| 90 | In the manual group, open the Rate page (`/sr rate <name>`) for the healer before the client assigns a role | The card shows the unknown-role label and a **?** on the role button. The DPS icon is **not** shown. If you rated this player before, "Last time: ..." may appear as extra text, but the role itself stays unknown. |
+| 91 | Click score **4** and close the card | The score is saved. Open the player's history: the rating has a score but **no role**, and no DPS entry appears. |
+| 92 | Rate the same player in a later group, again with no client-assigned role. Open the card and click the role button once | The button cycles Unknown → Tank. The card shows the Tank icon and the saved rating now has the Tank role. |
+| 93 | Click the role button again | It cycles to Healer and the rating is saved as Healer. Click again: DPS. Each click is an explicit choice and updates the saved rating. |
+| 94 | Open a player you rated in 1.5 whose role was stored as DPS, and check their history | The old rating is unchanged. 1.5.1 does not rewrite ratings saved by 1.5. |
 
 ## What I most need back
 

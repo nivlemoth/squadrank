@@ -12,7 +12,7 @@
 ## Notes-zhCN: 记住以往队友的表现，并在他们加入队伍时提醒你。
 ## Notes-zhTW: 記住以往隊友的表現，並在他們加入隊伍時提醒你。
 ## Author: Nivlemoth
-## Version: 1.5
+## Version: 1.5.1
 ## Category: Group
 ## IconTexture: Interface\AddOns\SquadRank\Media\Icon
 ## SavedVariables: SquadRankDB, SquadRankDebug

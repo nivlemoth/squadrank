@@ -467,7 +467,7 @@ describe("whole addon against a fake client", function()
 		assert.is_true(ns.PlayerDetail.ShareButton():IsShown())
 		mock.press(ns.PlayerDetail.ShareButton())
 		local text = ns.PlayerDetail.ShareText()
-		assert.equals("[SquadRank] Bob: New, average 5.0 from 1 rating. Roles: DPS 5.0.", text)
+		assert.equals("[SquadRank] Bob: New, average 5.0 from 1 rating.", text)
 		assert.is_nil(text:find("private", 1, true))
 
 		-- Taking Bob off the list from the drawer; sounds stay quiet when switched off.
@@ -953,6 +953,83 @@ describe("whole addon against a fake client", function()
 		noErrors()
 		assert.equals(1, #bob.ratings)
 		assert.equals(3, bob.ratings[1].score)
+	end)
+
+	it("keeps an unassigned role unknown instead of showing and saving DPS", function()
+		local priest = { name = "Mira", guid = "Player-1-000000A1", class = "PRIEST" }
+		world.units.party1 = priest
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		roster()
+		world.now = world.now + 900
+		world.units.party1 = nil
+		leaveGroup()
+		ns.SquadAlert.Open()
+		mock.tick()
+		local pid = "g:" .. priest.guid
+		local card = ns.RateFrame.FindCard(pid)
+		assert.is_not_nil(card)
+		assert.is_nil(card.entry.role)
+		assert.is_false(card.roleIcon:IsShown())
+		assert.is_true(card.roleText:IsShown())
+		assert.equals("?", card.roleText:GetText())
+		assert.is_true(card.sub:GetText():find(ns.L.ROLE_unknown, 1, true) ~= nil)
+
+		-- A score click saves the score with no role: no guess, no DPS icon.
+		mock.press(card.pips[4])
+		local rating = SquadRankDB.players[pid].ratings[1]
+		assert.equals(4, rating.score)
+		assert.is_nil(rating.role)
+
+		-- Only the role button assigns a role.
+		mock.press(card.role)
+		assert.equals("tank", card.entry.role)
+		assert.equals("tank", SquadRankDB.players[pid].ratings[1].role)
+
+		-- A second click explicitly selects healer, and that is what gets saved.
+		mock.press(card.role)
+		assert.equals("healer", card.entry.role)
+		assert.equals("healer", SquadRankDB.players[pid].ratings[1].role)
+		noErrors()
+	end)
+
+	it("shows last time's role without copying it into this run", function()
+		local healer = { name = "Mira", guid = "Player-1-000000A2", class = "PRIEST", role = "HEALER" }
+		world.units.party1 = healer
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		roster()
+		world.now = world.now + 900
+		world.units.party1 = nil
+		leaveGroup()
+		ns.SquadAlert.Open()
+		mock.tick()
+		local pid = "g:" .. healer.guid
+		mock.press(ns.RateFrame.FindCard(pid).pips[5])
+		assert.equals("healer", SquadRankDB.players[pid].ratings[1].role)
+		assert.is_true(mock.click("Done"))
+		mock.flush()
+
+		-- A later group where the client assigns nobody: the old role is shown, not saved.
+		local unassigned = { name = "Mira", guid = "Player-1-000000A2", class = "PRIEST" }
+		world.units.party1 = unassigned
+		mock.fire(ns, "GROUP_JOINED", 0, "Party-1-AAAA")
+		roster()
+		world.now = world.now + 900
+		world.units.party1 = nil
+		leaveGroup()
+		local secondRun = ns.Runs.LatestPending(SquadRankDB)
+		assert.is_not_nil(secondRun)
+		ns.SquadAlert.Open()
+		mock.tick()
+		local card = ns.RateFrame.FindCard(pid)
+		assert.is_nil(card.entry.role)
+		assert.equals("healer", card.entry.lastRole)
+		assert.is_true(card.sub:GetText():find(ns.L.RATE_LAST_ROLE:format(ns.L.ROLE_healer), 1, true) ~= nil)
+
+		mock.press(card.pips[3])
+		local rating = ns.Ratings.ForRun(SquadRankDB.players[pid], secondRun.id)
+		assert.equals(3, rating.score)
+		assert.is_nil(rating.role)
+		noErrors()
 	end)
 
 	it("asks about an open-world group after it breaks up, and steps aside in combat", function()
