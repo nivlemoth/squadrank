@@ -6,7 +6,7 @@ Checked 2026-11-10 against Blizzard_APIDocumentationGenerated in Gethe/wow-ui-so
 
 Status: **verified-src** = present in the generated docs on both clients, signature as shown.
 **undocumented** = a global absent from the generated docs (normal for old globals), so it **needs the in-game test**
-before use. **in-game ✔** = John has confirmed it in game (no entries yet).
+before use. **in-game ✔** = Nivlemoth has confirmed it in game (no entries yet).
 
 ## Unit / group
 | API | Status | Secret flag (F) | In-game test |

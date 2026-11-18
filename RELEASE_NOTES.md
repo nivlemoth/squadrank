@@ -208,7 +208,7 @@ new Blizzard call was checked against the Forever UI source.
   checkmarks pop, the progress bar fills, and the toast slides in and out. The rating window steps aside in
   combat and comes back after.
 
-0.1.0 was tested in game by John: loading, the settings panel, the main window, player history and manual
+0.1.0 was tested in game by Nivlemoth: loading, the settings panel, the main window, player history and manual
 rating all worked. The 0.2.0 window and alert have **not** been run in the game client yet; they are covered by
 104 automated tests and every new Blizzard call was checked against the Forever UI source.
 

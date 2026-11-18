@@ -40,7 +40,7 @@ Sources (accessed 2026-11-10):
 | CallbackHandler-1.0 | comes with Ace3. Use it for module events, or Blizzard's `CallbackRegistryMixin` |
 
 Alternative with no libraries: Blizzard's Addon Compartment + Settings API + ScrollBox + `CallbackRegistryMixin` cover
-most of the same ground (see widget-api-and-blizzard-ui.md). **This is a decision for John (see the questions).**
+most of the same ground (see widget-api-and-blizzard-ui.md). **This is a decision for Nivlemoth (see the questions).**
 
 ## BigWigs packager (`release.sh`)
 - Builds a zip from git and can upload to CurseForge (`CF_API_TOKEN`), WoWInterface (`WOWI_API_TOKEN`),

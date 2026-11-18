@@ -41,7 +41,7 @@ Sources (accessed 2026-11-10):
 | Dual spec | yes | at level 40, swap outside combat | role can change between runs |
 | Addon rules | 12.x restrictions | the wiki does not say; the source has the same restriction system | assume retail-equivalent restrictions |
 
-## Unknowns (not answerable from docs, so they need in-game tests or John)
+## Unknowns (not answerable from docs, so they need in-game tests or Nivlemoth)
 1. Does `C_RecentAllies.IsSystemEnabled()` return true on Forever? (TOC allows it; server may disable)
 2. Are party/raid member names and GUIDs ever secret on Forever during an encounter or on a restricted map? (secret-values doc)
 3. Does `ENCOUNTER_START`/`END` fire for Forever dungeon bosses? (Vanilla dungeons did not always have encounter IDs)
@@ -51,7 +51,7 @@ Sources (accessed 2026-11-10):
 7. Is cross-faction grouping possible? (`UnitFactionGroup("party1")` ≠ the player's faction)
 8. What does `GetRealmName()` return on a mega-realm, and does `UnitName("party1")` ever return a realm?
 9. Do the embedded Ace3/LibDBIcon libraries run without errors on Forever?
-10. Is retail support wanted at all, or only Forever? (question for John)
+10. Is retail support wanted at all, or only Forever? (question for Nivlemoth)
 
 ## Test script for the unknowns (Forever, in a party, ideally inside a dungeon)
 ```

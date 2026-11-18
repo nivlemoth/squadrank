@@ -6,7 +6,7 @@ Logged while building without stopping to ask. Newest at the bottom.
    this machine has none. Tests run on LuaJIT (Lua 5.1 language level) through `spec/run.lua`, a small runner
    that implements the subset of the busted API the specs use. The spec files also run under real busted.
    luacheck uses `std = "lua51"`, so LuaJIT-only syntax would be flagged.
-2. **Git identity.** No git user was configured. Set for this repository only: name "John", the account email.
+2. **Git identity.** No git user was configured. Set for this repository only: name "Nivlemoth", the Nivlemoth noreply email.
 3. **Sanitizer.** Our own Lua code strips escapes; `C_StringUtil.StripHyperlinks` is not used, so behaviour is
    the same in tests and in game. `||` (escaped pipe) is removed entirely.
 4. **Read-only mode.** If the saved database has a newer schema than the addon, or a migration fails, the addon
@@ -49,7 +49,7 @@ Logged while building without stopping to ask. Newest at the bottom.
 
 ## 0.2.0: rating flow redesign (2026-11-11)
 
-John asked for fewer clicks, rating at a convenient time (after the group breaks up) and smooth motion.
+Nivlemoth asked for fewer clicks, rating at a convenient time (after the group breaks up) and smooth motion.
 
 21. **One click per player.** A score click saves the rating at once; there is no Save button. Role, tags and
     note are optional and saved as they change. Reopening a run edits its ratings (as before). Rating a player
@@ -78,7 +78,7 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
 
 ## 0.3.0: one window, minimap button, new look (2026-11-11)
 
-30. **One window.** John found three separate windows (list, history, rating) clunky. Everything now lives
+30. **One window.** Nivlemoth found three separate windows (list, history, rating) clunky. Everything now lives
     in one window with a sidebar: Rate, Players, Runs, Settings, About. Pages switch in place with a short
     slide and fade. A player's history is a drawer that slides in over the right of the Players page, so the
     list stays in view. The old `MainWindow`, `PlayerDetail` and `RateFrame` modules keep their public
@@ -105,7 +105,7 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
 36. **Rate page by itself.** Opening the Rate page from the sidebar shows every group still waiting (up to 6,
     newest first), or an "All caught up" state. A count of players waiting shows on the Rate entry and as a
     pulsing gold dot on the minimap button.
-37. **Author credit.** "by Nivlemoth" on the About page and at the foot of the sidebar, as John asked.
+37. **Author credit.** "by Nivlemoth" on the About page and at the foot of the sidebar, as Nivlemoth asked.
 38. **Version 0.3.0.** No database change; schema stays 1. Two new settings keys get defaults on load.
 
 ## Localization (2026-11-12, no version bump)
@@ -280,7 +280,7 @@ John asked for fewer clicks, rating at a convenient time (after the group breaks
     saved table.
 81. **Translations were added, not machine-published.** All ten non-English catalogues got the 15 new
     keys, with the same `%`/`|` validation as the rest. Native-speaker review is still pending.
-82. **Version 1.5.** John asked for a bump from 1 to 1.5, so the TOC and `ns.VERSION` both say `1.5`
+82. **Version 1.5.** Nivlemoth asked for a bump from 1 to 1.5, so the TOC and `ns.VERSION` both say `1.5`
     and the build is labelled that way in the README, install guide and release notes. The schema
     stays 1. The release package ships from this version; whether CurseForge wants a four-part
     version later is a separate decision.
